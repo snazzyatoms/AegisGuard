@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1313
+config_schema: 1314
 
 
 # ------------------------------------------------------------------------------
@@ -380,6 +380,62 @@ storage:
     username: "root"
     password: "password"
     useSSL: false
+
+
+# ==============================================================================
+# Network / BungeeCord (cross-server)
+# ==============================================================================
+# Connects backend servers running AegisGuard through one shared MySQL/MariaDB
+# database and the proxy's standard plugin-messaging channel. Works with
+# BungeeCord, Waterfall, and Velocity (Velocity speaks the same 'BungeeCord'
+# channel when its forwarding mode is 'bungeecord' or 'modern' with the
+# legacy channel registered). No proxy-side plugin is required.
+#
+# Requirements before enabling:
+#   * storage.backend AND storage.type must be "mysql" or "mariadb", and every
+#     backend must point at the SAME database.
+#   * server_name below must match this backend's name in the proxy's config
+#     (BungeeCord config.yml 'servers:' entry / Velocity velocity.toml).
+#   * First shared boot: configure the same server_name per backend BEFORE
+#     starting against the shared DB. Existing plot rows are claimed by the
+#     first backend that loads them — see NETWORK_SETUP.md.
+#
+# YML/SQLite storage is per-server and cannot network; enabling network on a
+# non-shared backend logs a warning and disables itself.
+network:
+  enabled: false
+
+  # This backend's name in the proxy's server list. REQUIRED when enabled.
+  # Also tags new plots/beacons so other backends treat them as remote.
+  server_name: ""
+
+  # Optional friendly label in network listings (defaults to server_name).
+  display_name: ""
+
+  # Seconds between heartbeat writes marking this server online in the registry.
+  heartbeat_seconds: 30
+
+  # Seconds before a stale heartbeat counts as offline in listings/travel.
+  offline_after_seconds: 120
+
+  # Seconds a pending cross-server arrival stays valid (proxy hop + join).
+  arrival_ttl_seconds: 90
+
+  travel:
+    # List other servers' public plots/warps in Visit Atlas / Discover.
+    remote_destinations: true
+    # Allow clicking remote destinations to hop servers.
+    cross_server_travel: true
+
+  chat:
+    # Relay alliance / group / staff channels across the network. Plot chat
+    # stays local (it is bound to the world the plot lives in).
+    relay_channels: true
+
+  shared_player_data:
+    # Sync claim-block balances and per-player settings through the shared DB
+    # so they follow players across the network.
+    enabled: true
 
 
 # ==============================================================================

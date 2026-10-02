@@ -176,6 +176,14 @@ public class GroupManager {
             }
 
             try {
+                if (plugin.networkSocial() != null) {
+                    for (PlotGroup group : groupsById.values()) {
+                        plugin.networkSocial().pushGroup(group);
+                    }
+                }
+            } catch (Throwable ignored) { }
+
+            try {
                 data.save(file);
                 dirty = false;
             } catch (IOException ex) {
@@ -221,6 +229,52 @@ public class GroupManager {
 
     public Collection<PlotGroup> getAllGroups() {
         return groupsById.values();
+    }
+
+    public Collection<PlotGroup> groups() {
+        return getAllGroups();
+    }
+
+    /**
+     * Network (BungeeCord) merge: the shared roster is authoritative when
+     * networking is enabled. Creates unknown groups, replaces the member list
+     * with the network roster, and adopts network meta so every backend
+     * resolves the same channel.
+     */
+    public void mergeNetworkGroup(UUID id, String name, UUID leader, String chatTitle,
+                                  long createdAt, java.util.Set<UUID> members) {
+        if (id == null) return;
+        PlotGroup group = groupsById.get(id);
+        if (group == null) {
+            group = new PlotGroup(id, name == null ? "Group" : name,
+                    leader, createdAt <= 0 ? System.currentTimeMillis() : createdAt);
+            groupsById.put(id, group);
+            dirty = true;
+        }
+        if (name != null && !name.isBlank()) group.setName(name);
+        if (chatTitle != null) group.setChatTitle(chatTitle);
+        if (leader != null) group.setLeader(leader);
+
+        for (UUID existing : new java.util.ArrayList<>(group.getMembers().keySet())) {
+            if (members == null || !members.contains(existing)) {
+                group.removeMember(existing);
+                playerToGroup.remove(existing);
+            }
+        }
+        if (members != null) {
+            for (UUID member : members) {
+                if (member == null) continue;
+                if (!group.isMember(member)) {
+                    group.addMember(member, createdAt);
+                    dirty = true;
+                }
+                playerToGroup.put(member, id);
+            }
+        }
+        if (leader != null) {
+            if (!group.isMember(leader)) group.addMember(leader, group.getCreatedAt());
+            playerToGroup.put(leader, id);
+        }
     }
 
     public boolean isInGroup(UUID playerId) {
@@ -281,6 +335,11 @@ public class GroupManager {
         for (UUID member : new ArrayList<>(group.getMemberIds())) {
             playerToGroup.remove(member);
         }
+        try {
+            if (plugin.networkSocial() != null) {
+                plugin.networkSocial().deleteGroup(group.getId());
+            }
+        } catch (Throwable ignored) { }
         dirty = true;
     }
 

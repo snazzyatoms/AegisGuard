@@ -204,17 +204,20 @@ public class VisitGUI {
         plugin.runGlobalAsync(() -> {
             List<Plot> displayPlots = new ArrayList<>();
 
-            // Filter defensively
+            // Filter defensively — includes remote (other-backend) plots; the
+            // remote_destinations toggle filters them below.
             List<Plot> all;
             try {
-                all = new ArrayList<>(plugin.store().getAllPlots());
+                all = new ArrayList<>(plugin.store().getNetworkPlots());
             } catch (Throwable t) {
                 all = new ArrayList<>();
                 plugin.getLogger().warning("[VisitGUI] Failed to load plots: " + t.getMessage());
             }
 
+            boolean remoteDestinations = plugin.getConfig().getBoolean("network.travel.remote_destinations", true);
             for (Plot plot : all) {
                 if (plot == null) continue;
+                if (isRemote(plot) && !remoteDestinations) continue;
 
                 switch (requestedMode) {
                     case WARPS -> {
@@ -326,6 +329,32 @@ public class VisitGUI {
         });
     }
 
+    /** Whether this plot is owned by another backend in the shared network. */
+    private boolean isRemote(Plot plot) {
+        try {
+            return plugin.network() != null && plugin.network().isRemote(plot);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** Lore line naming the remote backend, or {@code lore} unchanged when local. */
+    private List<String> appendRemoteBadge(Player player, Plot plot, List<String> lore) {
+        if (!isRemote(plot) || lore == null) return lore;
+        String server = plot.getServer();
+        if (server == null || server.isBlank()) return lore;
+        List<String> out = new ArrayList<>(lore);
+        String label = server;
+        try {
+            if (plugin.network() != null && plugin.network().findServer(server) != null) {
+                label = plugin.network().findServer(server).label();
+            }
+        } catch (Throwable ignored) { }
+        out.add(GUIManager.color(t(player, "visit_remote_line", "&7Server: &b{SERVER}",
+                Map.of("SERVER", label))));
+        return out;
+    }
+
     private boolean matchesDiscoverFilter(Plot plot, DiscoverFilter filter) {
         var discovery = plugin.territoryLife().discovery(plot.getPlotId());
         return switch (filter) {
@@ -413,6 +442,7 @@ public class VisitGUI {
                         " ",
                         "&eClick to teleport"
                 ), Map.of("WARP", warpName, "CATEGORY", warpCategory));
+                lore = appendRemoteBadge(player, plot, lore);
                 lore = appendArrivalCue(player, plot, lore);
 
                 icon = GUIManager.createItem(mat, dn, lore);
@@ -510,6 +540,7 @@ public class VisitGUI {
                                 : t(player, "visit_favorite_add", "&eRight-click to favorite")));
                     }
 
+                    lore = appendRemoteBadge(player, plot, lore);
                     lore = appendArrivalCue(player, plot, lore);
                     meta.setLore(lore);
                     head.setItemMeta(meta);
@@ -809,6 +840,17 @@ public class VisitGUI {
 
         if (!canTeleport(player)) {
             plugin.effects().playError(player);
+            return;
+        }
+
+        // Remote destination: this plot lives on another backend — hop through
+        // the proxy with a pending arrival instead of local teleporting.
+        if (isRemote(plot)) {
+            if (plugin.networkTravel() == null
+                    || !plugin.networkTravel().sendToPlot(player, plot, plot.getServer())) {
+                sendSystem(player, "visit_fail_server_offline", "&cThat server is currently offline.");
+                plugin.effects().playError(player);
+            }
             return;
         }
 

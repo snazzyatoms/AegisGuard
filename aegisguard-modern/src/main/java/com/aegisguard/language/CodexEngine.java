@@ -546,6 +546,12 @@ public class CodexEngine {
         plugin.getConfig().set(PLAYER_STYLE_PATH + "." + id, style);
 
         try {
+            if (plugin.networkPlayerData() != null) {
+                plugin.networkPlayerData().set(id, "pref.style", style);
+            }
+        } catch (Throwable ignored) { }
+
+        try {
             // Bukkit's live YamlConfiguration is not safe to serialize while
             // another thread may be reading or mutating it. Keep config saves
             // on the server/global thread (Paper/Folia compatible).

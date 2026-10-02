@@ -60,6 +60,15 @@ public interface IDataStore {
     void removeAllPlots(UUID owner);
 
     /**
+     * Whether this plot belongs to another backend in a shared-DB network.
+     * YML storage has no network concept and always returns false; SQL
+     * implementations tag rows with {@code network.server_name}.
+     */
+    default boolean isRemotePlot(Plot plot) {
+        return false;
+    }
+
+    /**
      * Transfer ownership of a plot to a new owner.
      * Implementations must ensure caches stay in sync and prior owner privileges do not persist.
      */
@@ -119,6 +128,24 @@ public interface IDataStore {
     Collection<Plot> getAllPlots();
     Collection<Plot> getPlotsForSale();
     Collection<Plot> getPlotsForAuction();
+
+    /**
+     * Network-aware listing (BungeeCord shared-DB mode): local plots plus plots
+     * owned by other backends. Remote plots are read-only views — they are
+     * never indexed for protection or returned by {@link #getAllPlots()}.
+     * Non-network stores return {@link #getAllPlots()} unchanged.
+     */
+    default Collection<Plot> getNetworkPlots() {
+        return getAllPlots();
+    }
+
+    /**
+     * Resolve a plot by id including remote (other-backend) plots. Falls back
+     * to {@link #getPlotById(UUID)} on non-network stores.
+     */
+    default Plot getNetworkPlotById(UUID plotId) {
+        return getPlotById(plotId);
+    }
 
     Plot getPlotAt(Location loc);
     boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2);

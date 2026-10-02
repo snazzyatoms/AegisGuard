@@ -206,6 +206,11 @@ public class NotificationManager {
         settingsCache.put(settings.getPlayerUUID(), settings);
         dirty = true;
         saveDataAsync();
+        try {
+            if (plugin.networkPlayerData() != null) {
+                plugin.networkPlayerData().push(settings.getPlayerUUID());
+            }
+        } catch (Throwable ignored) { }
     }
 
     /**

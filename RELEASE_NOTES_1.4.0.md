@@ -62,6 +62,18 @@ Vanilla multiplayer is still text-only (`T`). These Aegis channels are opt-in ra
 
 Only one opt-in channel is active at a time. Public chat that is not intercepted still goes through Hearth rooms.
 
+### BungeeCord networks (cross-server play)
+
+AegisGuard can now link backend servers behind a BungeeCord/Waterfall/Velocity proxy into one network — no proxy-side jar required. With `network.enabled` and one shared MySQL/MariaDB database across every backend:
+
+- **Shared discovery** — Travel Atlas, Discover, and Warps list remote plots with a `Server:` badge. Clicking one sends you through the proxy and lands you honoring that plot's arrival rules (classic spawn or public beacon pad) after the usual lockdown/entry checks.
+- **Network radios** — alliance, group, and staff channels relay across the whole network through the shared event table, even with zero players online on the receiving end.
+- **Player data follows** — claim-block balances, starter-claim state, language style, and notification preferences travel with the player.
+- **Shared rosters** — alliances and groups merge through shared tables; kicks apply network-wide.
+- **`/agadmin network`** — registry status, per-server online state, and pending arrivals.
+
+Every network piece is gated and fails closed: YML/SQLite stays single-server, remote plots never enter local protection or upkeep, stale arrivals expire, and `Connect` requests no-op without a proxy. See `NETWORK_SETUP.md` for setup and the one-time row-claim order.
+
 ### Open House and Roles GUI lock/undo
 
 Owners, co-owners, and stewards can host a timed **Open House** with `/ag gathering start [minutes]` (or Explore → Open House). Live houses appear on Travel Atlas Discover under the **Live** filter. Optional visitor Guest Passes are issued to arrivals and revoked when the house ends. `modules.gatherings` can turn the system off.
@@ -77,7 +89,7 @@ Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, Open House,
 1. Stop the server completely.
 2. Confirm the host is running **Java 21 or newer**.
 3. Replace the plugin JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1311`, with a backup). Existing plots load as-is and stay on classic arrival.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1314`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional.
 6. Do **not** use Bukkit `/reload`.
 
@@ -90,6 +102,7 @@ Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, Open House,
 | **Java** | `21+` |
 | **Minecraft** | `1.20+` |
 | **Server software** | Spigot, Paper, Purpur, Folia, and compatible Bukkit forks |
+| **Networks** | BungeeCord, Waterfall, Velocity (backend jar only; shared MySQL/MariaDB required) |
 | **Upgrade path** | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration |
 | **Languages** | Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish |
 | **Optional** | Vault, PlaceholderAPI, WorldEdit/FAWE, Floodgate, Geyser-Spigot, Simple Voice Chat (`voicechat`) |

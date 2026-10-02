@@ -59,6 +59,13 @@ public class Plot {
     private String ownerName;
     private String world; // IMPORTANT: String world name (1.2.5/1.2.6 GUI expects this)
 
+    /**
+     * Network (BungeeCord) identity of the backend server that owns this plot.
+     * Null/blank = local. Remote plots are loaded for listings/chat context only
+     * and must never be consulted by local protection checks.
+     */
+    private String server;
+
     // Bounds (2D)
     private int x1, z1, x2, z2;
 
@@ -265,6 +272,27 @@ public class Plot {
 
     public void setWorld(String world) {
         this.world = world;
+    }
+
+    /**
+     * The network server that owns this plot (BungeeCord backend name), or
+     * {@code null}/blank when the plot is local / networking is not in use.
+     */
+    public String getServer() {
+        return server;
+    }
+
+    public void setServer(String server) {
+        this.server = (server == null || server.isBlank()) ? null : server;
+    }
+
+    /**
+     * Whether this plot lives on another backend server. Treats null/blank and
+     * an unset local name as local so non-networked installs are unaffected.
+     */
+    public boolean isRemote(String localServerName) {
+        return server != null && localServerName != null
+                && !server.equalsIgnoreCase(localServerName);
     }
 
     public World getBukkitWorld() {

@@ -153,6 +153,13 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.gatherings.GatheringService gatheringService;
     private com.aegisguard.chat.PlotChatService plotChatService;
     private com.aegisguard.chat.HearthService hearthService;
+
+    // Network (BungeeCord cross-server)
+    private com.aegisguard.network.NetworkService networkService;
+    private com.aegisguard.network.NetworkTravelService networkTravelService;
+    private com.aegisguard.network.NetworkChatService networkChatService;
+    private com.aegisguard.network.NetworkPlayerDataService networkPlayerDataService;
+    private com.aegisguard.network.NetworkSocialSync networkSocialSync;
     private Object hearthVoicechatHook;
     private com.aegisguard.protection.FlightSkillService flightSkillService;
     private com.aegisguard.season.SeasonService seasonService;
@@ -278,6 +285,11 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.gatherings.GatheringService gatherings() { return gatheringService; }
     public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
     public com.aegisguard.chat.HearthService hearth() { return hearthService; }
+    public com.aegisguard.network.NetworkService network() { return networkService; }
+    public com.aegisguard.network.NetworkTravelService networkTravel() { return networkTravelService; }
+    public com.aegisguard.network.NetworkChatService networkChat() { return networkChatService; }
+    public com.aegisguard.network.NetworkPlayerDataService networkPlayerData() { return networkPlayerDataService; }
+    public com.aegisguard.network.NetworkSocialSync networkSocial() { return networkSocialSync; }
     public Object hearthVoice() { return hearthVoicechatHook; }
     public com.aegisguard.protection.FlightSkillService flightSkills() { return flightSkillService; }
     public com.aegisguard.season.SeasonService seasons() { return seasonService; }
@@ -337,6 +349,20 @@ public class AegisGuard extends JavaPlugin {
             plotStore = new YMLDataStore(this);
         }
         plotStore.load();
+
+        // --- NETWORK (BungeeCord cross-server; self-disables unless mysql/mariadb shared) ---
+        networkService = new com.aegisguard.network.NetworkService(this);
+        networkService.start();
+        networkTravelService = new com.aegisguard.network.NetworkTravelService(this);
+        networkChatService = new com.aegisguard.network.NetworkChatService(this);
+        networkChatService.start();
+        networkPlayerDataService = new com.aegisguard.network.NetworkPlayerDataService(this);
+        networkPlayerDataService.start();
+        networkSocialSync = new com.aegisguard.network.NetworkSocialSync(this);
+        if (networkService.isNetworked()) {
+            getServer().getPluginManager().registerEvents(
+                    new com.aegisguard.network.NetworkJoinListener(this), this);
+        }
 
         // --- MANAGERS ---
         gui = new GUIManager(this);
@@ -427,6 +453,7 @@ public class AegisGuard extends JavaPlugin {
             });
             loadPersistentState("plot groups", () -> {
                 if (groupManager != null) groupManager.load();
+                if (networkSocialSync != null) networkSocialSync.pullGroups(groupManager);
             });
             loadPersistentState("routes and route progress", () -> {
                 if (routeService != null) routeService.load();
@@ -451,6 +478,7 @@ public class AegisGuard extends JavaPlugin {
             });
             loadPersistentState("alliances", () -> {
                 if (allianceManager != null) allianceManager.load();
+                if (networkSocialSync != null) networkSocialSync.pullAlliances(allianceManager);
             });
 
             // ✅ NotificationManager loads data inside constructor + reload()
@@ -630,6 +658,12 @@ public class AegisGuard extends JavaPlugin {
         if (snapshotManager != null) snapshotManager.shutdownOperations();
         if (plotChatService != null) plotChatService.clearAll();
         if (webAdminService != null) webAdminService.shutdown();
+        // Flush shared player data + stop channels before the SQL pool closes.
+        try {
+            if (networkPlayerDataService != null) networkPlayerDataService.stop();
+            if (networkChatService != null) networkChatService.stop();
+            if (networkService != null) networkService.stop();
+        } catch (Throwable ignored) { }
         if (platformScheduler != null) platformScheduler.shutdown();
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.

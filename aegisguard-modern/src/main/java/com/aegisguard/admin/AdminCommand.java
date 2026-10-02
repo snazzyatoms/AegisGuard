@@ -50,7 +50,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
             "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "season", "skill", "transition", "upgrade", "v130", "v140",
-            "staffchat", "sc", "discord", "plots", "inspect",
+            "staffchat", "sc", "discord", "plots", "inspect", "network",
             "help"
     };
 
@@ -130,6 +130,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "discord" -> handleDiscord(player, args);
             case "plots" -> handleAdminPlots(player, args);
             case "inspect" -> handleAdminInspect(player, args);
+            case "network" -> handleNetwork(player, args);
             case "help" -> sendAdminHelp(player);
             default -> sendAdminHelp(player);
         }
@@ -973,6 +974,51 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_restore_use_hint", "&eUse retry or release.");
     }
 
+    /**
+     * /agadmin network — registry + pending-arrival status for the shared-DB
+     * BungeeCord network. Reports cleanly when networking is disabled.
+     */
+    private void handleNetwork(CommandSender sender, String[] args) {
+        var net = plugin.network();
+        if (net == null || !net.isNetworked()) {
+            sendLocalized(sender, "admin_network_offline",
+                    "&7Network: &coffline&7. Enable &fnetwork.enabled&7 with a shared MySQL/MariaDB backend.");
+            return;
+        }
+
+        plugin.runGlobalAsync(() -> {
+            net.refreshServers();
+            var servers = net.servers();
+            int arrivals = net.store().countPendingArrivals();
+            long offlineAfter = net.offlineAfterMillis();
+            plugin.runMainGlobal(() -> {
+                sendLocalized(sender, "admin_network_header",
+                        "&6Network &8— &f{SERVER} &7(&f{LABEL}&7)",
+                        Map.of("SERVER", String.valueOf(net.serverName()),
+                                "LABEL", String.valueOf(net.displayName())));
+                if (servers.isEmpty()) {
+                    sendLocalized(sender, "admin_network_empty", "&7No servers registered yet.");
+                } else {
+                    for (var srv : servers) {
+                        boolean online = srv.isOnline(offlineAfter);
+                        boolean self = net.serverName() != null && net.serverName().equalsIgnoreCase(srv.serverName());
+                        sendLocalized(sender, "admin_network_entry",
+                                "{STATE} &f{SERVER} &8(&7{PLAYERS} online, v{VERSION}{SELF}&8)",
+                                Map.of(
+                                        "STATE", online ? "&a●" : "&7○",
+                                        "SERVER", srv.label(),
+                                        "PLAYERS", String.valueOf(srv.onlinePlayers()),
+                                        "VERSION", srv.pluginVersion() == null ? "?" : srv.pluginVersion(),
+                                        "SELF", self ? ", you" : ""));
+                    }
+                }
+                sendLocalized(sender, "admin_network_arrivals",
+                        "&7Pending arrivals: &f{COUNT}&7 — relayed chat channels: alliance/group/staff.",
+                        Map.of("COUNT", String.valueOf(arrivals)));
+            });
+        });
+    }
+
     private void sendAdminHelp(Player player) {
         sendLocalized(player, "admin_help_header", "&6AegisGuard Staff Commands");
         sendLocalized(player, "admin_help_menu", "&e/agadmin &7| &e/agadmin menu &8- Staff Command Center");
@@ -994,6 +1040,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_staffchat", "&e/agadmin staffchat &8- Toggle staff radio");
         sendLocalized(player, "admin_help_plots", "&e/agadmin plots <player> &8- Browse a player's plots");
         sendLocalized(player, "admin_help_inspect", "&e/agadmin inspect [player] &8- Inspect a claim in detail");
+        sendLocalized(player, "admin_help_network", "&e/agadmin network &8- Cross-server (BungeeCord) status");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
     }
 

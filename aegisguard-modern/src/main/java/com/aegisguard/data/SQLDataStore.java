@@ -48,6 +48,15 @@ public class SQLDataStore implements IDataStore {
     private volatile long allPlotsCacheStamp = -1L;
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
+    /**
+     * Plots owned by other backends in a shared-DB network (network.server tag
+     * differs from this backend's network.server_name). They are intentionally
+     * kept OUT of every live index — no local protection checks, claim limits,
+     * upkeep, market, or mutation path may see them. Network-aware GUIs read
+     * them through {@link #getNetworkPlots()} / {@link #getNetworkPlotById(UUID)}.
+     */
+    private final Map<UUID, Plot> remotePlots = new ConcurrentHashMap<>();
+
     private volatile boolean isDirty = false;
     private String storageType = "sqlite";
 
@@ -74,7 +83,8 @@ public class SQLDataStore implements IDataStore {
                     " last_upkeep BIGINT," +
                     " flags TEXT," +
                     " roles TEXT," +
-                    " settings TEXT" +
+                    " settings TEXT," +
+                    " server VARCHAR(64)" +
                     " )";
 
     private static final String CREATE_ZONES_TABLE =
@@ -134,8 +144,8 @@ public class SQLDataStore implements IDataStore {
 
     private static final String UPSERT_PLOT =
             "REPLACE INTO aegis_plots " +
-                    "(plot_id, owner_uuid, owner_name, world, x1, z1, x2, z2, level, xp, last_upkeep, flags, roles, settings) " +
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "(plot_id, owner_uuid, owner_name, world, x1, z1, x2, z2, level, xp, last_upkeep, flags, roles, settings, server) " +
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
     private static final String DELETE_PLOT =
             "DELETE FROM aegis_plots WHERE plot_id = ?";
@@ -184,10 +194,13 @@ public class SQLDataStore implements IDataStore {
 
     // Wilderness logging
     private static final String LOG_WILDERNESS =
-            "INSERT INTO aegis_wilderness_log (world, x, y, z, old_material, new_material, timestamp, player_uuid) VALUES (?,?,?,?,?,?,?,?)";
+            "INSERT INTO aegis_wilderness_log (world, x, y, z, old_material, new_material, timestamp, player_uuid, server) VALUES (?,?,?,?,?,?,?,?,?)";
     private static final String GET_REVERTABLE_BLOCKS =
             "SELECT id, world, x, y, z, old_material FROM aegis_wilderness_log "
                     + "WHERE timestamp < ? ORDER BY timestamp DESC, id DESC LIMIT ?";
+    private static final String GET_REVERTABLE_BLOCKS_SCOPED =
+            "SELECT id, world, x, y, z, old_material FROM aegis_wilderness_log "
+                    + "WHERE timestamp < ? AND server = ? ORDER BY timestamp DESC, id DESC LIMIT ?";
     private static final String DELETE_WILDERNESS_BY_ID =
             "DELETE FROM aegis_wilderness_log WHERE id = ?";
 
@@ -302,6 +315,74 @@ public class SQLDataStore implements IDataStore {
             s.execute(CREATE_STALL_LISTINGS_TABLE);
             s.execute(CREATE_ZONE_META_TABLE);
             s.execute(CREATE_ZONE_GUESTS_TABLE);
+            ensureColumn(s, "aegis_plots", "server", "VARCHAR(64)");
+
+            // --- Network (BungeeCord cross-server) tables ---
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_network_servers (" +
+                    " server_name VARCHAR(64) PRIMARY KEY," +
+                    " display_name VARCHAR(64)," +
+                    " plugin_version VARCHAR(24)," +
+                    " online_players INT," +
+                    " last_seen BIGINT" +
+                    " )");
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_network_arrivals (" +
+                    " player_uuid VARCHAR(36) PRIMARY KEY," +
+                    " target_server VARCHAR(64)," +
+                    " kind VARCHAR(24)," +
+                    " plot_id VARCHAR(36)," +
+                    " beacon_id VARCHAR(36)," +
+                    " world VARCHAR(64)," +
+                    " x DOUBLE, y DOUBLE, z DOUBLE, yaw FLOAT, pitch FLOAT," +
+                    " issued_at BIGINT, expires_at BIGINT" +
+                    " )");
+            if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
+                s.execute("CREATE TABLE IF NOT EXISTS aegis_network_events (" +
+                        " id BIGINT PRIMARY KEY AUTO_INCREMENT," +
+                        " origin_server VARCHAR(64)," +
+                        " kind VARCHAR(32)," +
+                        " payload TEXT," +
+                        " created_at BIGINT" +
+                        " )");
+            } else {
+                s.execute("CREATE TABLE IF NOT EXISTS aegis_network_events (" +
+                        " id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        " origin_server TEXT," +
+                        " kind TEXT," +
+                        " payload TEXT," +
+                        " created_at INTEGER" +
+                        " )");
+            }
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_player_data (" +
+                    " player_uuid VARCHAR(36) PRIMARY KEY," +
+                    " data TEXT," +
+                    " updated_at BIGINT" +
+                    " )");
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_network_alliances (" +
+                    " alliance_id VARCHAR(36) PRIMARY KEY," +
+                    " name VARCHAR(64)," +
+                    " leader_uuid VARCHAR(36)," +
+                    " chat_title VARCHAR(64)," +
+                    " created_at BIGINT, updated_at BIGINT" +
+                    " )");
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_network_alliance_members (" +
+                    " alliance_id VARCHAR(36)," +
+                    " member_uuid VARCHAR(36)," +
+                    " joined_at BIGINT," +
+                    " PRIMARY KEY (alliance_id, member_uuid)" +
+                    " )");
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_network_groups (" +
+                    " group_id VARCHAR(36) PRIMARY KEY," +
+                    " name VARCHAR(64)," +
+                    " leader_uuid VARCHAR(36)," +
+                    " chat_title VARCHAR(64)," +
+                    " created_at BIGINT, updated_at BIGINT" +
+                    " )");
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_network_group_members (" +
+                    " group_id VARCHAR(36)," +
+                    " member_uuid VARCHAR(36)," +
+                    " joined_at BIGINT," +
+                    " PRIMARY KEY (group_id, member_uuid)" +
+                    " )");
             s.execute("CREATE TABLE IF NOT EXISTS aegis_teleport_beacons (" +
                     " beacon_id VARCHAR(36) PRIMARY KEY," +
                     " plot_id VARCHAR(36)," +
@@ -326,14 +407,16 @@ public class SQLDataStore implements IDataStore {
                         "id INTEGER PRIMARY KEY AUTO_INCREMENT, " +
                         "world VARCHAR(64), x INT, y INT, z INT, " +
                         "old_material VARCHAR(64), new_material VARCHAR(64), " +
-                        "timestamp BIGINT, player_uuid VARCHAR(36) )");
+                        "timestamp BIGINT, player_uuid VARCHAR(36), server VARCHAR(64) )");
             } else {
                 s.execute("CREATE TABLE IF NOT EXISTS aegis_wilderness_log ( " +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         "world TEXT, x INTEGER, y INTEGER, z INTEGER, " +
                         "old_material TEXT, new_material TEXT, " +
-                        "timestamp INTEGER, player_uuid TEXT )");
+                        "timestamp INTEGER, player_uuid TEXT, server TEXT )");
             }
+            ensureColumn(s, "aegis_wilderness_log", "server", "VARCHAR(64)");
+            ensureColumn(s, "aegis_teleport_beacons", "server", "VARCHAR(64)");
 
         } catch (SQLException e) {
             plugin.getLogger().severe("Database Error: " + e.getMessage());
@@ -353,14 +436,96 @@ public class SQLDataStore implements IDataStore {
         return normalized;
     }
 
+    /**
+     * The configured network.server_name when networking is enabled, else null.
+     * Used to claim legacy plot rows and tag new plots; consumers distinguish
+     * local vs remote rows through {@link Plot#getServer()}.
+     */
+    private String configuredNetworkServerName() {
+        try {
+            if (!plugin.getConfig().getBoolean("network.enabled", false)) return null;
+            String name = plugin.getConfig().getString("network.server_name", "");
+            return (name == null || name.isBlank()) ? null : name.trim();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** Add a column to an existing table if it is missing (idempotent, both dialects). */
+    private void ensureColumn(Statement s, String table, String column, String definition) {
+        boolean exists = false;
+        try {
+            if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
+                try (ResultSet rs = s.executeQuery(
+                        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS " +
+                        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '" + table +
+                        "' AND COLUMN_NAME = '" + column + "'")) {
+                    exists = rs.next();
+                }
+            } else {
+                try (ResultSet rs = s.executeQuery("PRAGMA table_info(" + table + ")")) {
+                    while (rs.next()) {
+                        if (column.equalsIgnoreCase(rs.getString("name"))) { exists = true; break; }
+                    }
+                }
+            }
+            if (!exists) {
+                s.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Could not verify/add column " + table + "." + column + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Borrow a pooled connection for network features. Callers must close it.
+     * Returns null when the pool is down; network code degrades gracefully.
+     */
+    public Connection getConnection() throws SQLException {
+        if (hikari == null || hikari.isClosed()) {
+            throw new SQLException("AegisGuard SQL pool is not connected");
+        }
+        return hikari.getConnection();
+    }
+
+    /** The resolved storage dialect (sqlite | mysql | mariadb). */
+    public String storageType() {
+        return storageType;
+    }
+
     @Override
     public void load() {
         plotsByOwner.clear();
         plotsByChunk.clear();
+        remotePlots.clear();
         membershipStamp.incrementAndGet();
 
         int plotCount = 0;
         Map<UUID, Plot> plotsById = new HashMap<>();
+
+        // When networking is enabled, atomically claim any legacy rows that have
+        // no server tag for this backend. Whichever server runs this first wins;
+        // see NETWORK_SETUP.md for migration ordering.
+        String localServer = configuredNetworkServerName();
+        if (localServer != null) {
+            try (Connection conn = hikari.getConnection();
+                 PreparedStatement claim = conn.prepareStatement(
+                         "UPDATE aegis_plots SET server = ? WHERE server IS NULL OR server = ''")) {
+                claim.setString(1, localServer);
+                claim.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().warning("Could not tag legacy plots with server '" + localServer + "': " + e.getMessage());
+            }
+            try (Connection conn = hikari.getConnection();
+                 PreparedStatement claim = conn.prepareStatement(
+                         "UPDATE aegis_wilderness_log SET server = ? WHERE server IS NULL OR server = ''")) {
+                claim.setString(1, localServer);
+                claim.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(java.util.logging.Level.FINE,
+                        "Could not tag legacy wilderness rows with server '" + localServer + "': " + e.getMessage());
+            }
+        }
 
         try (Connection conn = hikari.getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_plots");
@@ -391,6 +556,10 @@ public class SQLDataStore implements IDataStore {
 
                     String settings = rs.getString("settings");
                     if (settings != null && !settings.isEmpty()) applySettings(plot, settings);
+
+                    String serverTag = null;
+                    try { serverTag = rs.getString("server"); } catch (SQLException ignored) { }
+                    if (serverTag != null && !serverTag.isBlank()) plot.setServer(serverTag);
 
                     plot.setApiEventsSuppressed(false);
                     cachePlot(plot);
@@ -592,6 +761,14 @@ public class SQLDataStore implements IDataStore {
             throw new IllegalStateException("SQL datastore is unavailable while saving plot " + plot.getPlotId());
         }
 
+        // Never write another backend's row — the owning server is the only
+        // writer for its plots in a shared-DB network.
+        if (isRemotePlot(plot)) {
+            plugin.getLogger().log(java.util.logging.Level.FINE,
+                    "Skipped save of remote plot " + plot.getPlotId() + " (owned by server '" + plot.getServer() + "')");
+            return;
+        }
+
         try (Connection conn = hikari.getConnection()) {
             boolean auto = conn.getAutoCommit();
             try {
@@ -612,6 +789,7 @@ public class SQLDataStore implements IDataStore {
                     ps.setString(12, plot.serializeFlags());
                     ps.setString(13, plot.serializeRoles());
                     ps.setString(14, serializeSettings(plot));
+                    ps.setString(15, plot.getServer() != null ? plot.getServer() : configuredNetworkServerName());
                     ps.executeUpdate();
                 }
 
@@ -1040,13 +1218,31 @@ public class SQLDataStore implements IDataStore {
         // Deduplicate by id to prevent ghosts
         removePlotByIdEverywhere(plot.getPlotId());
 
+        // Remote plots live on another backend's world. They stay out of every
+        // local index so protection, upkeep, and mutation paths only ever see
+        // local plots; network GUIs read them via getNetworkPlots().
+        if (isRemotePlot(plot)) {
+            remotePlots.put(plot.getPlotId(), plot);
+            membershipStamp.incrementAndGet();
+            return;
+        }
+
         plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet()).add(plot);
         membershipStamp.incrementAndGet();
         indexPlot(plot);
     }
 
+    /** Whether this plot belongs to another backend in a shared-DB network. */
+    public boolean isRemotePlot(Plot plot) {
+        if (plot == null) return false;
+        String local = configuredNetworkServerName();
+        return plot.isRemote(local);
+    }
+
     private void removePlotByIdEverywhere(UUID plotId) {
         if (plotId == null) return;
+
+        remotePlots.remove(plotId);
 
         for (Map.Entry<UUID, Set<Plot>> entry : plotsByOwner.entrySet()) {
             Set<Plot> set = entry.getValue();
@@ -1118,6 +1314,8 @@ public class SQLDataStore implements IDataStore {
         int z2 = Math.max(c1.getBlockZ(), c2.getBlockZ());
 
         Plot plot = new Plot(id, owner, ownerName, c1.getWorld().getName(), x1, z1, x2, z2, System.currentTimeMillis());
+        String localServer = configuredNetworkServerName();
+        if (localServer != null) plot.setServer(localServer);
         addPlot(plot);
     }
 
@@ -1144,6 +1342,14 @@ public class SQLDataStore implements IDataStore {
                 .filter(plot -> plot != null && plotId.equals(plot.getPlotId()))
                 .findFirst()
                 .orElse(null);
+
+        // A remote (other-backend) plot must never be deleted by this server —
+        // drop it from the remote listing index only.
+        if (removedPlot == null && remotePlots.containsKey(plotId)) {
+            remotePlots.remove(plotId);
+            membershipStamp.incrementAndGet();
+            return;
+        }
 
         // Hard dedupe kill-switch: removes plotId from any cached owner set + chunk index
         removePlotByIdEverywhere(plotId);
@@ -1359,6 +1565,7 @@ public class SQLDataStore implements IDataStore {
                 ps.setString(6, newMat);
                 ps.setLong(7, System.currentTimeMillis());
                 ps.setString(8, playerUUID.toString());
+                ps.setString(9, configuredNetworkServerName());
                 ps.executeUpdate();
             } catch (SQLException error) {
                 plugin.getLogger().warning("Failed to persist wilderness restoration record at "
@@ -1373,11 +1580,18 @@ public class SQLDataStore implements IDataStore {
 
         queueDb(() -> {
             List<WildernessRevertRow> rows = new ArrayList<>();
+            String localServer = configuredNetworkServerName();
+            String query = localServer != null ? GET_REVERTABLE_BLOCKS_SCOPED : GET_REVERTABLE_BLOCKS;
             try (Connection conn = hikari.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(GET_REVERTABLE_BLOCKS)) {
+                 PreparedStatement ps = conn.prepareStatement(query)) {
 
                 ps.setLong(1, timestamp);
-                ps.setInt(2, limit);
+                if (localServer != null) {
+                    ps.setString(2, localServer);
+                    ps.setInt(3, limit);
+                } else {
+                    ps.setInt(2, limit);
+                }
 
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -1485,6 +1699,21 @@ public class SQLDataStore implements IDataStore {
         allPlotsCacheStamp = membershipStamp.get();
         allPlotsCache = List.copyOf(byId.values());
         return allPlotsCache;
+    }
+
+    @Override
+    public Collection<Plot> getNetworkPlots() {
+        if (remotePlots.isEmpty()) return getAllPlots();
+        List<Plot> out = new ArrayList<>(getAllPlots());
+        out.addAll(remotePlots.values());
+        return out;
+    }
+
+    @Override
+    public Plot getNetworkPlotById(UUID plotId) {
+        if (plotId == null) return null;
+        Plot remote = remotePlots.get(plotId);
+        return remote != null ? remote : getPlotById(plotId);
     }
 
     @Override

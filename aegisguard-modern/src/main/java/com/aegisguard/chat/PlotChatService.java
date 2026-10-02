@@ -243,8 +243,10 @@ public final class PlotChatService {
             return SendResult.NOT_MEMBER;
         }
         String line = formatAlliance(speaker, alliance, message);
-        return broadcast(speaker, line, alliance.getMemberIds(),
+        SendResult result = broadcast(speaker, line, alliance.getMemberIds(),
                 "alliance_chat_no_listeners", "&eNobody else in your alliance is online.");
+        relay("ALLIANCE", allianceLabel(alliance), speaker, alliance.getMemberIds(), message);
+        return result;
     }
 
     public SendResult sendGroup(Player speaker, String rawMessage) {
@@ -264,8 +266,10 @@ public final class PlotChatService {
             return SendResult.NOT_MEMBER;
         }
         String line = formatGroup(speaker, group, message);
-        return broadcast(speaker, line, group.getMemberIds(),
+        SendResult result = broadcast(speaker, line, group.getMemberIds(),
                 "group_chat_no_listeners", "&eNobody else in your group is online.");
+        relay("GROUP", groupLabel(group), speaker, group.getMemberIds(), message);
+        return result;
     }
 
     public SendResult sendStaff(Player speaker, String rawMessage) {
@@ -284,8 +288,10 @@ public final class PlotChatService {
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (canStaffChat(online)) staff.add(online.getUniqueId());
         }
-        return broadcast(speaker, line, staff,
+        SendResult result = broadcast(speaker, line, staff,
                 "staff_chat_no_listeners", "&eNo other staff are online.");
+        relay("STAFF", "Staff", speaker, null, message);
+        return result;
     }
 
     public RenameResult renameAlliance(Player player, String rawTitle) {
@@ -437,6 +443,58 @@ public final class PlotChatService {
         return ChatColor.translateAlternateColorCodes('&', filled);
     }
 
+    /**
+     * Format a network-relayed message using the local viewer's templates.
+     * Channel is ALLIANCE / GROUP / STAFF; {@code label} is the origin-side
+     * alliance/group/staff label carried in the event.
+     */
+    public String formatRelayed(String channel, String label, String senderName, String message, Player viewer) {
+        String template = switch (channel == null ? "" : channel.toUpperCase(Locale.ROOT)) {
+            case "ALLIANCE" -> translate(viewer, "alliance_chat_format",
+                    "&8[&d{ALLIANCE}&8] &f{PLAYER}&7: &f{MESSAGE}");
+            case "GROUP" -> translate(viewer, "group_chat_format",
+                    "&8[&a{GROUP}&8] &f{PLAYER}&7: &f{MESSAGE}");
+            default -> translate(viewer, "staff_chat_format",
+                    "&8[&cStaff&8] &f{PLAYER}&7: &f{MESSAGE}");
+        };
+        String token = switch (channel == null ? "" : channel.toUpperCase(Locale.ROOT)) {
+            case "ALLIANCE" -> "{ALLIANCE}";
+            case "GROUP" -> "{GROUP}";
+            default -> "{STAFF}";
+        };
+        String filled = template
+                .replace(token, label == null ? channel : label)
+                .replace("{PLAYER}", senderName == null ? "?" : senderName)
+                .replace("{MESSAGE}", message == null ? "" : message);
+        if (!filled.contains("{ALLIANCE}") && !filled.contains("{GROUP}") && !filled.contains("{STAFF}")
+                && !channel.equalsIgnoreCase("STAFF")) {
+            // Template didn't carry a label token — prepend the channel label plainly.
+            filled = "&8[&b" + (label == null ? channel : label) + "&8] " + filled;
+        }
+        return ChatColor.translateAlternateColorCodes('&', filled);
+    }
+
+    private void relay(String channel, String label, Player speaker, Set<UUID> members, String message) {
+        try {
+            if (plugin.networkChat() != null) {
+                plugin.networkChat().relay(channel, label, speaker, members, message);
+            }
+        } catch (Throwable ignored) { }
+    }
+
+    /**
+     * Suppress the "nobody else is online" nag when the channel could still be
+     * heard on another backend (networked + relay on + non-PLOT channel).
+     */
+    private boolean relayMayHaveRemoteListeners(Player speaker) {
+        try {
+            return plugin.network() != null && plugin.network().isNetworked()
+                    && activeChannel(speaker.getUniqueId()) != Channel.PLOT;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     public static boolean isFrequencyMember(Plot plot, UUID playerId) {
         if (plot == null || playerId == null) return false;
         if (plot.isBanned(playerId)) return false;
@@ -473,7 +531,7 @@ public final class PlotChatService {
             plugin.runMain(target, () -> target.sendMessage(line));
             if (!target.getUniqueId().equals(speaker.getUniqueId())) others++;
         }
-        if (others == 0) {
+        if (others == 0 && !relayMayHaveRemoteListeners(speaker)) {
             plugin.runMain(speaker, () -> speaker.sendMessage(color(translate(speaker, emptyKey, emptyFallback))));
         }
         return others == 0 ? SendResult.NO_LISTENERS : SendResult.SENT;

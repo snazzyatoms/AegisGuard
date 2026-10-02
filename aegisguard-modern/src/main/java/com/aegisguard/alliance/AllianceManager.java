@@ -65,6 +65,60 @@ public class AllianceManager {
         return List.copyOf(alliancesById.values());
     }
 
+    public Collection<Alliance> alliances() {
+        return all();
+    }
+
+    /**
+     * Network (BungeeCord) merge: the shared roster is authoritative when
+     * networking is enabled. Creates unknown alliances, replaces the member
+     * list with the network roster, and adopts the network meta (name, leader,
+     * chat title) so every backend resolves the same channel.
+     */
+    public void mergeNetworkAlliance(UUID id, String name, UUID leader, String chatTitle,
+                                     long createdAt, java.util.Set<UUID> members) {
+        if (id == null) return;
+        Alliance alliance = alliancesById.get(id);
+        if (alliance == null) {
+            // Alliance requires a non-null leader — fall back to the first
+            // network member rather than crash on a leaderless row.
+            UUID effectiveLeader = leader;
+            if (effectiveLeader == null && members != null) {
+                effectiveLeader = members.stream().filter(java.util.Objects::nonNull).findFirst().orElse(null);
+            }
+            if (effectiveLeader == null) return; // unusable row
+            alliance = new Alliance(id, name == null ? "Alliance" : name,
+                    effectiveLeader, createdAt <= 0 ? System.currentTimeMillis() : createdAt);
+            alliancesById.put(id, alliance);
+            dirty = true;
+        }
+        if (name != null && !name.isBlank()) alliance.setName(name);
+        if (chatTitle != null) alliance.setChatTitle(chatTitle);
+
+        // Replace roster with the network view: stale local members (kicked on
+        // another backend while we were away) drop out instead of resurrecting.
+        for (UUID existing : new java.util.ArrayList<>(alliance.getMemberIds())) {
+            if (members == null || !members.contains(existing)) {
+                alliance.removeMember(existing);
+                playerToAlliance.remove(existing);
+            }
+        }
+        if (members != null) {
+            for (UUID member : members) {
+                if (member == null) continue;
+                if (!alliance.isMember(member)) {
+                    alliance.addMember(member, createdAt);
+                    dirty = true;
+                }
+                playerToAlliance.put(member, id);
+            }
+        }
+        if (leader != null) {
+            if (!alliance.isMember(leader)) alliance.addMember(leader, alliance.getCreatedAt());
+            playerToAlliance.put(leader, id);
+        }
+    }
+
     public Alliance get(UUID id) {
         return id == null ? null : alliancesById.get(id);
     }
@@ -203,6 +257,11 @@ public class AllianceManager {
             playerToAlliance.remove(member);
         }
         alliancesById.remove(alliance.getId());
+        try {
+            if (plugin.networkSocial() != null) {
+                plugin.networkSocial().deleteAlliance(alliance.getId());
+            }
+        } catch (Throwable ignored) { }
         dirty = true;
         saveAsync();
         return null;
@@ -313,6 +372,13 @@ public class AllianceManager {
                     out.set(base + ".invites." + entry.getKey(), entry.getValue());
                 }
             }
+            try {
+                if (plugin.networkSocial() != null) {
+                    for (Alliance alliance : alliancesById.values()) {
+                        plugin.networkSocial().pushAlliance(alliance);
+                    }
+                }
+            } catch (Throwable ignored) { }
             try {
                 out.save(file);
                 dirty = false;

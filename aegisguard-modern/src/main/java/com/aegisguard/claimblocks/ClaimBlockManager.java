@@ -17,6 +17,11 @@ public class ClaimBlockManager {
 
     private final Map<UUID, ClaimBlockData> cache = new ConcurrentHashMap<>();
 
+    /** Live view of every player id tracked by the claim-block ledger (network sync). */
+    public List<UUID> cachedPlayerIds() {
+        return new ArrayList<>(cache.keySet());
+    }
+
     private final File file;
     private FileConfiguration data;
 
@@ -557,6 +562,16 @@ public class ClaimBlockManager {
                 // ✅ NEW (v1.2.5): Persist sell-lock lots
                 data.set(path + ".sell_lock_lots", cbd.serializeLots());
             }
+
+            // Network (BungeeCord): mirror balances into the shared player-data
+            // row when networking is on. push() dedupes unchanged blobs.
+            try {
+                if (plugin.networkPlayerData() != null) {
+                    for (UUID owner : snap.keySet()) {
+                        plugin.networkPlayerData().push(owner);
+                    }
+                }
+            } catch (Throwable ignored) { }
 
             try { data.save(file); }
             catch (IOException e) {

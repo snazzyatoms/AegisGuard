@@ -42,7 +42,8 @@ public final class BeaconStore {
                     " alliance_flag BOOLEAN, public_access BOOLEAN, staff_only BOOLEAN," +
                     " require_confirm BOOLEAN, allow_combat BOOLEAN," +
                     " vault_cost DOUBLE, claim_block_cost BIGINT," +
-                    " extra_cooldown INT, created_at BIGINT" +
+                    " extra_cooldown INT, created_at BIGINT," +
+                    " server VARCHAR(64)" +
                     " )";
 
     private final AegisGuard plugin;
@@ -242,14 +243,52 @@ public final class BeaconStore {
         return sql.borrowBeaconConnection();
     }
 
+    /**
+     * This backend's network.server_name when networking is enabled, else null —
+     * mirrors SQLDataStore#configuredNetworkServerName for beacon row tagging.
+     */
+    private String networkServerName() {
+        try {
+            if (!plugin.getConfig().getBoolean("network.enabled", false)) return null;
+            String name = plugin.getConfig().getString("network.server_name", "");
+            return (name == null || name.isBlank()) ? null : name.trim();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private void ensureServerColumn(Statement s) throws Exception {
+        s.execute("ALTER TABLE aegis_teleport_beacons ADD COLUMN server VARCHAR(64)");
+    }
+
     private void loadSqlFallback() {
         try (Connection conn = sqlConnection()) {
             if (conn == null) return;
             try (Statement create = conn.createStatement()) {
                 create.execute(CREATE_TABLE);
             }
-            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_teleport_beacons");
-                 ResultSet rs = ps.executeQuery()) {
+            // Older rows have no server column — add it, then let this backend
+            // claim untagged rows exactly like aegis_plots does.
+            try (Statement alter = conn.createStatement()) {
+                ensureServerColumn(alter);
+            } catch (Exception ignored) { /* column already exists */ }
+            String local = networkServerName();
+            if (local != null) {
+                try (PreparedStatement claim = conn.prepareStatement(
+                        "UPDATE aegis_teleport_beacons SET server = ? WHERE server IS NULL OR server = ''")) {
+                    claim.setString(1, local);
+                    claim.executeUpdate();
+                }
+            }
+            PreparedStatement ps;
+            if (local != null) {
+                ps = conn.prepareStatement(
+                        "SELECT * FROM aegis_teleport_beacons WHERE server = ? OR server IS NULL OR server = ''");
+                ps.setString(1, local);
+            } else {
+                ps = conn.prepareStatement("SELECT * FROM aegis_teleport_beacons");
+            }
+            try (ps; ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     TeleportBeacon beacon = fromSql(rs);
                     if (beacon != null) beacons.put(beacon.getId(), beacon);
@@ -272,14 +311,35 @@ public final class BeaconStore {
                 try (Statement create = conn.createStatement()) {
                     create.execute(CREATE_TABLE);
                 }
-                try (PreparedStatement wipe = conn.prepareStatement("DELETE FROM aegis_teleport_beacons")) {
-                    wipe.executeUpdate();
+                try (Statement alter = conn.createStatement()) {
+                    ensureServerColumn(alter);
+                } catch (Exception ignored) { /* column already exists */ }
+                // Scoped wipe: on a shared DB only this backend's rows are
+                // rewritten — other servers' pads must survive every save.
+                String local = networkServerName();
+                if (local != null) {
+                    // Claim untagged legacy rows for this backend BEFORE wiping —
+                    // otherwise a save would delete rows another backend owns.
+                    try (PreparedStatement claim = conn.prepareStatement(
+                            "UPDATE aegis_teleport_beacons SET server = ? WHERE server IS NULL OR server = ''")) {
+                        claim.setString(1, local);
+                        claim.executeUpdate();
+                    }
+                    try (PreparedStatement wipe = conn.prepareStatement(
+                            "DELETE FROM aegis_teleport_beacons WHERE server = ?")) {
+                        wipe.setString(1, local);
+                        wipe.executeUpdate();
+                    }
+                } else {
+                    try (PreparedStatement wipe = conn.prepareStatement("DELETE FROM aegis_teleport_beacons")) {
+                        wipe.executeUpdate();
+                    }
                 }
                 String insert = "INSERT INTO aegis_teleport_beacons (" +
                         "beacon_id,plot_id,world,x,y,z,yaw,pitch,material,name,purpose,linked_id," +
                         "custom_model_data,enabled,owners,members,trusted,guests,alliance_flag," +
                         "public_access,staff_only,require_confirm,allow_combat,vault_cost," +
-                        "claim_block_cost,extra_cooldown,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                        "claim_block_cost,extra_cooldown,created_at,server) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(insert)) {
                     for (TeleportBeacon beacon : beacons.values()) {
                         bind(ps, beacon);
@@ -328,6 +388,7 @@ public final class BeaconStore {
         ps.setLong(25, beacon.getClaimBlockCost());
         ps.setInt(26, beacon.getExtraCooldownSeconds());
         ps.setLong(27, beacon.getCreatedAt());
+        ps.setString(28, networkServerName());
     }
 
     private TeleportBeacon fromSql(ResultSet rs) throws Exception {

@@ -123,6 +123,7 @@ public class GUIManager {
     private com.aegisguard.arena.ArenaAdminGUI arenaAdminGUI;
     private final com.aegisguard.beacon.BeaconGUI beaconGUI;
     private final TravelHubGUI travelHubGUI;
+    private final NetworkServersGUI networkServersGUI;
     private final com.aegisguard.caravans.CaravanGUI caravanGUI;
     private final com.aegisguard.gatherings.GatheringGUI gatheringGUI;
 
@@ -203,6 +204,7 @@ public class GUIManager {
         this.allianceAccessGUI = new AllianceAccessGUI(plugin);
         this.beaconGUI = new com.aegisguard.beacon.BeaconGUI(plugin);
         this.travelHubGUI = new TravelHubGUI(plugin);
+        this.networkServersGUI = new NetworkServersGUI(plugin);
         this.caravanGUI = new com.aegisguard.caravans.CaravanGUI(plugin);
         this.gatheringGUI = new com.aegisguard.gatherings.GatheringGUI(plugin);
     }
@@ -366,6 +368,8 @@ public class GUIManager {
     public RoutesGUI routes() { return routesGUI; }
 
     public TravelHubGUI travelHub() { return travelHubGUI; }
+
+    public NetworkServersGUI networkServers() { return networkServersGUI; }
 
     public RouteAdminGUI routeAdmin() { return routeAdminGUI; }
 

@@ -101,6 +101,12 @@ public final class BeaconStore {
         }
         dirty = true;
         save();
+        // Pads on OTHER backends may also link here (shared table) — clear
+        // those inbound links so no dangling linked_id survives the network.
+        var net = plugin.network();
+        if (net != null && net.isNetworked() && net.store() != null) {
+            plugin.scheduler().runAsync(() -> net.store().clearInboundBeaconLinks(id));
+        }
         return true;
     }
 

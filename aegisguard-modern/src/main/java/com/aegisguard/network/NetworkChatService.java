@@ -45,8 +45,12 @@ public final class NetworkChatService {
 
     private boolean ready() {
         NetworkService n = net();
-        return n != null && n.isNetworked()
-                && plugin.getConfig().getBoolean("network.chat.relay_channels", true);
+        return n != null && n.isNetworked();
+    }
+
+    /** Channel relay (alliance/group/staff chat) is separately toggleable. */
+    private boolean chatRelayOn() {
+        return ready() && plugin.getConfig().getBoolean("network.chat.relay_channels", true);
     }
 
     public void start() {
@@ -80,7 +84,7 @@ public final class NetworkChatService {
      * delivery, used by staff chat).
      */
     public void relay(String channel, String label, Player speaker, Set<UUID> members, String message) {
-        if (!ready() || speaker == null || message == null || message.isEmpty()) return;
+        if (!chatRelayOn() || speaker == null || message == null || message.isEmpty()) return;
         NetworkService n = net();
         if (n == null) return;
 
@@ -116,10 +120,31 @@ public final class NetworkChatService {
 
     /** Instant-delivery hook for forwarded chat (optional fast path). */
     public void onForwardedChat(Player carrier, DataInputStream in) {
+        if (!chatRelayOn()) return;
         try {
             String payload = in.readUTF();
             deliver(payload);
         } catch (Throwable ignored) { }
+    }
+
+    /**
+     * Admin network broadcast — publishes a {@code broadcast} bus event that
+     * every backend delivers to ALL online players. Deliberately independent
+     * of {@code relay_channels}: it's a staff tool, not a chat channel.
+     */
+    public boolean broadcast(String senderName, String message) {
+        if (!ready() || message == null || message.isBlank()) return false;
+        NetworkService n = net();
+        if (n == null) return false;
+        Map<String, String> fields = new HashMap<>();
+        fields.put("mid", UUID.randomUUID().toString());
+        fields.put("sender", senderName == null ? "Network" : senderName);
+        fields.put("text", message);
+        String payload = encode(fields);
+        plugin.scheduler().runAsync(() -> n.store().publishEvent(n.serverName(), "broadcast", payload));
+        // The poll skips own-origin events — deliver locally ourselves.
+        deliverBroadcast(payload);
+        return true;
     }
 
     // ------------------------------------------------------------------
@@ -141,10 +166,13 @@ public final class NetworkChatService {
             long max = from;
             for (NetworkEvent event : events) {
                 max = Math.max(max, event.id());
-                if (!"chat".equals(event.kind())) continue;
                 String origin = event.originServer();
                 if (origin != null && origin.equalsIgnoreCase(n.serverName())) continue;
-                deliver(event.payload());
+                switch (event.kind()) {
+                    case "chat" -> { if (chatRelayOn()) deliver(event.payload()); }
+                    case "broadcast" -> deliverBroadcast(event.payload());
+                    default -> { }
+                }
             }
             cursor.set(max);
             maybePrune();
@@ -197,6 +225,27 @@ public final class NetworkChatService {
                         ? plugin.plotChat().formatRelayed(ch, lbl, sn, text, target)
                         : "&8[&b" + lbl + "&8] &f" + sn + "&7: &f" + text;
                 target.sendMessage(line);
+            });
+        }
+    }
+
+    /** Deliver a broadcast event to every online player on this backend. */
+    private void deliverBroadcast(String payload) {
+        Map<String, String> fields = decode(payload);
+        String text = fields.get("text");
+        if (text == null || text.isEmpty()) return;
+        String mid = fields.get("mid");
+        if (mid != null && !delivered.add(mid)) return;
+        if (delivered.size() > 1024) delivered.clear();
+        String senderName = fields.get("sender");
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            Player target = online;
+            plugin.runMain(target, () -> {
+                if (!target.isOnline()) return;
+                String line = plugin.gui().tr(target, "network_broadcast",
+                        "&8[&dNetwork&8] &f{TEXT}");
+                target.sendMessage(line.replace("{SENDER}", senderName == null ? "Network" : senderName)
+                        .replace("{TEXT}", text));
             });
         }
     }

@@ -286,6 +286,81 @@ public final class NetworkStore {
     }
 
     // ------------------------------------------------------------------
+    // Remote beacons (cross-server pad links/hops)
+    // ------------------------------------------------------------------
+
+    /** A teleport-pad row read from the shared table, owned by any backend. */
+    public record RemoteBeacon(UUID beaconId, String server, UUID plotId, String world,
+                               double x, double y, double z, float yaw, float pitch,
+                               String name, boolean enabled, boolean publicAccess) { }
+
+    /** Look up a pad row by id in the shared table regardless of owning server. */
+    public RemoteBeacon findBeacon(UUID beaconId) {
+        if (beaconId == null) return null;
+        try (Connection c = conn(); PreparedStatement ps = c.prepareStatement(
+                "SELECT beacon_id, server, plot_id, world, x, y, z, yaw, pitch, name, enabled, public_access " +
+                "FROM aegis_teleport_beacons WHERE beacon_id = ?")) {
+            ps.setString(1, beaconId.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return readRemoteBeacon(rs);
+            }
+        } catch (SQLException e) {
+            log("find beacon", e);
+        }
+        return null;
+    }
+
+    /**
+     * Every pad on OTHER backends that a local pad may link to: enabled and
+     * public_access only — private pads stay link-local.
+     */
+    public List<RemoteBeacon> remotePublicBeacons(String localServer) {
+        List<RemoteBeacon> out = new ArrayList<>();
+        String sql = localServer != null
+                ? "SELECT beacon_id, server, plot_id, world, x, y, z, yaw, pitch, name, enabled, public_access " +
+                  "FROM aegis_teleport_beacons WHERE enabled = 1 AND public_access = 1 AND server <> ?"
+                : "SELECT beacon_id, server, plot_id, world, x, y, z, yaw, pitch, name, enabled, public_access " +
+                  "FROM aegis_teleport_beacons WHERE enabled = 1 AND public_access = 1";
+        try (Connection c = conn(); PreparedStatement ps = c.prepareStatement(sql)) {
+            if (localServer != null) ps.setString(1, localServer);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    RemoteBeacon b = readRemoteBeacon(rs);
+                    if (b != null) out.add(b);
+                }
+            }
+        } catch (SQLException e) {
+            log("remote beacons", e);
+        }
+        return out;
+    }
+
+    /** Clear inbound links to a deleted pad — also pads owned by other backends. */
+    public void clearInboundBeaconLinks(UUID beaconId) {
+        if (beaconId == null) return;
+        try (Connection c = conn(); PreparedStatement ps = c.prepareStatement(
+                "UPDATE aegis_teleport_beacons SET linked_id = NULL WHERE linked_id = ?")) {
+            ps.setString(1, beaconId.toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log("clear inbound beacon links", e);
+        }
+    }
+
+    private RemoteBeacon readRemoteBeacon(ResultSet rs) throws SQLException {
+        return new RemoteBeacon(
+                parseUuid(rs.getString("beacon_id")),
+                rs.getString("server"),
+                parseUuid(rs.getString("plot_id")),
+                rs.getString("world"),
+                rs.getDouble("x"), rs.getDouble("y"), rs.getDouble("z"),
+                rs.getFloat("yaw"), rs.getFloat("pitch"),
+                rs.getString("name"),
+                rs.getBoolean("enabled"),
+                rs.getBoolean("public_access"));
+    }
+
+    // ------------------------------------------------------------------
     // Alliance / group roster sync
     // ------------------------------------------------------------------
 

@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -51,10 +52,16 @@ public final class BeaconGUI {
     public static class LinkHolder extends HubAwareHolder {
         private final UUID beaconId;
         private boolean bothWays;
+        /** Remote public pads offered for cross-server links (id → shared row). */
+        private Map<UUID, com.aegisguard.network.NetworkStore.RemoteBeacon> remote = Map.of();
         LinkHolder(UUID beaconId) { this.beaconId = beaconId; }
         public UUID beaconId() { return beaconId; }
         public boolean bothWays() { return bothWays; }
         public void setBothWays(boolean bothWays) { this.bothWays = bothWays; }
+        public Map<UUID, com.aegisguard.network.NetworkStore.RemoteBeacon> remote() { return remote; }
+        public void setRemote(Map<UUID, com.aegisguard.network.NetworkStore.RemoteBeacon> remote) {
+            this.remote = remote == null ? Map.of() : remote;
+        }
     }
 
     public static class UnbindHolder extends HubAwareHolder {
@@ -67,11 +74,15 @@ public final class BeaconGUI {
         private final UUID originId;
         private final UUID destId;
         private final boolean listingArrival;
+        /** Set when the destination pad lives on another backend. */
+        private com.aegisguard.network.NetworkStore.RemoteBeacon remote;
         ConfirmHolder(UUID originId, UUID destId, boolean listingArrival) {
             this.originId = originId;
             this.destId = destId;
             this.listingArrival = listingArrival;
         }
+        public com.aegisguard.network.NetworkStore.RemoteBeacon remote() { return remote; }
+        public void setRemote(com.aegisguard.network.NetworkStore.RemoteBeacon remote) { this.remote = remote; }
     }
 
     /** Top-level beacon list — every pad the player manages plus reachable public pads. */
@@ -504,6 +515,26 @@ public final class BeaconGUI {
     }
 
     public void openLink(Player player, TeleportBeacon origin, boolean bothWays) {
+        // Remote public pads live in shared SQL — fetch them off the entity
+        // thread, then build the GUI back on it. Non-networked installs skip
+        // straight to the local list.
+        var net = plugin.network();
+        if (net == null || !net.isNetworked() || net.store() == null) {
+            openLinkInventory(player, origin, bothWays, List.of());
+            return;
+        }
+        plugin.scheduler().runAsync(() -> {
+            List<com.aegisguard.network.NetworkStore.RemoteBeacon> remote =
+                    net.store().remotePublicBeacons(net.serverName());
+            plugin.scheduler().runEntity(player,
+                    () -> openLinkInventory(player, origin, bothWays, remote), null);
+        });
+    }
+
+    private void openLinkInventory(Player player, TeleportBeacon origin, boolean bothWays,
+                                   List<com.aegisguard.network.NetworkStore.RemoteBeacon> remotePads) {
+        // Origin may have been unbound while the remote list was loading.
+        if (origin == null || svc().store().get(origin.getId()) == null) return;
         String title = plugin.gui().title(player, "beacon_link_title", "&aLink Beacon");
         LinkHolder linkHolder = withOrigin(new LinkHolder(origin.getId()), player);
         linkHolder.setBothWays(bothWays);
@@ -518,6 +549,22 @@ public final class BeaconGUI {
             ItemStack item = padIcon(player, other);
             plugin.gui().tagAction(item, "dest:" + other.getId());
             inv.setItem(slot++, item);
+        }
+        // Remote pads (other backends, public only) — tagged rdest: so the
+        // click handler knows the destination is a shared row, not local.
+        if (remotePads != null && !remotePads.isEmpty()) {
+            Map<UUID, com.aegisguard.network.NetworkStore.RemoteBeacon> remote = new HashMap<>();
+            for (var rb : remotePads) {
+                if (slot == 17) slot = 19;
+                if (slot == 26) slot = 28;
+                if (slot > 34) break;
+                if (rb == null || rb.beaconId() == null) continue;
+                remote.put(rb.beaconId(), rb);
+                ItemStack item = remotePadIcon(player, rb);
+                plugin.gui().tagAction(item, "rdest:" + rb.beaconId());
+                inv.setItem(slot++, item);
+            }
+            linkHolder.setRemote(remote);
         }
         inv.setItem(45, back(player));
         if (linkHolder.isFromHub()) inv.setItem(47, hubReturn(player));
@@ -646,6 +693,21 @@ public final class BeaconGUI {
             if (event.getSlot() == 45) { openSetup(player, origin); return; }
             if ("close".equals(action) || event.getSlot() == 49) { player.closeInventory(); return; }
             if ("both_ways".equals(action)) { openLink(player, origin, !link.bothWays()); return; }
+            if (action != null && action.startsWith("rdest:")) {
+                UUID destId = parseUuid(action.substring(6));
+                var remote = destId == null ? null : link.remote().get(destId);
+                if (remote == null || !service.linkRemote(player, origin, remote)) {
+                    service.send(player, "beacon_denied", "&cYou are not allowed to link to that beacon.");
+                } else {
+                    // Remote rows are read-only here — link is always one-way.
+                    service.send(player, "beacon_linked_remote",
+                            "&aLinked to &f{NAME}&a on &b{SERVER}&a — one-way link. Stand here to travel.",
+                            Map.of("NAME", remote.name() == null ? "pad" : remote.name(),
+                                    "SERVER", remote.server() == null ? "?" : remote.server()));
+                }
+                openSetup(player, origin);
+                return;
+            }
             if (action != null && action.startsWith("dest:")) {
                 UUID destId = parseUuid(action.substring(5));
                 TeleportBeacon dest = destId == null ? null : service.store().get(destId);
@@ -702,6 +764,15 @@ public final class BeaconGUI {
             if ("go".equals(action) || event.getSlot() == 11) {
                 player.closeInventory();
                 TeleportBeacon origin = confirm.originId == null ? null : service.store().get(confirm.originId);
+                if (confirm.remote() != null) {
+                    // Remote pad hop — needs a valid origin pad (player departed from it).
+                    if (origin == null) {
+                        service.send(player, "beacon_pad_gone", "&cThe destination pad is missing or broken.");
+                        return;
+                    }
+                    service.executeRemoteTrip(player, origin, confirm.remote());
+                    return;
+                }
                 TeleportBeacon dest = service.store().get(confirm.destId);
                 if (dest == null) {
                     service.send(player, "beacon_dest_missing", "&cThe destination plot is gone.");
@@ -868,6 +939,61 @@ public final class BeaconGUI {
                     Map.of("PLOT", plot.getPlotName())));
         }
         return GUIManager.createItem(mat, "&b" + beacon.getName(), lore);
+    }
+
+    /** Icon for a pad hosted by another backend — shows its server badge. */
+    private ItemStack remotePadIcon(Player player, com.aegisguard.network.NetworkStore.RemoteBeacon rb) {
+        List<String> lore = new ArrayList<>();
+        lore.add(plugin.gui().tr(player, "visit_remote_line", "&7Server: &b{SERVER}",
+                Map.of("SERVER", rb.server() == null ? "?" : rb.server())));
+        if (rb.world() != null) {
+            lore.add("&8" + rb.world() + " " + (int) rb.x() + ", " + (int) rb.y() + ", " + (int) rb.z());
+        }
+        lore.add(t(player, "beacon_icon_public", "&aPublic"));
+        lore.add(t(player, "beacon_remote_link_hint", "&7Remote pads link one-way only."));
+        return GUIManager.createItem(Material.ENDER_PEARL, "&b" + (rb.name() == null ? "Remote pad" : rb.name()), lore);
+    }
+
+    /** Confirm screen for a pad on another backend. */
+    public void openRemoteConfirm(Player player, TeleportBeacon origin,
+                                  com.aegisguard.network.NetworkStore.RemoteBeacon remote) {
+        String destName = remote.name() == null ? "Remote pad" : remote.name();
+        String title = plugin.gui().title(player, "beacon_confirm_title", "&eConfirm teleport");
+        ConfirmHolder holder = withOrigin(new ConfirmHolder(
+                origin == null ? null : origin.getId(), remote.beaconId(), false), player);
+        holder.setRemote(remote);
+        Inventory inv = Bukkit.createInventory(holder, 27, title);
+        fillSmall(inv);
+        inv.setItem(13, remotePadIcon(player, remote));
+        List<String> goLore = new ArrayList<>(tl(player, "beacon_confirm_go_lore",
+                List.of("&7You will arrive at the linked pad.")));
+        goLore.add(plugin.gui().tr(player, "visit_remote_line", "&7Server: &b{SERVER}",
+                Map.of("SERVER", remote.server() == null ? "?" : remote.server())));
+        TeleportBeacon billed = origin != null ? origin : null;
+        if (billed != null) {
+            BeaconCharges.TripCost cost = svc().charges().resolve(player, billed);
+            if (!cost.isFree()) {
+                goLore.add(plugin.gui().tr(player, "beacon_confirm_fee",
+                        "&6Fee: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks",
+                        Map.of("VAULT", svc().charges().vaultLabel(cost.vault()),
+                                "BLOCKS", String.valueOf(cost.claimBlocks()))));
+            } else {
+                goLore.add(t(player, "beacon_confirm_free", "&aThis trip is free."));
+            }
+        }
+        ItemStack go = GUIManager.createItem(Material.LIME_STAINED_GLASS_PANE,
+                plugin.gui().tr(player, "beacon_confirm_go", "&aConfirm teleport to &f{NAME}",
+                        Map.of("NAME", destName)),
+                goLore);
+        plugin.gui().tagAction(go, "go");
+        inv.setItem(11, go);
+        ItemStack no = GUIManager.createItem(Material.RED_STAINED_GLASS_PANE,
+                t(player, "beacon_confirm_cancel", "&cCancel"),
+                tl(player, "beacon_confirm_cancel_lore", List.of("&7Stay where you are.")));
+        plugin.gui().tagAction(no, "stop");
+        inv.setItem(15, no);
+        player.openInventory(inv);
+        GUIManager.playClick(player);
     }
 
     /** Same-plot pads first, then other pads this player can manage (cross-claim links). */

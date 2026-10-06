@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1314
+config_schema: 1315
 
 
 # ------------------------------------------------------------------------------
@@ -436,6 +436,25 @@ network:
     # Sync claim-block balances and per-player settings through the shared DB
     # so they follow players across the network.
     enabled: true
+
+  hub:
+    # Designated "hub"/"lobby" backend — its name in the proxy server list.
+    # /ag hub and the Travel Hub's spawn button hop players here. Leave blank
+    # for no dedicated hub (spawn buttons stay local-world).
+    server: ""
+    # Optional exact landing point on the hub backend. When blank the player
+    # lands at that server's world spawn.
+    world: ""
+    x: 0
+    y: 0
+    z: 0
+    # Register top-level /hub and /lobby commands. Turn off if another plugin
+    # already owns those names.
+    register_commands: true
+    # Auto-send brand-new network players to the hub on their first join.
+    # OFF by default — the hub backend must be online for the hop to work.
+    # Requires shared_player_data — its missing row is how "new" is detected.
+    redirect_new_players: false
 
 
 # ==============================================================================

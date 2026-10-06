@@ -161,6 +161,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             }
         }
 
+        if (args[0].equalsIgnoreCase("network") && args.length == 2) {
+            return StringUtil.copyPartialMatches(args[1],
+                    List.of("find", "broadcast"), new ArrayList<>());
+        }
+        if (args[0].equalsIgnoreCase("network") && args.length == 3
+                && args[1].equalsIgnoreCase("find")) {
+            List<String> names = new ArrayList<>();
+            for (Player p : Bukkit.getOnlinePlayers()) names.add(p.getName());
+            return StringUtil.copyPartialMatches(args[2], names, new ArrayList<>());
+        }
+
         if (args[0].equalsIgnoreCase("snapshot") && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("here", "current"), new ArrayList<>());
         }
@@ -986,6 +997,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        String sub = args.length > 1 ? args[1].toLowerCase(java.util.Locale.ROOT) : "";
+        if ("find".equals(sub)) { handleNetworkFind(sender, args); return; }
+        if ("broadcast".equals(sub) || "bc".equals(sub)) { handleNetworkBroadcast(sender, args); return; }
+
         plugin.runGlobalAsync(() -> {
             net.refreshServers();
             var servers = net.servers();
@@ -1019,6 +1034,62 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         });
     }
 
+    /**
+     * /agadmin network find <player> — which backend hosts (or last hosted) a
+     * player, via the {@code last_server} field in their shared data row.
+     */
+    private void handleNetworkFind(CommandSender sender, String[] args) {
+        var net = plugin.network();
+        if (args.length < 3 || args[2].isBlank()) {
+            sendLocalized(sender, "admin_network_find_usage",
+                    "&eUsage: /agadmin network find <player>");
+            return;
+        }
+        String name = args[2];
+        plugin.runGlobalAsync(() -> {
+            org.bukkit.OfflinePlayer target = org.bukkit.Bukkit.getOfflinePlayer(name);
+            java.util.UUID foundId = target == null ? null : target.getUniqueId();
+            String blob = foundId == null ? null : net.store().loadPlayerData(foundId);
+            String lastServer = blob == null || plugin.networkPlayerData() == null
+                    ? null : plugin.networkPlayerData().readField(blob, "last_server");
+            plugin.runMainGlobal(() -> {
+                if (lastServer == null || lastServer.isBlank()) {
+                    sendLocalized(sender, "admin_network_find_unknown",
+                            "&cNo record of &f{PLAYER}&c on this network.",
+                            Map.of("PLAYER", name));
+                    return;
+                }
+                boolean online = net.isServerOnline(lastServer);
+                sendLocalized(sender, "admin_network_find_result",
+                        "&7{PLAYER} &7last seen on &f{SERVER} &7({STATE}&7)",
+                        Map.of("PLAYER", name, "SERVER", lastServer,
+                                "STATE", online ? "&aonline" : "&coffline"));
+            });
+        });
+    }
+
+    /** /agadmin network broadcast <message> — every backend, every player. */
+    private void handleNetworkBroadcast(CommandSender sender, String[] args) {
+        if (sender instanceof Player p
+                && !p.hasPermission("aegis.admin.broadcast") && !plugin.isAdmin(p)) {
+            plugin.msg().send(p, "no_perm");
+            return;
+        }
+        if (args.length < 3) {
+            sendLocalized(sender, "admin_network_broadcast_usage",
+                    "&eUsage: /agadmin network broadcast <message>");
+            return;
+        }
+        String message = String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length));
+        var chat = plugin.networkChat();
+        if (chat == null || !chat.broadcast(sender.getName(), message)) {
+            sendLocalized(sender, "admin_network_broadcast_fail",
+                    "&cCould not publish the broadcast — is networking live?");
+            return;
+        }
+        sendLocalized(sender, "admin_network_broadcast_sent", "&aBroadcast sent to the network.");
+    }
+
     private void sendAdminHelp(Player player) {
         sendLocalized(player, "admin_help_header", "&6AegisGuard Staff Commands");
         sendLocalized(player, "admin_help_menu", "&e/agadmin &7| &e/agadmin menu &8- Staff Command Center");
@@ -1040,7 +1111,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_staffchat", "&e/agadmin staffchat &8- Toggle staff radio");
         sendLocalized(player, "admin_help_plots", "&e/agadmin plots <player> &8- Browse a player's plots");
         sendLocalized(player, "admin_help_inspect", "&e/agadmin inspect [player] &8- Inspect a claim in detail");
-        sendLocalized(player, "admin_help_network", "&e/agadmin network &8- Cross-server (BungeeCord) status");
+        sendLocalized(player, "admin_help_network", "&e/agadmin network [find <p>|broadcast <msg>] &8- Cross-server (BungeeCord)");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
     }
 

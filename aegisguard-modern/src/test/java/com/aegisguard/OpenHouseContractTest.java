@@ -25,14 +25,14 @@ class OpenHouseContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1314, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1315, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("gatherings"));
         Map<String, Object> gatherings = (Map<String, Object>) config.get("gatherings");
         assertEquals(Boolean.TRUE, gatherings.get("enabled"));
         assertEquals(30, ((Number) gatherings.get("default_minutes")).intValue());
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1314"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1315"));
         assertTrue(Files.readString(JAVA.resolve("config/Modules.java")).contains("GATHERINGS"));
     }
 

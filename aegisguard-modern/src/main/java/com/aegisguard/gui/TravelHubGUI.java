@@ -109,6 +109,23 @@ public class TravelHubGUI {
                 tl(player, "travel_hub_home_lore", List.of(
                         "&7Teleport to your plot home."))));
 
+        // Cross-server quick actions (BungeeCord-style networks only)
+        var net = plugin.network();
+        boolean networked = net != null && net.isNetworked();
+        String hubServer = plugin.getConfig().getString("network.hub.server", "");
+        if (networked && hubServer != null && !hubServer.isBlank()) {
+            inv.setItem(21, GUIManager.createItem(Material.TOTEM_OF_UNDYING,
+                    t(player, "travel_hub_network_hub", "&dNetwork Hub"),
+                    tl(player, "travel_hub_network_hub_lore", List.of(
+                            "&7Travel to the network's", "&7hub server."))));
+        }
+        if (networked) {
+            inv.setItem(23, GUIManager.createItem(Material.RECOVERY_COMPASS,
+                    t(player, "travel_hub_servers", "&eNetwork Servers"),
+                    tl(player, "travel_hub_servers_lore", List.of(
+                            "&7Pick a server on the", "&7network to travel to."))));
+        }
+
         inv.setItem(22, GUIManager.createItem(Material.GRASS_BLOCK,
                 t(player, "travel_hub_spawn", "&aServer Spawn"),
                 tl(player, "travel_hub_spawn_lore", List.of(
@@ -165,7 +182,17 @@ public class TravelHubGUI {
                 return;
             }
             case 20 -> { player.closeInventory(); runCommand(player, "home"); return; }
+            case 21 -> { travelToHub(player); return; }
             case 22 -> { travelToSpawn(player); return; }
+            case 23 -> {
+                var net = plugin.network();
+                if (net != null && net.isNetworked()) {
+                    plugin.gui().networkServers().open(player, 0);
+                } else {
+                    plugin.effects().playError(player);
+                }
+                return;
+            }
             case 24 -> { player.closeInventory(); runCommand(player, "stuck"); return; }
             default -> { /* filler or header */ }
         }
@@ -187,6 +214,16 @@ public class TravelHubGUI {
         Location spawn = player.getWorld().getSpawnLocation();
         var result = plugin.safeTravel().travel(player, spawn, SafeTravelService.Kind.SPAWN);
         if (result.isSuccess()) {
+            player.closeInventory();
+        }
+    }
+
+    /** Network Hub button — hop to the hub backend; falls back to world spawn. */
+    private void travelToHub(Player player) {
+        var travel = plugin.networkTravel();
+        if (travel == null || !travel.sendToHub(player)) {
+            travelToSpawn(player);
+        } else {
             player.closeInventory();
         }
     }

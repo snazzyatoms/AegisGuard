@@ -107,7 +107,8 @@ public final class NetworkPlayerDataService {
         plugin.scheduler().runAsync(() -> {
             try {
                 String blob = net().store().loadPlayerData(id);
-                if (blob != null && !blob.isEmpty()) {
+                boolean newToNetwork = blob == null || blob.isEmpty();
+                if (!newToNetwork) {
                     Map<String, String> fields = decode(blob);
                     cache.put(id, new ConcurrentHashMap<>(fields));
                     applyLocal(player, fields);
@@ -115,6 +116,22 @@ public final class NetworkPlayerDataService {
                 // Mark only after the pull resolves — writes before ownership is
                 // proven could overwrite a live row with unloaded defaults.
                 pullReady.add(id);
+                // Record which backend hosts this player — powers admin
+                // "find" lookups through the shared row.
+                set(id, "last_server", net().serverName());
+                // First-network-join hub redirect: no shared row means the
+                // player has never been on any AegisGuard backend. Off by
+                // default; a short delay lets the proxy finish the join
+                // handshake before the Connect message goes out. Loops are
+                // impossible — sendToHub is a no-op on the hub server itself.
+                if (newToNetwork
+                        && plugin.getConfig().getBoolean("network.hub.redirect_new_players", false)) {
+                    plugin.scheduler().runEntityLater(player, () -> {
+                        if (player.isOnline() && plugin.networkTravel() != null) {
+                            plugin.networkTravel().sendToHub(player);
+                        }
+                    }, null, 40L);
+                }
             } catch (Throwable t) {
                 plugin.getLogger().log(Level.FINE, "[NetworkData] pull failed for " + id + ": " + t.getMessage());
             }
@@ -206,6 +223,10 @@ public final class NetworkPlayerDataService {
 
     private void collect(UUID playerId, Map<String, String> fields) {
         try {
+            NetworkService n = net();
+            if (n != null) fields.putIfAbsent("last_server", n.serverName());
+        } catch (Throwable ignored) { }
+        try {
             if (plugin.getClaimBlockManager() != null) {
                 // getCached, not getOrCreate — fabricating an empty ledger here
                 // would write zeros over a live shared row.
@@ -296,6 +317,12 @@ public final class NetworkPlayerDataService {
             out.append(e.getKey()).append('=').append(escape(e.getValue()));
         }
         return out.toString();
+    }
+
+    /** Read one field from a shared-data blob (admin "find" lookups etc.). */
+    public String readField(String blob, String key) {
+        if (blob == null || key == null) return null;
+        return decode(blob).get(key);
     }
 
     private Map<String, String> decode(String blob) {

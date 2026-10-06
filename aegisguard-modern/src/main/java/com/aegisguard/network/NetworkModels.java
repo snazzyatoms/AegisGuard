@@ -48,7 +48,9 @@ public final class NetworkModels {
         public enum ArrivalKind {
             PLOT_SPAWN,
             BEACON_PAD,
-            SERVER_WARP
+            SERVER_WARP,
+            /** Plain server hop — land at the target world's spawn (or stored coords). */
+            WORLD_SPAWN
         }
 
         public boolean isExpired() {

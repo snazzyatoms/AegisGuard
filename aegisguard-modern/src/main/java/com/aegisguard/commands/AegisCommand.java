@@ -48,6 +48,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "group", "alliance", "arena", "beacon", "caravan", "gathering", "gatherings", "openhouse", "chat", "frequency", "staff", "staffchat",
             "discover", "favorite", "activity",
             "transfer", "heir", "succession", "settlements", "roles",
+            // Cross-server (BungeeCord network) travel
+            "hub", "lobby", "servers",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
             // ✅ NEW: cost preview command
@@ -275,6 +277,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "farewell" -> handleWelcomeFarewell(p, args, false);
 
             case "stuck" -> handleStuck(p);
+
+            case "hub", "lobby" -> handleNetworkHub(p);
+
+            case "servers" -> handleNetworkServers(p);
 
             case "rename" -> handleRename(p, args);
 
@@ -1355,6 +1361,41 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         plugin.effects().playTeleport(p);
     }
 
+    /**
+     * /ag hub — hop to the configured network hub backend. When the network is
+     * off, no hub is configured, or the player is already on the hub, this
+     * degrades to the local world spawn so the command is always useful.
+     */
+    private void handleNetworkHub(Player p) {
+        if (!plugin.cfg().isTravelSystemEnabled()) {
+            sendKey(p, "travel_system_disabled", "&cTravel system is disabled.");
+            return;
+        }
+        var netTravel = plugin.networkTravel();
+        if (netTravel != null && netTravel.sendToHub(p)) {
+            p.closeInventory();
+            return;
+        }
+        var result = plugin.safeTravel().travel(p, p.getWorld().getSpawnLocation(),
+                com.aegisguard.travel.SafeTravelService.Kind.SPAWN);
+        if (result.isSuccess()) p.closeInventory();
+    }
+
+    /** Entry point for the dynamic /hub and /lobby CommandMap aliases. */
+    public void hub(Player p) {
+        handleNetworkHub(p);
+    }
+
+    /** /ag servers — the cross-server selector; requires networking. */
+    private void handleNetworkServers(Player p) {
+        var net = plugin.network();
+        if (net == null || !net.isNetworked() || plugin.gui().networkServers() == null) {
+            sendKey(p, "network_disabled", "&cCross-server networking is not enabled here.");
+            return;
+        }
+        plugin.gui().networkServers().open(p, 0);
+    }
+
 // --------------------------------------------------
 // Kick / Ban / Unban
 // --------------------------------------------------
@@ -2045,7 +2086,7 @@ private void handleUnsell(Player p) {
             "economy", List.of("market", "auction", "sell", "unsell", "rent", "unrent", "rental",
                     "claimblocks", "blocks", "giftblocks", "exchange", "settlements", "stall", "shop", "ledger"),
             "travel", List.of("visit", "travel", "home", "spawn", "beacon", "routes", "route",
-                    "stuck", "discover", "favorite", "activity"),
+                    "stuck", "discover", "favorite", "activity", "hub", "lobby", "servers"),
             "social", List.of("chat", "frequency", "staff", "staffchat", "gathering", "gatherings",
                     "openhouse", "notice", "hearth", "caravan", "caravans", "like", "level", "profile"),
             "admin", List.of("admin", "agadmin", "doctor", "inspect", "reload", "refresh",

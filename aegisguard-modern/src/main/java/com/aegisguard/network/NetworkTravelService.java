@@ -92,10 +92,104 @@ public final class NetworkTravelService {
         return true;
     }
 
-    // NOTE: a remote pad's arrival is resolved ON the destination backend via
-    // the plot's own arrival mode — sendToPlot is the only producer needed.
-    // BEACON_PAD arrivals remain consumable (see landOnPad) so a row written
-    // by a different backend/version in the shared table still lands correctly.
+    /**
+     * Plain server hop — hub command, servers picker, join redirect. Writes a
+     * WORLD_SPAWN arrival so the destination lands the player at world spawn
+     * deterministically instead of wherever they last stood there.
+     */
+    public boolean sendToServer(Player player, String targetServer) {
+        if (player == null) return false;
+        return sendToServer(player, targetServer, ArrivalKind.WORLD_SPAWN, null, null,
+                0, 0, 0, player.getLocation().getYaw(), player.getLocation().getPitch());
+    }
+
+    /**
+     * Full form — callers may pin a landing world/coords inside the arrival
+     * (e.g. a configured hub point). Blank world lands at the destination's
+     * default spawn.
+     */
+    private boolean sendToServer(Player player, String targetServer, ArrivalKind kind,
+                                 UUID plotId, String world, double x, double y, double z,
+                                 float yaw, float pitch) {
+        if (!ready() || player == null || targetServer == null || targetServer.isBlank()) return false;
+        if (!net().isServerOnline(targetServer)) {
+            send(player, "visit_fail_server_offline", "&cThat server is currently offline.");
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        long ttl = Math.max(15L, plugin.getConfig().getLong("network.arrival_ttl_seconds", 90L)) * 1000L;
+        NetworkArrival arrival = new NetworkArrival(
+                player.getUniqueId(), targetServer,
+                kind != null ? kind : ArrivalKind.WORLD_SPAWN,
+                plotId, null, world, x, y, z, yaw, pitch,
+                now, now + ttl);
+        plugin.scheduler().runAsync(() -> {
+            net().store().writeArrival(arrival);
+            plugin.scheduler().runEntity(player, () -> {
+                if (!net().sendToServer(player, targetServer)) {
+                    send(player, "visit_fail_server_offline", "&cCould not reach that server.");
+                    return;
+                }
+                send(player, "network_sending_to_server",
+                        "&7Sending you to &b" + serverLabel(targetServer) + "&7...");
+                player.closeInventory();
+            }, null);
+        });
+        return true;
+    }
+
+    /**
+     * Hub hop: send the player to the configured {@code network.hub.server},
+     * landing at the configured hub world/coords or that server's world spawn.
+     * Returns false when networking is off, no hub is configured, or the player
+     * is already on the hub — callers then fall back to local world spawn.
+     */
+    public boolean sendToHub(Player player) {
+        if (!ready() || player == null) return false;
+        String hub = plugin.getConfig().getString("network.hub.server", "");
+        if (hub == null || hub.isBlank()) return false;
+        if (hub.equalsIgnoreCase(net().serverName())) return false;
+        String world = plugin.getConfig().getString("network.hub.world", "");
+        if (world == null || world.isBlank()) world = null;
+        return sendToServer(player, hub, ArrivalKind.WORLD_SPAWN, null, world,
+                plugin.getConfig().getDouble("network.hub.x", 0.0),
+                plugin.getConfig().getDouble("network.hub.y", 0.0),
+                plugin.getConfig().getDouble("network.hub.z", 0.0), 0f, 0f);
+    }
+
+    /**
+     * Remote pad hop: a pad on this backend linked to a pad owned by another
+     * server. The shared row carries coords + owning plot so the destination
+     * can land the player and re-check plot entry rules.
+     */
+    public boolean sendToPad(Player player, NetworkStore.RemoteBeacon pad) {
+        if (!ready() || player == null || pad == null
+                || pad.server() == null || pad.server().isBlank()) return false;
+        if (!net().isServerOnline(pad.server())) {
+            send(player, "visit_fail_server_offline", "&cThat server is currently offline.");
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        long ttl = Math.max(15L, plugin.getConfig().getLong("network.arrival_ttl_seconds", 90L)) * 1000L;
+        NetworkArrival arrival = new NetworkArrival(
+                player.getUniqueId(), pad.server(), ArrivalKind.BEACON_PAD,
+                pad.plotId(), pad.beaconId(), pad.world(),
+                pad.x(), pad.y() + 1.0, pad.z(), pad.yaw(), pad.pitch(),
+                now, now + ttl);
+        plugin.scheduler().runAsync(() -> {
+            net().store().writeArrival(arrival);
+            plugin.scheduler().runEntity(player, () -> {
+                if (!net().sendToServer(player, pad.server())) {
+                    send(player, "visit_fail_server_offline", "&cCould not reach that server.");
+                    return;
+                }
+                send(player, "network_sending_to_server",
+                        "&7Sending you to &b" + serverLabel(pad.server()) + "&7...");
+                player.closeInventory();
+            }, null);
+        });
+        return true;
+    }
 
     // ------------------------------------------------------------------
     // Land side — consume pending arrival on join
@@ -126,6 +220,11 @@ public final class NetworkTravelService {
 
         if (arrival.kind() == ArrivalKind.BEACON_PAD) {
             landOnPad(player, arrival);
+            return;
+        }
+
+        if (arrival.kind() == ArrivalKind.WORLD_SPAWN) {
+            landAtWorldSpawn(player, arrival);
             return;
         }
 
@@ -167,11 +266,66 @@ public final class NetworkTravelService {
         }
     }
 
+    /**
+     * WORLD_SPAWN arrival: land at this backend's designated hub point —
+     * {@code network.hub.world/x/y/z} when configured, else the arrival's
+     * world (or the server's main world) spawn. No plot needed.
+     */
+    private void landAtWorldSpawn(Player player, NetworkArrival arrival) {
+        Location target = null;
+
+        String hubWorld = plugin.getConfig().getString("network.hub.world", "");
+        String hubServer = plugin.getConfig().getString("network.hub.server", "");
+        boolean isHub = hubServer != null && net().serverName() != null
+                && hubServer.equalsIgnoreCase(net().serverName());
+        // y==0 means the coords were never configured — a hub point at bedrock
+        // level is a config mistake, so treat unset/0,0,0 as "use world spawn".
+        if (isHub && hubWorld != null && !hubWorld.isBlank()
+                && plugin.getConfig().getDouble("network.hub.y", 0.0) != 0.0) {
+            org.bukkit.World w = org.bukkit.Bukkit.getWorld(hubWorld);
+            if (w != null) {
+                target = new Location(w,
+                        plugin.getConfig().getDouble("network.hub.x"),
+                        plugin.getConfig().getDouble("network.hub.y"),
+                        plugin.getConfig().getDouble("network.hub.z"));
+            }
+        }
+
+        if (target == null) {
+            org.bukkit.World w = arrival.world() != null && !arrival.world().isBlank()
+                    ? org.bukkit.Bukkit.getWorld(arrival.world())
+                    : null;
+            if (w == null && !org.bukkit.Bukkit.getWorlds().isEmpty()) {
+                w = org.bukkit.Bukkit.getWorlds().get(0);
+            }
+            if (w != null) target = w.getSpawnLocation();
+        }
+
+        if (target == null) return; // no worlds loaded — vanilla spawn stands
+        SafeTravelResult result = plugin.safeTravel().travel(player, target,
+                com.aegisguard.travel.SafeTravelService.Kind.SPAWN);
+        if (result.isSuccess() && plugin.effects() != null) {
+            plugin.effects().playTeleport(player);
+        }
+    }
+
     private void landOnPad(Player player, NetworkArrival arrival) {
         BeaconService beacons = plugin.beacons();
         TeleportBeacon pad = beacons != null && arrival.beaconId() != null
                 ? beacons.store().get(arrival.beaconId()) : null;
         if (pad == null || !pad.isEnabled()) {
+            // Pad gone between link and landing — fall back to the pad coords
+            // recorded in the arrival so the player still lands near it.
+            if (arrival.world() != null) {
+                org.bukkit.World w = org.bukkit.Bukkit.getWorld(arrival.world());
+                if (w != null) {
+                    plugin.safeTravel().travel(player,
+                            new Location(w, arrival.x(), arrival.y(), arrival.z(),
+                                    arrival.yaw(), arrival.pitch()),
+                            com.aegisguard.travel.SafeTravelService.Kind.VISIT);
+                    return;
+                }
+            }
             send(player, "beacon_pad_gone", "&cThe destination pad is missing or broken.");
             return;
         }

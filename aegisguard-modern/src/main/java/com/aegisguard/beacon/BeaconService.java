@@ -215,6 +215,23 @@ public final class BeaconService {
     }
 
     /**
+     * Link a local pad to a pad owned by ANOTHER backend (cross-server hop).
+     * Remote pads are read-only here, so the link is always one-way: only our
+     * origin row's linked_id changes — the remote row is never written by us.
+     * Only public+enabled remote pads may be linked (enforced again at hop
+     * time by the destination backend's own permission checks).
+     */
+    public boolean linkRemote(Player player, TeleportBeacon origin,
+                              com.aegisguard.network.NetworkStore.RemoteBeacon dest) {
+        if (origin == null || dest == null || dest.beaconId() == null) return false;
+        if (dest.beaconId().equals(origin.getId())) return false;
+        if (!dest.enabled() || !dest.publicAccess()) return false;
+        origin.setLinkedBeaconId(dest.beaconId());
+        store.put(origin);
+        return true;
+    }
+
+    /**
      * Links A->B, and when {@code bothWays} is set also tries B->A.
      * The reverse link is only applied when the player manages B and B has no
      * existing route — it never steals a pad's current destination.
@@ -582,6 +599,10 @@ public final class BeaconService {
     public void openPadConfirm(Player player, TeleportBeacon origin) {
         if (player == null || origin == null) return;
         TeleportBeacon dest = origin.getLinkedBeaconId() == null ? null : store.get(origin.getLinkedBeaconId());
+        if (dest == null && origin.getLinkedBeaconId() != null
+                && tryRemotePad(player, origin, origin.getLinkedBeaconId())) {
+            return; // linked pad lives on another backend — resolving async
+        }
         if (dest == null || !dest.isEnabled() || !destinationReady(dest)) {
             send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
             if (plugin.effects() != null) plugin.effects().playError(player);
@@ -606,6 +627,97 @@ public final class BeaconService {
             return;
         }
         executeTrip(player, null, arrival, true);
+    }
+
+    /**
+     * The pad linked from {@code origin} wasn't in the local store — on a
+     * networked install it may live on another backend (shared beacon table).
+     * Resolves it async and continues to confirm/trip, or reports unlinked.
+     */
+    private boolean tryRemotePad(Player player, TeleportBeacon origin, UUID linkedId) {
+        var net = plugin.network();
+        var travel = plugin.networkTravel();
+        if (net == null || !net.isNetworked() || travel == null || net.store() == null) return false;
+        plugin.scheduler().runAsync(() -> {
+            com.aegisguard.network.NetworkStore.RemoteBeacon remote = net.store().findBeacon(linkedId);
+            plugin.scheduler().runEntity(player, () -> {
+                if (remote == null || !remote.enabled() || remote.server() == null
+                        || remote.server().equalsIgnoreCase(net.serverName())) {
+                    send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                    return;
+                }
+                if (!canDepart(player, origin)) {
+                    send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                    return;
+                }
+                if (origin.isRequireConfirm() && plugin.gui() != null && plugin.gui().beacons() != null) {
+                    plugin.gui().beacons().openRemoteConfirm(player, origin, remote);
+                    return;
+                }
+                executeRemoteTrip(player, origin, remote);
+            }, null);
+        });
+        return true;
+    }
+
+    /**
+     * Cross-server pad trip: same gates as a local trip (depart permission,
+     * combat, cooldown, charge) but the teleport leg is a proxy hop — the
+     * destination backend re-validates plot entry + the pad on arrival.
+     */
+    public void executeRemoteTrip(Player player, TeleportBeacon origin,
+                                  com.aegisguard.network.NetworkStore.RemoteBeacon dest) {
+        if (player == null || origin == null || dest == null) return;
+        if (recentlyTraveled(player) || !tripLocks.add(player.getUniqueId())) return;
+        boolean charged = false;
+        try {
+            if (!canDepart(player, origin)) {
+                send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
+                return;
+            }
+            if (!origin.isAllowCombat() && plugin.safeTravel() != null
+                    && plugin.safeTravel().isInCombat(player.getUniqueId())) {
+                send(player, "travel_fail_combat", "&cYou cannot travel while in combat.");
+                return;
+            }
+            int extra = origin.getExtraCooldownSeconds();
+            if (extra > 0) {
+                Long last = lastUseAt.get(player.getUniqueId());
+                if (last != null) {
+                    long wait = (extra * 1000L) - (System.currentTimeMillis() - last);
+                    if (wait > 0) {
+                        send(player, "travel_fail_cooldown",
+                                "&cTravel is cooling down. Try again in &e{SECONDS}&c second(s).",
+                                Map.of("SECONDS", String.valueOf(Math.max(1L, wait / 1000L))));
+                        return;
+                    }
+                }
+            }
+            BeaconCharges.TripCost cost = charges.resolve(player, origin);
+            if (!charges.charge(player, cost)) {
+                send(player, "beacon_cannot_pay", "&cYou cannot afford this beacon trip.");
+                if (plugin.effects() != null) plugin.effects().playError(player);
+                return;
+            }
+            charged = true;
+            var travel = plugin.networkTravel();
+            if (travel == null || !travel.sendToPad(player, dest)) {
+                charges.refund(player, cost);
+                charged = false;
+                send(player, "beacon_travel_failed", "&cTeleport failed. You were not charged.");
+                if (plugin.effects() != null) plugin.effects().playError(player);
+                return;
+            }
+            pruneIfLarge(lastUseAt, 4000L);
+            lastUseAt.put(player.getUniqueId(), System.currentTimeMillis());
+            player.closeInventory();
+        } finally {
+            if (!charged) tripLocks.remove(player.getUniqueId());
+            else plugin.scheduler().runEntityLater(player,
+                    () -> tripLocks.remove(player.getUniqueId()), null, 40L);
+        }
     }
 
     public void executeTrip(Player player, @Nullable TeleportBeacon origin, TeleportBeacon dest, boolean listingArrival) {

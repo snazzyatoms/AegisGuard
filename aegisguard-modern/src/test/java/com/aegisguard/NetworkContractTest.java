@@ -175,4 +175,154 @@ class NetworkContractTest {
         assertTrue(text.contains("server_name"));
         assertTrue(text.contains("mysql") || text.contains("MySQL"));
     }
+
+    // ------------------------------------------------------------------
+    // Hub / server selector / remote pads / broadcast (1.4.0 wave 2)
+    // ------------------------------------------------------------------
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void configDocumentsHubDefaults() throws Exception {
+        Yaml yaml = new Yaml();
+        Map<String, Object> config;
+        try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
+            config = yaml.load(in);
+        }
+        Map<String, Object> network = (Map<String, Object>) config.get("network");
+        Map<String, Object> hub = (Map<String, Object>) network.get("hub");
+        assertTrue(hub != null, "network.hub section must ship in config.yml");
+        assertEquals("", hub.get("server"), "hub.server defaults unset — /hub falls back to spawn");
+        assertTrue(hub.containsKey("world") && hub.containsKey("x")
+                && hub.containsKey("y") && hub.containsKey("z"),
+                "hub landing point keys must exist");
+        assertEquals(Boolean.TRUE, hub.get("register_commands"),
+                "/hub /lobby registration defaults on for networks");
+        assertEquals(Boolean.FALSE, hub.get("redirect_new_players"),
+                "first-join redirect must be OFF by default");
+    }
+
+    @Test
+    void worldSpawnArrivalsAndHubHopExist() throws Exception {
+        String models = read(NETWORK.resolve("NetworkModels.java"));
+        assertTrue(models.contains("WORLD_SPAWN"),
+                "ArrivalKind must carry WORLD_SPAWN for hub/server hops");
+        String travel = read(NETWORK.resolve("NetworkTravelService.java"));
+        assertTrue(travel.contains("public boolean sendToServer(Player player, String targetServer)"));
+        assertTrue(travel.contains("public boolean sendToHub(Player player)"));
+        assertTrue(travel.contains("sendToPad"),
+                "remote pad hops need a sendToPad producer");
+        assertTrue(travel.contains("landAtWorldSpawn"),
+                "WORLD_SPAWN arrivals need a landing handler");
+        // Hub falls back to local spawn when already on the hub backend
+        assertTrue(travel.contains("hub.equalsIgnoreCase(net().serverName())"));
+    }
+
+    @Test
+    void firstJoinRedirectAndLastServerTracking() throws Exception {
+        String data = read(NETWORK.resolve("NetworkPlayerDataService.java"));
+        assertTrue(data.contains("last_server"),
+                "shared rows must record the hosting backend for admin find");
+        assertTrue(data.contains("redirect_new_players"),
+                "first-network-join redirect must be config-gated");
+        assertTrue(data.contains("runEntityLater"),
+                "redirect must be delayed past the join handshake");
+    }
+
+    @Test
+    void serverSelectorGuiIsRegisteredAndDispatched() throws Exception {
+        String gui = read(JAVA.resolve("gui/GUIManager.java"));
+        assertTrue(gui.contains("networkServersGUI"));
+        assertTrue(gui.contains("public NetworkServersGUI networkServers()"));
+        String listener = read(JAVA.resolve("gui/GUIListener.java"));
+        assertTrue(listener.contains("NetworkServersHolder"),
+                "GUIListener must whitelist + dispatch the servers holder");
+        String hub = read(JAVA.resolve("gui/TravelHubGUI.java"));
+        assertTrue(hub.contains("networkServers().open"),
+                "Travel Hub needs a Servers button");
+        assertTrue(hub.contains("sendToHub"),
+                "Travel Hub needs the Network Hub quick action");
+    }
+
+    @Test
+    void remoteBeaconLinksStayPublicAndOneWay() throws Exception {
+        String store = read(NETWORK.resolve("NetworkStore.java"));
+        assertTrue(store.contains("remotePublicBeacons"));
+        assertTrue(store.contains("public_access = 1"),
+                "remote link picker must expose public pads only");
+        assertTrue(store.contains("server <> ?") || store.contains("server <>"),
+                "remote picker must exclude pads on this backend");
+        assertTrue(store.contains("clearInboundBeaconLinks"),
+                "deleting a pad must clear links pointing at it network-wide");
+        String service = read(JAVA.resolve("beacon/BeaconService.java"));
+        assertTrue(service.contains("linkRemote"));
+        assertTrue(service.contains("executeRemoteTrip"));
+        assertTrue(service.contains("tryRemotePad"));
+        String gui = read(JAVA.resolve("beacon/BeaconGUI.java"));
+        assertTrue(gui.contains("rdest:"),
+                "link picker must distinguish remote pads from local");
+        String beaconStore = read(JAVA.resolve("beacon/BeaconStore.java"));
+        assertTrue(beaconStore.contains("clearInboundBeaconLinks"),
+                "local unbind must clear remote inbound links");
+    }
+
+    @Test
+    void adminBroadcastAndFindRideTheEventBus() throws Exception {
+        String chat = read(NETWORK.resolve("NetworkChatService.java"));
+        assertTrue(chat.contains("publishEvent(n.serverName(), \"broadcast\""));
+        assertTrue(chat.contains("deliverBroadcast"),
+                "broadcast events need a delivery path on every backend");
+        assertTrue(chat.contains("case \"broadcast\""));
+        String admin = read(JAVA.resolve("admin/AdminCommand.java"));
+        assertTrue(admin.contains("handleNetworkFind"));
+        assertTrue(admin.contains("handleNetworkBroadcast"));
+        assertTrue(admin.contains("aegis.admin.broadcast"));
+    }
+
+    @Test
+    void dynamicHubCommandsAreConfigGatedAndCleanedUp() throws Exception {
+        String main = read(JAVA.resolve("AegisGuard.java"));
+        assertTrue(main.contains("registerAliasCommand(\"hub\""));
+        assertTrue(main.contains("registerAliasCommand(\"lobby\""));
+        assertTrue(main.contains("getCommandMap()"),
+                "top-level aliases must go through the CommandMap");
+        assertTrue(main.contains("unregisterAliasCommands"),
+                "aliases must be removed on disable so /reload leaves no stale commands");
+        assertTrue(main.contains("network.hub.register_commands"));
+        // /ag hub + /ag servers exist for players either way
+        String cmd = read(JAVA.resolve("commands/AegisCommand.java"));
+        assertTrue(cmd.contains("handleNetworkHub"));
+        assertTrue(cmd.contains("handleNetworkServers"));
+        assertTrue(cmd.contains("\"hub\", \"lobby\", \"servers\""));
+    }
+
+    @Test
+    void newNetworkKeysExistInAllNineLangPacks() throws Exception {
+        Path lang = Path.of("src/main/resources/lang");
+        List<String> guisKeys = List.of(
+                "network_servers_title", "network_server_name", "network_server_self_name",
+                "network_server_online", "network_server_offline", "network_server_players",
+                "network_server_version", "network_server_self_hint", "network_server_click",
+                "network_server_offline_hint", "network_disabled",
+                "travel_hub_network_hub", "travel_hub_network_hub_lore",
+                "travel_hub_servers", "travel_hub_servers_lore", "back_to_hub_lore",
+                "beacon_linked_remote", "beacon_remote_link_hint", "network_broadcast");
+        List<String> systemKeys = List.of(
+                "admin_network_find_usage", "admin_network_find_unknown",
+                "admin_network_find_result", "admin_network_broadcast_usage",
+                "admin_network_broadcast_sent", "admin_network_broadcast_fail");
+        try (var dirs = Files.list(lang)) {
+            for (Path dir : dirs.filter(Files::isDirectory).toList()) {
+                String guis = read(dir.resolve("guis.yml"));
+                for (String key : guisKeys) {
+                    assertTrue(guis.contains(key + ":"),
+                            dir.getFileName() + "/guis.yml missing " + key);
+                }
+                String system = read(dir.resolve("system.yml"));
+                for (String key : systemKeys) {
+                    assertTrue(system.contains(key + ":"),
+                            dir.getFileName() + "/system.yml missing " + key);
+                }
+            }
+        }
+    }
 }

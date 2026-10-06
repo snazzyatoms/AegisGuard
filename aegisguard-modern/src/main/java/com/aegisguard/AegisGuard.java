@@ -440,6 +440,18 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminCmd);
         }
 
+        // Dynamic /hub + /lobby for BungeeCord-style networks — registered only
+        // when networking is live and the config opts in. They fall back to
+        // world spawn when no hub backend is configured, and politely yield to
+        // another plugin that already owns the bare name (CommandMap registers
+        // under the aegisguard: prefix automatically in that case).
+        if (networkService != null && networkService.isNetworked()
+                && getConfig().getBoolean("network.hub.register_commands", true)
+                && playerCommand != null) {
+            registerAliasCommand("hub", "Travel to the network hub");
+            registerAliasCommand("lobby", "Travel to the network hub (lobby)");
+        }
+
         // Load async data (safe)
         runGlobalAsync(() -> {
             loadPersistentState("expansion requests", () -> {
@@ -549,6 +561,46 @@ public class AegisGuard extends JavaPlugin {
         }
 
         console().info("log_enabled", "AegisGuard enabled.");
+    }
+
+    private final java.util.Set<String> dynamicCommands = new java.util.HashSet<>();
+
+    /**
+     * Register a top-level command through the server CommandMap (not plugin.yml)
+     * so /hub and /lobby only exist when the network feature is enabled.
+     */
+    private void registerAliasCommand(String name, String description) {
+        try {
+            org.bukkit.command.CommandMap map = getServer().getCommandMap();
+            org.bukkit.command.Command command = new org.bukkit.command.Command(name) {
+                @Override
+                public boolean execute(org.bukkit.command.CommandSender sender, String label, String[] args) {
+                    if (sender instanceof Player p && playerCommand != null) {
+                        playerCommand.hub(p);
+                    } else {
+                        sender.sendMessage("Only players can use this command.");
+                    }
+                    return true;
+                }
+            };
+            command.setDescription(description);
+            command.setUsage("/" + name);
+            map.register("aegisguard", command);
+            dynamicCommands.add(name);
+            dynamicCommands.add("aegisguard:" + name);
+        } catch (Throwable t) {
+            getLogger().warning("Could not register /" + name + ": " + t.getMessage());
+        }
+    }
+
+    /** Remove CommandMap aliases on disable so /reload leaves no stale commands. */
+    private void unregisterAliasCommands() {
+        if (dynamicCommands.isEmpty()) return;
+        try {
+            var known = getServer().getCommandMap().getKnownCommands();
+            for (String key : dynamicCommands) known.remove(key);
+        } catch (Throwable ignored) { }
+        dynamicCommands.clear();
     }
 
     private void registerSanctuaryExhaustionListener() {
@@ -664,6 +716,7 @@ public class AegisGuard extends JavaPlugin {
             if (networkChatService != null) networkChatService.stop();
             if (networkService != null) networkService.stop();
         } catch (Throwable ignored) { }
+        unregisterAliasCommands();
         if (platformScheduler != null) platformScheduler.shutdown();
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.

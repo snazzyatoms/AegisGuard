@@ -71,8 +71,13 @@ AegisGuard can now link backend servers behind a BungeeCord/Waterfall/Velocity p
 - **Player data follows** — claim-block balances, starter-claim state, language style, and notification preferences travel with the player.
 - **Shared rosters** — alliances and groups merge through shared tables; kicks apply network-wide.
 - **`/agadmin network`** — registry status, per-server online state, and pending arrivals.
+- **Network hub** — `network.hub.server` names a dedicated hub/lobby backend. `/aegis hub` (and optional top-level `/hub`, `/lobby` via `network.hub.register_commands`) hops players there, landing at the configured point or the hub's world spawn. Without a hub configured — or when you're already on it — it falls back to the local world spawn, so the command is never dead.
+- **Server selector** — `/aegis servers` and the Travel Hub's compass button open a live picker over the server registry: online state, player counts, and plugin versions, with click-to-travel hops.
+- **Cross-server beacon links** — the Link picker lists **public** pads from every backend (pearls with a `Server:` badge). Remote links are one-way by design — your pad's `linked_id` points outward, the remote row is never touched, and the destination backend re-checks entry + pad state on landing. Unbinding a pad clears inbound links network-wide.
+- **First-join redirect (opt-in)** — `network.hub.redirect_new_players: true` forwards players brand-new to the network (no shared data row) to the hub shortly after join.
+- **Network broadcast** — `/agadmin network broadcast <message>` reaches every online player on every backend through the event bus; `/agadmin network find <player>` reports which backend last hosted someone (`aegis.admin.broadcast` for the former).
 
-Every network piece is gated and fails closed: YML/SQLite stays single-server, remote plots never enter local protection or upkeep, stale arrivals expire, and `Connect` requests no-op without a proxy. See `NETWORK_SETUP.md` for setup and the one-time row-claim order.
+Every network piece is gated and fails closed: YML/SQLite stays single-server, remote plots never enter local protection or upkeep, remote pads are read-only, stale arrivals expire, and `Connect` requests no-op without a proxy. See `NETWORK_SETUP.md` for setup and the one-time row-claim order.
 
 ### Open House and Roles GUI lock/undo
 

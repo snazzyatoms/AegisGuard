@@ -106,6 +106,7 @@ permissions:
       aegis.admin.hearth: true
       aegis.admin.staffchat: true
       aegis.admin.discord: true
+      aegis.admin.broadcast: true
       aegis.arena.admin: true
       aegis.arena.steward: true
 
@@ -162,6 +163,7 @@ permissions:
       aegis.admin.hearth: true
       aegis.admin.staffchat: true
       aegis.admin.discord: true
+      aegis.admin.broadcast: true
       aegis.admin.alerts: true
       aegis.notify.bypass: true
       aegis.notify.others: true
@@ -175,6 +177,10 @@ permissions:
 
   aegis.admin.discord:
     description: Link, unlink, and inspect Discord account links for players.
+    default: op
+
+  aegis.admin.broadcast:
+    description: Send a network-wide broadcast through the cross-server event bus.
     default: op
 
   aegis.admin.alerts:

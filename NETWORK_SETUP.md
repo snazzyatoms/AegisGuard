@@ -77,6 +77,11 @@ UPDATE aegis_plots SET server = 'survival2' WHERE world = 'world_nether';
 | Chat relay | Alliance, group, and staff channels relay network-wide over the shared event table — no players needed online on either end (toggle: `network.chat.relay_channels`). |
 | Claim blocks | Balances, earned/bought/bonus/spent, starter claims, sell locks, language style, and notification prefs follow players (toggle: `network.shared_player_data.enabled`). |
 | Alliances & groups | Rosters merge through shared tables — kicks on one backend apply everywhere. The network roster wins on boot. |
+| Network hub | `/aegis hub` (+ optional `/hub` `/lobby`) sends players to the configured hub backend — world-spawn or an exact landing point (config: `network.hub.*`). Falls back to local world spawn when unset or when already on the hub. |
+| Server selector | `/aegis servers` or the Travel Hub compass lists every registered backend with live online state, player counts, and versions — click to hop. |
+| Cross-server beacons | Link a local pad to a **public** pad on another backend from the Link picker (pearls with a `Server:` line). Links are one-way only; remote rows are never written by your backend. |
+| First-join redirect | With `network.hub.redirect_new_players: true`, brand-new network players (no shared data row) are forwarded to the hub ~2s after joining. Off by default. |
+| Admin broadcast | `/agadmin network broadcast <message>` publishes to every backend's online players via the event bus (`aegis.admin.broadcast`). `/agadmin network find <player>` reports which backend last hosted a player. |
 
 ## What stays local (by design)
 
@@ -84,8 +89,12 @@ UPDATE aegis_plots SET server = 'survival2' WHERE world = 'world_nether';
 - **Protection indexing** — remote plots never enter local protection,
   upkeep, or claim-limit code paths; each backend owns its rows.
 - **Claim limits** — counted per backend, not pooled.
-- **Beacons** — pads are managed on the owning server; remote plots still
+- **Beacons** — pads are created, edited, and unbound on the owning server
+  only; remote pads appear in the link picker read-only. Remote plots still
   honor beacon-arrival when visitors land (enforced at the destination).
+- **Remote links** — a pad may link outbound to a remote public pad, but
+  remote pads never link back through your backend and never appear in
+  edit/manage screens.
 
 ## Failure behavior
 
@@ -113,4 +122,12 @@ network:
   heartbeat_seconds: 30       # registry liveness write
   offline_after_seconds: 120  # heartbeat staleness → shown offline
   arrival_ttl_seconds: 90     # pending-arrival validity window
+  hub:
+    server: ""                # proxy name of the hub backend ("" = no hub)
+    world: ""                 # optional landing world ("" = hub's spawn world)
+    x: 0
+    y: 0
+    z: 0                      # optional exact landing point when world set
+    register_commands: true   # register /hub and /lobby aliases
+    redirect_new_players: false  # send brand-new network players to the hub
 ```

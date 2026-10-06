@@ -1,18 +1,21 @@
 # ==============================================================================
 # AegisGuard 1.4.0 - Main Configuration
 # ==============================================================================
-# This file is organized from core server setup to advanced gameplay systems.
+# Every section is wrapped in a banner and every key explains what it does.
+# Sections run roughly from core setup (modules, localization, storage,
+# economy) through gameplay systems to staff tools at the end of the file.
 #
 # Recommended setup order:
-# 1. localization   - choose default and fallback languages
-# 2. modules        - optional systems are on by default except wilderness_revert (off; SQL-only)
-# 3. hooks          - enable only the integrations your server actually uses
-# 4. storage        - choose YML or database-backed storage
-# 5. economy        - decide whether claims use Vault, ClaimBlocks, or both
-# 6. claims         - set claim limits, costs, and per-world behavior
-# 7. protections    - review default protection behavior inside plots
-# 8. group_plots    - configure shared groups, treasury, and starter claims
-# 9. upkeep         - on by default; set false if you do not want recurring plot taxes
+#  1. localization   - choose default and fallback languages
+#  2. modules        - optional systems are on by default except wilderness_revert (off; SQL-only)
+#  3. hooks          - enable only the integrations your server actually uses
+#  4. storage        - choose YML file storage or a database backend
+#  5. network        - BungeeCord/Velocity cross-server features (needs shared MySQL/MariaDB)
+#  6. economy        - decide whether claims use Vault, ClaimBlocks, or both
+#  7. claims         - set claim limits, costs, and per-world behavior
+#  8. protections    - review default protection behavior inside plots
+#  9. group_plots    - configure shared groups, treasury, and starter claims
+# 10. upkeep         - on by default; set false if you do not want recurring plot taxes
 #
 # After editing, run /agadmin reload or restart the server.
 #
@@ -53,36 +56,66 @@ prefix: '&8[&bAegisGuard&8]&r '
 # auction, cosmetics, titles, biomes, unstuck, social, first_claim_walkthrough,
 # starter_kit, and arena to false. Leave claiming and protection as they are.
 modules:
+  # Temporary visitor access passes that expire on their own.
   guest_passes: true
+  # Owner/staff panic switch that freezes building on a plot during griefing.
   lockdown: true
+  # Cross-plot friend groups that owners can opt into via Alliance Access toggles.
   alliance_access: true
+  # Per-plot profile page: name, description, category, greeting, noticeboard.
   realm_profiles: true
+  # Two-page onboarding shown once after a player's first claim.
   first_claim_walkthrough: true
+  # First-join wand + quickstart note for brand-new players.
   starter_kit: true
+  # Staff-authored exploration routes with checkpoints and rewards.
   routes: true
+  # Safe Travel: cooldowns, combat gates, and confirmations on teleports.
   travel: true
+  # Public plot listings, categories, featured pins, and visit counts.
   plot_discovery: true
+  # Plot growth requests (admin-approved or instant) plus Horizon endgame ranks.
   expansions: true
+  # Rentable sub-regions inside a plot, independent of full-plot rentals.
   zoning: true
+  # Shared group-owned plots with a treasury and starter-size bonus.
   group_plots: true
+  # Plot level progression with per-level rewards.
   leveling: true
+  # The ClaimBlocks currency: playtime earnings, gifts, and the Vault exchange.
   claim_blocks: true
+  # Vault economy integration for claim costs, fees, and sales.
   economy: true
+  # Plot market listings (buy/sell plots) and the market hub menu.
   market: true
+  # Built-in TradeStalls shops inside market plots.
   market_stalls: true
+  # Full-plot rental contracts between owners and renters.
   rentals: true
+  # Public plot auctions with bidding.
   auction: true
+  # Recurring plot taxes with grace periods and optional auto-unclaim.
   upkeep: true
+  # Merging two perfectly aligned adjacent claims into one.
   claim_merge: true
-  # Claim-data snapshots. Optional WorldEdit/FAWE build copies: snapshots.build_backup (off by default).
+  # Claim-data snapshots for rollback. Optional WorldEdit/FAWE build copies:
+  # snapshots.build_backup (off by default).
   snapshots: true
+  # The staff-only Audit Ledger of high-impact administrative actions.
   audit: true
+  # Cosmetic plot borders and entry effects.
   cosmetics: true
+  # Entry/exit title and action-bar notifications.
   titles: true
+  # Per-plot biome changes.
   biomes: true
+  # The /ag unstuck escape command for players trapped in a claim.
   unstuck: true
+  # Likes and social discovery counters on plots.
   social: true
+  # The durable owner/admin territory activity history.
   territory_activity: true
+  # Cooperative PvE dungeon runs on protected server plots.
   arena: true
   # Off by default. Enable only if the owner wants it AND storage is SQL.
   # YAML storage is a no-op. SQL being on does not turn this on automatically.
@@ -100,58 +133,100 @@ modules:
   gatherings: true
 
 
-# Guardian Succession: co-owners, heirs, transfer cooldown, and inactivity assume.
+# ==============================================================================
+# Guardian Succession
+# ==============================================================================
+# Ownership continuity: named heirs, co-owner promotion, and inactive-owner
+# takeover so plots never become permanently orphaned when an owner vanishes.
 succession:
   enabled: true
+  # Days an owner may stay offline before an heir may assume the plot.
   inactivity_days: 30
+  # Cooldown between ownership transfers to prevent flip-flopping.
   transfer_cooldown_seconds: 3600
+  # Window after a succession during which staff can roll the transfer back.
   rollback_window_seconds: 300
+  # During succession, lock co-owner management powers until the transfer settles.
   auto_lock_co_owners: true
 
-# Caravans & Trade Routes: real-time shipments along public beacon hops.
+
+# ==============================================================================
+# Caravans & Trade Routes
+# ==============================================================================
+# Real-time shipments between public teleport-beacon pads: players pack cargo,
+# dispatch it, and it physically travels the network over time. Random road
+# events (ambush, toll, boon, delay) apply en route.
 caravans:
   enabled: true
+  # How often (ticks) the shipment ticker advances all active caravans.
   tick_interval_ticks: 20
+  # Shipments one player may have in transit at once.
   max_active_per_player: 3
+  # Seconds between dispatches from the same player.
   dispatch_cooldown_seconds: 30
+  # Allowed cargo bounds (items per shipment) and the pre-filled amount.
   min_cargo: 10
   max_cargo: 10000
   default_cargo: 100
+  # Shipping fee as a fraction of declared cargo value.
   fee_rate: 0.05
+  # Floor for the shipping fee so tiny loads still cost something.
   min_fee: 1
+  # Optional insurance: pays out if an ambush event destroys cargo.
   insurance_enabled: true
   insurance_rate: 0.15
+  # Travel speed: milliseconds of transit per block of distance, clamped below.
   ms_per_block: 50
   min_travel_ms: 5000
   max_travel_ms: 600000
+  # Route distances (blocks) that elevate a shipment to medium / high risk.
   risk_medium_distance: 250
   risk_high_distance: 800
+  # Fees and insurance payouts require Vault. Set false to allow blocks-only.
   require_vault: true
+  # When true, destination pads must sit on plots with a trade-ish purpose.
   require_trade_purpose: false
+  # Plot purposes that count as trade destinations when the above is on.
   market_purposes:
     - SHOP
     - MARKET
     - AUCTION
+  # Relative weights when a road event is rolled for a shipment in transit.
   events:
     ambush_weight: 15
     toll_weight: 15
     boon_weight: 10
     delay_weight: 10
+  # Fraction of cargo lost when an ambush event wins.
   ambush_loss_rate: 1.0
+  # Bonus cargo/value granted by a boon event.
   boon_bonus_rate: 0.20
+  # Fraction skimmed as a toll event fee.
   toll_rate: 0.05
+  # Share of shipment value paid to a hired escort player.
   escort_cut_rate: 0.10
+  # Escorts divide ambush loss by this factor.
   escort_ambush_divisor: 2
+  # Delay added to arrival when a delay event wins (milliseconds).
   delay_ms: 15000
+  # Fraction of travel completed before a shipment can no longer be cancelled.
   cancel_progress: 0.25
 
-# Open House: timed Atlas listings and optional visitor Guest Passes.
+
+# ==============================================================================
+# Open House (Gatherings)
+# ==============================================================================
+# Timed public listings: an owner opens their plot to visitors for a set
+# window and the Atlas features it until the timer expires.
 gatherings:
   enabled: true
+  # Pre-filled event length (minutes) and the allowed bounds.
   default_minutes: 30
   min_minutes: 10
   max_minutes: 180
+  # Visitors arriving during the event receive a temporary Guest Pass.
   grant_guest_pass: true
+  # How often (ticks) the listing ticker checks expirations.
   tick_interval_ticks: 100
 
 
@@ -176,23 +251,6 @@ starter_kit:
     # If true, dropping the quickstart note deletes it immediately instead of
     # leaving it on the ground.
     note_disappears_on_drop: true
-
-language_styles:
-  # Keep this aligned with localization.default_language unless you are preserving
-  # an older installation that still references the legacy style selector.
-  default: old_english
-
-  # Languages available to older selectors or compatibility code.
-  available:
-    - old_english
-    - modern_english
-    - spanish_mx
-    - spanish_ar
-    - portuguese_br
-    - french_fr
-    - italian_it
-    - german_de
-    - polish_pl
 
 
 # ==============================================================================
@@ -248,6 +306,29 @@ localization:
   player_styles: {}
 
 
+# ------------------------------------------------------------------------------
+# Legacy style selector (compatibility)
+# ------------------------------------------------------------------------------
+# Older builds and third-party selectors read language_styles.* instead of
+# localization.*. Keep these aligned with the localization defaults above.
+language_styles:
+  # Keep this aligned with localization.default_language unless you are preserving
+  # an older installation that still references the legacy style selector.
+  default: old_english
+
+  # Languages available to older selectors or compatibility code.
+  available:
+    - old_english
+    - modern_english
+    - spanish_mx
+    - spanish_ar
+    - portuguese_br
+    - french_fr
+    - italian_it
+    - german_de
+    - polish_pl
+
+
 # ==============================================================================
 # Chest GUIs and Bedrock (Geyser / Floodgate)
 # ==============================================================================
@@ -270,11 +351,15 @@ gui:
 # only fills missing keys and never overwrites a custom true/false choice.
 hooks:
   dynmap:
+    # Draws plot outlines, owners, and sale/rent markers on a Dynmap web map.
     enabled: false
+    # The Dynmap layer label shown in the map's layer picker.
     layer_name: "AegisGuard Plots"
+    # Minutes between full outline re-syncs to the map.
     sync_interval_minutes: 5
     # Hex color for rental listings; distinct from the yellow sale marker.
     for_rent_color: "009688"
+    # Outline stroke and area fill styling (hex RRGGBB, opacity 0-1, px width).
     style:
       stroke_color: "00FF00"
       stroke_opacity: 0.8
@@ -283,8 +368,11 @@ hooks:
       fill_opacity: 0.35
 
   discord:
+    # Posts selected events to a Discord channel through an incoming webhook.
     enabled: false
+    # Paste a Discord channel webhook URL here. Never share or commit it.
     webhook_url: ""
+    # Which events are posted. Off-by-default events are the noisy/sensitive ones.
     events:
       claim_create: true
       claim_delete: true
@@ -302,24 +390,31 @@ hooks:
     # staff can reference either identity in commands.
     linking:
       enabled: false
+      # Your Discord server's ID and the role granted to linked players.
       guild_id: ""
       linked_role_id: ""
       # Storage backend for links: playerdata (YAML player preferences) or sql.
       storage: "playerdata"
 
   bluemap:
+    # Draws plot outlines on a BlueMap web map.
     enabled: false
+    # The BlueMap marker-set label shown in its layer picker.
     label: "Claims"
 
   pl3xmap:
+    # Draws plot outlines on a Pl3xMap web map.
     enabled: false
 
   protection_compat:
+    # Defers to other protection plugins (WorldGuard, GriefPrevention, etc.)
+    # where their regions overlap AegisGuard claims.
     enabled: false
 
     # EXTERNAL_WINS is the safest mode when multiple protection plugins overlap.
     overlap_policy: EXTERNAL_WINS
     debug_logging: false
+    # Providers checked when enabled. Lower priority number = consulted first.
     plugins:
       worldguard:
         enabled: false
@@ -372,6 +467,8 @@ storage:
   database:
     # SQLite database filename, relative to plugins/AegisGuard/. This value is honored.
     file: "aegisguard.db"
+    # MySQL/MariaDB connection — the server address, port, and schema name.
+    # On a BungeeCord network every backend points at the SAME database.
     host: "localhost"
     port: 3306
     database: "aegisguard"
@@ -379,6 +476,7 @@ storage:
     # credentials into version control or shared config packs.
     username: "root"
     password: "password"
+    # Encrypt the database connection. Requires TLS configured on the DB server.
     useSSL: false
 
 
@@ -465,22 +563,33 @@ network:
 # unless you have a reverse proxy handling TLS and authentication.
 web_dashboard:
   enabled: false
+  # Address the embedded HTTP server binds to. Keep 127.0.0.1 unless a reverse
+  # proxy in front handles TLS and authentication.
   host: "127.0.0.1"
   port: 8080
+  # Bearer token required on every request. Leave empty to keep the API
+  # unreachable even when enabled; set a strong random value before use.
   auth_token: ""
 
 
 # ==============================================================================
 # Currency routing
 # ==============================================================================
-# These decide which economy backend each system prefers when multiple payment
-# methods exist.
+# When a system supports more than one payment method (Vault money or
+# ClaimBlocks), these pick which one it tries first. Supported values: VAULT,
+# CLAIM_BLOCKS. Systems that only take one currency ignore their entry here.
 currencies:
+  # New claim purchases.
   claiming: VAULT
+  # Plot expansion / resize charges.
   resizing: VAULT
+  # Temporary flight skill purchases.
   flight: VAULT
+  # Per-plot biome changes.
   biomes: VAULT
+  # Teleport/beacon trip fees.
   teleport: VAULT
+  # Plot level-up costs.
   leveling: VAULT
 
 
@@ -488,6 +597,8 @@ currencies:
 # Economy and pricing
 # ==============================================================================
 economy:
+  # Master switch for every money-touching feature (claims, flags, markets,
+  # rentals, upgrades). With it off, those systems run free of charge.
   enabled: true
 
   # Dual key: economy.use_vault (legacy flat toggle) is still read by several
@@ -508,9 +619,11 @@ economy:
 
   # Example item-based price hook if you want some systems to consume items.
   item_cost:
+    # Bukkit material name consumed per transaction.
     type: DIAMOND
     amount: 5
 
+  # Per-flag unlock prices charged when an owner enables them on a plot.
   flag_costs:
     fly: 5000.0
     shop-interact: 500.0
@@ -518,6 +631,7 @@ economy:
   # Fallback cost for the separate Frontier Expansion request system.
   expansion_cost_per_block: 10.0
 
+  # Return part of a plot's purchase price when its owner unclaims it.
   refund_on_unclaim: true
   refund_percent: 50.0
 
@@ -552,8 +666,11 @@ claims:
   max_claims_per_player: 2
   # Minimum Chebyshev radius on both axes (a 10×10 plot has radius 5).
   min_radius: 5
+  # Maximum Chebyshev radius per axis (64 = up to a 129×129 plot).
   max_radius: 64
+  # Hard cap on total plot area in blocks, regardless of shape.
   max_area: 16000
+  # How long the wand corner-preview glow stays visible after a selection.
   preview_seconds: 10
 
   # Quick-Claim: one command / one click claims a square of the given radius
@@ -586,6 +703,9 @@ claims:
     allow_visit_teleport: true
 
   # World-specific overrides. Omit a value to inherit the global default.
+  # Per-world keys: allow_claims (claims allowed at all), use_vault (Vault
+  # payments in this world), vault_cost (flat price when fair pricing is off),
+  # max_claims_per_player, max_radius.
   per_world:
     world:
       allow_claims: true
@@ -608,6 +728,8 @@ claims:
 # ClaimBlocks economy
 # ==============================================================================
 claim_blocks:
+  # Master switch for the ClaimBlocks currency: balances, earning, gifting,
+  # and the Vault exchange. Plot spending is governed by the paying system.
   enabled: true
 
   gift:
@@ -616,21 +738,26 @@ claim_blocks:
     # Gifts transfer only currently available blocks; they never reduce claimed land.
     enabled: true
     permission: "aegis.claimblocks.gift"
+    # Total blocks one player may give away per day.
     daily_limit: 5000
+    # Largest single gift.
     max_amount: 1000
 
   # Starting balance for new players.
   starting_blocks: 500
 
   first_claim_limit:
+    # When true, a player's very first claim is free but capped to this area.
     enabled: true
     max_area: 100
 
   earn:
     playtime:
       enabled: true
+      # Payout window and the blocks granted per window.
       interval_minutes: 10
       blocks_per_interval: 50
+      # Message the player when a playtime payout lands.
       notify: true
 
       anti_afk:
@@ -648,6 +775,7 @@ claim_blocks:
         track_combat: true
 
     level_up:
+      # Grant blocks whenever a player's plot levels up.
       enabled: true
       per_level: 600
 
@@ -670,16 +798,20 @@ claim_blocks:
   exchange:
     enabled: true
 
+    # Which preset rates/limits/fees apply: safe_small | balanced_mid |
+    # fast_large | custom (custom reads the values directly above profiles).
     profile: safe_small
 
     # Prevent exchange access when Vault is present but no economy provider exists.
     require_vault_provider: true
 
     sell_requires_permission:
+      # When true, selling blocks requires the permission below.
       enabled: false
       permission: "aegis.claimblocks.sell"
 
     worlds_allowed:
+      # When true, the exchange only works inside the listed worlds.
       enabled: false
       worlds:
         - world
@@ -692,11 +824,14 @@ claim_blocks:
       bypass_limits: "aegis.claimblocks.exchange.bypass"
       bypass_sell_lock: "aegis.claimblocks.selllock.bypass"
 
+    # "custom" profile values — the prices one block costs to buy and earns
+    # when sold.
     rates:
       buy_price_per_block: 10.0
       sell_price_per_block: 6.0
 
     limits:
+      # Seconds between a player's exchange transactions.
       cooldown_seconds: 10
       max_trades_per_hour: 30
 
@@ -704,14 +839,17 @@ claim_blocks:
         min_blocks: 1
         max_blocks_per_trade: 5000
         max_blocks_per_day: 25000
+        # Daily Vault spend cap for buys; 0.0 = unlimited.
         max_money_per_day: 0.0
 
       sell:
         min_blocks: 1
         max_blocks_per_trade: 5000
         max_blocks_per_day: 15000
+        # Daily Vault payout cap for sells; 0.0 = unlimited.
         max_money_per_day: 0.0
 
+    # Skim taken off each side of a trade (percent + flat Vault amount).
     fees:
       buy:
         percent: 2.5
@@ -721,9 +859,13 @@ claim_blocks:
         flat: 0.0
 
     sell_lock:
+      # Blocks bought through the exchange cannot be re-sold for this many
+      # minutes — slows buy-low/sell-high flipping.
       enabled: true
       hold_minutes: 30
+      # EXCHANGE_PURCHASED_ONLY = only exchange-bought blocks are locked.
       scope: EXCHANGE_PURCHASED_ONLY
+      # Cap on simultaneously locked blocks; 0 = no cap.
       max_locked_blocks: 0
 
     audit:
@@ -814,6 +956,8 @@ claim_blocks:
 # Group plots
 # ==============================================================================
 group_plots:
+  # Shared plots owned by a named group with a pooled treasury. Members claim
+  # together and pay upkeep from the group balance.
   enabled: true
 
   # Invites are intentionally local so players cannot mass-invite random users.
@@ -1050,6 +1194,7 @@ lockdown:
 # Expansion requests
 # ==============================================================================
 expansions:
+  # Frontier Expansion requests: owners pay to grow a plot beyond its borders.
   enabled: true
 
   # QUEUE = admin approval required
@@ -1057,10 +1202,12 @@ expansions:
   approval_mode: QUEUE
 
   snapshots:
+    # Auto-capture a claim-data snapshot before each approved expansion.
     enabled: true
 
   audit:
     enabled: true
+    # Keep request outcomes visible in memory for this many minutes.
     keep_recent_minutes: 60
     include_in_admin_gui_history: true
     save_to_file: true
@@ -1068,6 +1215,7 @@ expansions:
     max_entries: 250
 
   approval:
+    # Ping online staff when a new request enters the queue.
     notify_admins: true
     notify_permission: "aegis.admin"
 
@@ -1091,9 +1239,12 @@ expansions:
       max_cost: 0.0
       max_added_blocks: 0
 
+  # Vault price per newly claimed block, multiplied each expansion.
   cost_per_block: 10.0
   cost_multiplier: 1.1
+  # Absolute maximum Chebyshev radius a plot may ever reach through expansion.
   max_radius_global: 200
+  # Required empty space (blocks) between the grown border and other claims.
   buffer_zone: 5
 
   # Deliberately slow endgame progression after completing Plot Level 30.
@@ -1200,10 +1351,15 @@ full_plot_renting:
     - ANIMALS
     - VEHICLES
 
+# ==============================================================================
+# Plot discovery (Atlas / Discover)
+# ==============================================================================
 # Public territory discovery, favorites, featured destinations, and visit counts.
 plot_discovery:
   enabled: true
+  # Safety cap on how many public plots a single browse page may return.
   max_results: 500
+  # Categories owners may tag their plot with; shown as filter chips in GUIs.
   categories:
     - build
     - shop
@@ -1212,10 +1368,16 @@ plot_discovery:
     - event
     - other
 
-# Durable owner/admin history. Oldest entries are removed after this global cap.
+# ==============================================================================
+# Territory activity ledger
+# ==============================================================================
+# Durable owner/admin history of territory events. Oldest entries are removed
+# after this global cap.
 territory_activity:
   enabled: true
+  # Global entry cap across all plots before oldest entries are pruned.
   max_entries: 5000
+  # Also log every visit (noisy on busy servers; off by default).
   log_visits: false
 
 # Realm Profiles & Noticeboards (1.3.0+, Milestone 4). Gives every plot's existing name,
@@ -1223,9 +1385,12 @@ territory_activity:
 # short owner-moderated noticeboard for rules, event details, shop info, or announcements.
 # Never replaces an existing plot name, description, or greeting automatically.
 realm_profiles:
+  # The per-plot profile page: display name, description, category, greeting,
+  # and the noticeboard below.
   enabled: true
 
   noticeboard:
+    # Owner-moderated short notes shown to visitors (rules, shop info, events).
     enabled: true
     # Maximum number of notices kept per plot. Oldest notice is dropped once a new one
     # would exceed this limit.
@@ -1242,6 +1407,7 @@ realm_profiles:
 # automatically once shown, and is always reachable again via /ag guide or the "Replay
 # Walkthrough" button in Settings.
 first_claim_walkthrough:
+  # Shows the once-ever onboarding guide a few seconds after a first claim.
   enabled: true
 
 
@@ -1253,15 +1419,20 @@ first_claim_walkthrough:
 # walking near checkpoints. Never forces teleports or alters claim boundaries.
 routes:
   enabled: true
+  # Distance (blocks) within which a checkpoint counts as reached.
   default_checkpoint_radius: 4.0
   # When true, the route detail screen offers an optional teleport to the next
   # checkpoint. Discovery itself never requires teleporting.
   allow_optional_teleport: false
   guidance:
+    # Direction helpers while a player follows a route.
     enabled: true
+    # Particle trail toward the next checkpoint.
     particles: true
+    # Action-bar distance/direction readout.
     action_bar: true
   rewards:
+    # Small completion rewards when a player finishes a route.
     enabled: true
 
 
@@ -1323,8 +1494,11 @@ teleport_beacons:
   # When true, travelers may pick classic vs beacon on plots whose owner allowed it.
   # force_public_arrival always wins. Beacon still requires a public pad.
   allow_traveler_override: true
+  # Pads a single player plot may hold.
   max_per_plot: 3
+  # Higher cap for staff-owned server zones (hubs, spawn).
   max_per_server_zone: 8
+  # How close (blocks) a player must stand to a pad for it to trigger.
   stand_radius: 1.6
   # How long (seconds) a player must linger near a linked pad before the stand
   # confirm opens, and the minimum gap between repeat prompts. Raised from the
@@ -1383,17 +1557,30 @@ teleport_beacons:
 # Frequency remains a 2.0 network feature.
 plot_chat:
   enabled: true
+  # Maximum characters per Frequency message.
   max_message_length: 256
 
+# ==============================================================================
+# Alliance chat
+# ==============================================================================
 # Same-server alliance member radio. Reuses plot_chat.max_message_length.
+# Cross-server relay is governed by network.chat.relay_channels.
 alliance_chat:
   enabled: true
 
+# ==============================================================================
+# Group chat
+# ==============================================================================
 # Same-server group member radio. Reuses plot_chat.max_message_length.
+# Cross-server relay is governed by network.chat.relay_channels.
 group_chat:
   enabled: true
 
+# ==============================================================================
+# Staff chat
+# ==============================================================================
 # Same-server staff radio. Reuses plot_chat.max_message_length.
+# Cross-server relay is governed by network.chat.relay_channels.
 staff_chat:
   enabled: true
 
@@ -1407,9 +1594,13 @@ staff_chat:
 # entities are spawned, so Paper and Folia stay compatible.
 visual_presence:
   enabled: true
+  # Big title + owner name shown when a player walks into a plot.
   holographic_entry: true
+  # On-market plots show a floating "For Sale" label in chat/title context.
   for_sale_labels: true
+  # The wand/scepter shows which direction the claim border lies.
   smart_borders: true
+  # Distance (blocks) border direction labels remain visible around the player.
   border_label_distance: 3
 
 
@@ -1420,10 +1611,14 @@ visual_presence:
 # to the player holding the wand, producing a solid visible border without
 # particles or real block edits. The fallback is per-player particles.
 visualization:
+  # Particle used for claim borders when ProtocolLib is absent or disabled.
   particle: FLAME
   protocol_lib:
+    # Send fake block-change packets so the wand holder sees a solid border.
     enabled: true
+    # Fake-block material drawn along the border.
     material: LIME_STAINED_GLASS
+    # Vertical offset applied to the fake border blocks.
     y_offset: 0
 
 
@@ -1434,7 +1629,9 @@ visualization:
 # and administration. Membership alone grants nothing. Each plot must opt in
 # via its six Alliance Access toggles (all default OFF).
 alliance_access:
+  # Friend networks between players; plots opt in via six per-plot toggles.
   enabled: true
+  # Maximum members one alliance may hold.
   max_members: 20
 
   # Pending invites older than this many minutes are ignored and pruned.
@@ -1457,6 +1654,8 @@ alliance_access:
 # Local Market Hub
 # ==============================================================================
 market_hub:
+  # The per-plot market menu: rentals, shop access, and external shop bridges
+  # reachable from one button when standing in a plot.
   enabled: true
 
   # When true, the main Market button opens the plot's local market hub first
@@ -1554,11 +1753,14 @@ market_stalls:
   allow_zone_renters: true
 
   currencies:
+    # Payment methods stalls may price items in.
     vault_enabled: true
     claim_blocks_enabled: true
+    # Pre-selected currency on new stall listings.
     default: VAULT
 
   pricing:
+    # Items sold per purchase click by default, and the largest bundle allowed.
     default_bundle_size: 1
     max_bundle_size: 64
 
@@ -1569,10 +1771,13 @@ market_stalls:
 leveling:
   enabled: true
 
+  # Vault cost for level 2; each further level multiplies the previous price.
   base_cost: 1000.0
   cost_multiplier: 1.5
+  # Level cap. Level 30 unlocks Horizon renown progression (expansions.horizons).
   max_level: 30
 
+  # When true, leveling also grows the plot borders by expansion_amount.
   expand_plot_on_levelup: false
   expansion_amount: 5
 
@@ -1697,8 +1902,11 @@ leveling:
 # Plot upkeep is on by default; set false to disable recurring plot taxes.
 upkeep:
   enabled: true
+  # How often the upkeep collector runs.
   check_interval_hours: 24
+  # Vault amount charged per plot per collection.
   cost_per_plot: 50.0
+  # Days a plot may miss payments before penalties apply.
   grace_period_days: 7
 
   # If true, plots can be unclaimed automatically after failed payments and grace.
@@ -1718,8 +1926,11 @@ upkeep:
 # (Independent of upkeep.enabled.)
 auction:
   enabled: true
+  # Default auction length (days) when a plot is listed.
   duration_days: 3
+  # Minimum raise each new bid must add.
   min_bid_increase: 50.0
+  # Share of the winning bid paid to the seller; the rest is the house fee.
   owner_cut_percent: 50
 
 
@@ -1730,10 +1941,13 @@ wilderness_revert:
   # Disabled by default. Enable only if the owner wants it AND storage is SQL.
   # YAML storage does nothing (no-op). SQL being on does not enable this.
   enabled: false
+  # Age (hours) a wilderness block-change log entry must reach before the
+  # original block is restored.
   revert_after_hours: 2
   # Primary scheduler key for 1.2.7+. Older installs may still use
   # check_interval_minutes and will continue to work.
   interval_seconds: 600
+  # Blocks restored per tick batch — keeps lag off the main thread.
   revert_batch_size: 500
 
 
@@ -1744,12 +1958,19 @@ wilderness_revert:
 protections:
   pvp_protection: true     # Prevent PvP inside plots by default.
   no_mobs_in_claims: true  # Suppress hostile mob presence in claims where supported.
+  # Chests, barrels, and other storage locked to trusted roles.
   container_protection: true
+  # Taming, damaging, and interacting with owned pets restricted.
   pets_protection: true
+  # Item frames, armor stands, paintings, and other entities protected.
   entities_protection: true
+  # Crop trampling and farmland damage restricted.
   farm_protection: true
+  # TNT and other explosions cannot damage blocks inside claims.
   tnt-damage: true
+  # Fire cannot spread into or inside claims.
   fire-spread: true
+  # Pistons cannot push or pull blocks across claim borders.
   piston-use: true
   # Block water/lava/dragon-egg flow across claim borders (BlockFromTo).
   # Also blocks dispensers injecting liquid sources into claims, and seeds the
@@ -1806,7 +2027,11 @@ protections:
 # voicechat plugin is installed. Isolated groups match Hearth rooms.
 # ==============================================================================
 hearth:
+  # When true, links into Simple Voice Chat so players in the same Hearth room
+  # are grouped into a shared proximity channel.
   voicechat: true
+  # Also move players out of any voice group they joined themselves. Off by
+  # default — leave false to let players keep manual voice groups.
   voicechat_override_player_groups: false
 
 # ==============================================================================
@@ -1815,7 +2040,9 @@ hearth:
 # ==============================================================================
 flight_skill:
   enabled: true
+  # Staff with aegis.admin.fly fly indefinitely without consuming a grant.
   staff_always: true
+  # Seconds granted when no duration is specified, and the maximum allowed.
   default_seconds: 300
   max_seconds: 3600
 
@@ -1823,7 +2050,9 @@ flight_skill:
 # Staff season overlay for Atlas Discover and Routes
 # ==============================================================================
 seasons:
+  # Seasonal staff overlay: a themed title plus featured plots and routes.
   enabled: true
+  # Featured pins shown at once in Atlas Discover and the Routes list.
   max_featured_plots: 5
   max_featured_routes: 5
 
@@ -1832,38 +2061,38 @@ seasons:
 # Active mob barrier
 # ==============================================================================
 mob_barrier:
-    enabled: true
-    # Paper, Purpur, and Folia block hostile movement at protected borders.
-    # Spigot uses targeting protection plus the periodic cleanup fallback.
-    block_boundary_entry: true
-    # Hostiles already inside protected land cannot target or damage players
-    # and are removed after this grace period if they remain inside.
-    despawn_grace_seconds: 5
-    # Primary scheduler key for 1.2.7+. Older installs may still use
-    # check_interval_ticks and will continue to work.
-    interval_seconds: 3
-    # Extra cleanup pass while a player is standing inside a mob-protected plot.
-    player_cleanup_interval_seconds: 2
-    # Keep particle volume low by default for busy servers.
-    remove_particles: true
-    low_particle_mode: true
+  enabled: true
+  # Paper, Purpur, and Folia block hostile movement at protected borders.
+  # Spigot uses targeting protection plus the periodic cleanup fallback.
+  block_boundary_entry: true
+  # Hostiles already inside protected land cannot target or damage players
+  # and are removed after this grace period if they remain inside.
+  despawn_grace_seconds: 5
+  # Primary scheduler key for 1.2.7+. Older installs may still use
+  # check_interval_ticks and will continue to work.
+  interval_seconds: 3
+  # Extra cleanup pass while a player is standing inside a mob-protected plot.
+  player_cleanup_interval_seconds: 2
+  # Keep particle volume low by default for busy servers.
+  remove_particles: true
+  low_particle_mode: true
 
-    # Categories affected by border/cleanup protection. Hostiles stay on by default.
-    protect_hostile: true
-    protect_passive: false
-    protect_boss: false
+  # Categories affected by border/cleanup protection. Hostiles stay on by default.
+  protect_hostile: true
+  protect_passive: false
+  protect_boss: false
 
-    # Optional per-world overrides. Omit a world to inherit the global values.
-    # Example:
-    # per_world:
-    #   world_nether:
-    #     enabled: false
-    #   world:
-    #     protect_passive: true
-    per_world: {}
+  # Optional per-world overrides. Omit a world to inherit the global values.
+  # Example:
+  # per_world:
+  #   world_nether:
+  #     enabled: false
+  #   world:
+  #     protect_passive: true
+  per_world: {}
 
-    # Staff diagnostics: when true, /agadmin health reports why mob protection applied.
-    staff_diagnostics: true
+  # Staff diagnostics: when true, /agadmin health reports why mob protection applied.
+  staff_diagnostics: true
 
 
 # ==============================================================================
@@ -1872,6 +2101,8 @@ mob_barrier:
 cosmetics:
   enabled: true
 
+  # Purchasable border particle styles. Each entry: material (GUI icon),
+  # particle (Bukkit particle name), display-name, price (Vault).
   border_particles:
     flame:
       material: BLAZE_POWDER
@@ -1894,6 +2125,8 @@ cosmetics:
       display-name: "&dEnchantment Border"
       price: 3000.0
 
+  # Cosmetic effects played when a player enters a plot. Each entry:
+  # sound (Bukkit sound name) + particle (Bukkit particle name).
   entry_effects:
     lightning:
       sound: ENTITY_LIGHTNING_BOLT_THUNDER
@@ -1938,7 +2171,9 @@ titles:
 # ==============================================================================
 unstuck:
   enabled: true
+  # Seconds the player must stand still before the escape teleport fires.
   warmup_seconds: 5
+  # Seconds between /ag unstuck uses.
   cooldown_seconds: 300
 
 
@@ -1947,7 +2182,9 @@ unstuck:
 # ==============================================================================
 biomes:
   enabled: true
+  # Vault price per biome change.
   cost_per_change: 2000.0
+  # Biome names owners may pick from (Bukkit biome enum names).
   allowed:
     - PLAINS
     - FOREST
@@ -1966,7 +2203,9 @@ biomes:
 # Social features
 # ==============================================================================
 social:
+  # Let visitors "like" public plots (powers Discovery popularity sorting).
   likes_enabled: true
+  # A player may like a given plot only once.
   one_like_per_player: true
 
 
@@ -1974,10 +2213,15 @@ social:
 # Admin tools and staff access
 # ==============================================================================
 admin:
+  # When true, banned players' claims are removed automatically on ban.
   auto_remove_banned: false
+  # Staff with admin permission may exceed max_claims_per_player.
   bypass_claim_limit: false
+  # Echo staff actions (claim edits, repairs) to other online admins.
   broadcast_admin_actions: true
+  # Staff plots may ignore claim count limits entirely.
   unlimited_plots: true
+  # Server operators are treated as trusted on every plot.
   trust_operators: true
   # Safety cap for one /agadmin blocks adjustment.
   max_claimblock_adjustment: 1000000000
@@ -1995,6 +2239,10 @@ admin:
       - " "
       - "&cCreates server zones directly."
 
+
+# ------------------------------------------------------------------------------
+# Staff permission mapping
+# ------------------------------------------------------------------------------
 staff_access:
   # Any permission in one of these lists grants the matching elevated access.
   # Server zones do NOT treat blanket aegis.admin / isAdmin as enough by itself —
@@ -2016,9 +2264,12 @@ staff_access:
 # Sound scheme
 # ==============================================================================
 sounds:
+  # Master switch for every plugin sound below. Player opt-outs still apply.
   global_enabled: true
+  # Per-player overrides are stored here automatically.
   players: {}
 
+  # Menu feedback sounds. Each entry: sound (Bukkit sound), volume, pitch.
   menu_open:
     sound: BLOCK_CHEST_OPEN
     volume: 0.7
@@ -2059,8 +2310,10 @@ sounds:
 # Protection deny feedback
 # ==============================================================================
 protection_effects:
+  # Plays a sound/particle when a player is denied by plot protection.
   enabled: true
 
+  # Sound + particle used when a deny category has no override below.
   defaults:
     deny_sound: BLOCK_NOTE_BLOCK_BASS
     deny_particle: SMOKE_NORMAL
@@ -2185,26 +2438,40 @@ roles:
 # module is separate.
 arena:
   enabled: true
+  # Seconds a disconnected player's slot stays reserved in a live run.
   disconnect_grace_seconds: 60
+  # Allow joining a run after it has already started.
   allow_late_join: false
   party:
+    # Seconds a party invite remains answerable.
     invite_expire_seconds: 60
+    # Default party size bounds for new runs.
     default_min_players: 1
     default_max_players: 4
+    # Reserve/transfer party leadership around disconnects.
     leadership_reserve_during_grace: true
     leadership_transfer_after_grace: true
   totem:
+    # Totem of Undying handling inside runs: CONSUME_AND_ELIMINATE burns the
+    # totem and still counts the player downed; other modes allow carrying on.
     default_policy: CONSUME_AND_ELIMINATE
   scaling:
+    # Lock difficulty scaling to the roster present at run start.
     lock_at_run_start: true
+    # Re-scale difficulty if the party size changes mid-run.
     dynamic_mid_run: false
   rewards:
+    # MVP model: EQUAL_MILESTONE_PLUS_SCORE_BONUS splits evenly then adds a
+    # score-weighted bonus on top.
     mvp_model: EQUAL_MILESTONE_PLUS_SCORE_BONUS
+    # Fraction of the run a player must be present for to earn rewards.
     presence_min_ratio: 0.5
     enabled: true
   defaults:
+    # Runs allowed simultaneously per arena.
     max_active_runs_per_arena: 1
   limits:
+    # Hard global caps protecting the server from runaway arena load.
     max_active_arenas: 16
     max_active_runs: 8
     max_players_per_run: 8
@@ -2212,17 +2479,24 @@ arena:
     max_projectiles_per_run: 128
     max_boss_minions_per_run: 16
     max_loaded_chunks_per_run: 24
+    # Ticks allowed for post-run cleanup before it is force-finished.
     cleanup_timeout_ticks: 200
+    # Consecutive failures before an arena auto-disables for staff review.
     auto_disable_after_failures: 3
   persistence:
+    # Rolling state backups kept per arena for recovery.
     backup_count: 5
+    # Days a closed run's record is kept before archival.
     archive_closed_runs_after_days: 14
   inventory:
+    # SAVE_AND_RESTORE returns player inventories after a PvE run.
     default_policy_pve: SAVE_AND_RESTORE
     allow_drop_on_death: false
   pvp:
+    # PvP inside arena runs (off by default — arenas are cooperative PvE).
     enabled: false
   hooks:
+    # Spawn boss/mob packs from MythicMobs when installed.
     mythicmobs: false
   presets:
     lava_dungeon:

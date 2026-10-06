@@ -1,4 +1,10 @@
-# AegisGuard plugin metadata
+# ==============================================================================
+# AegisGuard plugin manifest
+# ==============================================================================
+# name / main / version / api-version are consumed by the server loader and
+# must stay in sync with pom.xml. folia-supported marks the plugin safe for
+# Folia's regionized threading (AegisScheduler handles all scheduling).
+# ==============================================================================
 name: AegisGuard
 main: com.aegisguard.AegisGuard
 version: 1.4.0
@@ -52,6 +58,15 @@ softdepend:
   - floodgate
   - Geyser-Spigot
 
+# ==============================================================================
+# Commands
+# ==============================================================================
+# /aegis is the single player entry point (aliases /ag, /guard); every feature
+# is a subcommand or GUI behind it. /aegisadmin is the staff surface
+# (aliases /agadmin, /aga). Top-level /hub and /lobby are registered
+# dynamically at runtime only when network.hub.register_commands is on —
+# they do not appear here.
+# ==============================================================================
 commands:
   aegis:
     description: Player command for claims, plot management, groups, travel, and ClaimBlocks.
@@ -169,23 +184,11 @@ permissions:
       aegis.notify.others: true
 
   # ---------------------------------------------------------------------------
-  # Core player permissions
+  # Core player permissions (default: true — everyone gets these)
   # ---------------------------------------------------------------------------
   aegis.use:
     description: Allows use of the main /aegis command.
     default: true
-
-  aegis.admin.discord:
-    description: Link, unlink, and inspect Discord account links for players.
-    default: op
-
-  aegis.admin.broadcast:
-    description: Send a network-wide broadcast through the cross-server event bus.
-    default: op
-
-  aegis.admin.alerts:
-    description: Receive rate-limited staff alerts for repeated claim-protection denials.
-    default: op
 
   aegis.menu:
     description: Allows opening the main AegisGuard player menu.
@@ -352,6 +355,25 @@ permissions:
     description: Hear every Hearth room and speak without being muffled.
     default: op
 
+  aegis.admin.staffchat:
+    description: Use staff chat (/ag staff, /agadmin staffchat).
+    default: op
+
+  aegis.admin.discord:
+    description: Link, unlink, and inspect Discord account links for players.
+    default: op
+
+  aegis.admin.broadcast:
+    description: Send a network-wide broadcast through the cross-server event bus.
+    default: op
+
+  aegis.admin.alerts:
+    description: Receive rate-limited staff alerts for repeated claim-protection denials.
+    default: op
+
+  # ---------------------------------------------------------------------------
+  # Gameplay feature permissions (default: true unless noted)
+  # ---------------------------------------------------------------------------
   aegis.arena.use:
     description: Browse, join, and party for Arena dungeon runs.
     default: true
@@ -387,10 +409,6 @@ permissions:
   aegis.gathering:
     description: Host an Open House on a plot you manage (/ag gathering).
     default: true
-
-  aegis.admin.staffchat:
-    description: Use staff chat (/ag staff, /agadmin staffchat).
-    default: op
 
 
   # ---------------------------------------------------------------------------

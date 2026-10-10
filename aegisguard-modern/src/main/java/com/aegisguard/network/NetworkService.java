@@ -115,6 +115,7 @@ public final class NetworkService implements PluginMessageListener {
         }
         try {
             store.deregisterServer(serverName);
+            store.clearOwnArenas(serverName);
         } catch (Throwable ignored) { }
         try {
             var messenger = plugin.getServer().getMessenger();
@@ -209,9 +210,30 @@ public final class NetworkService implements PluginMessageListener {
             if (fresh != null) servers = new CopyOnWriteArrayList<>(fresh);
             store.pruneExpiredArrivals();
             store.pruneEvents(300_000L);
+            publishArenaCatalog();
             verifyServerName();
         } catch (Throwable t) {
             plugin.getLogger().log(java.util.logging.Level.FINE, "[Network] heartbeat failed: " + t.getMessage());
+        }
+    }
+
+    /**
+     * Advertise this backend's arenas to the network so other servers can list
+     * and route players to them. Rows ride the same DB-clock heartbeat as the
+     * server registry; stale/removed arenas prune themselves out.
+     */
+    private void publishArenaCatalog() {
+        try {
+            if (!plugin.getConfig().getBoolean("network.arenas.publish", true)) return;
+            com.aegisguard.arena.ArenaService arenas = plugin.arena();
+            if (arenas == null || !arenas.isEnabled()) {
+                store.publishArenas(serverName, List.of());
+                return;
+            }
+            store.publishArenas(serverName, arenas.networkCatalog());
+        } catch (Throwable t) {
+            plugin.getLogger().log(java.util.logging.Level.FINE,
+                    "[Network] arena publish failed: " + t.getMessage());
         }
     }
 

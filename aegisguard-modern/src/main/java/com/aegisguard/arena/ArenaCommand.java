@@ -2,6 +2,7 @@ package com.aegisguard.arena;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.arena.preset.LavaDungeonPreset;
+import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -132,6 +133,33 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
                     "ACTIVE", String.valueOf(service.countActiveRuns(def.getId()))));
         }
         if (!any) msg(sender, "arena_empty_none");
+
+        // Remote arenas advertised by other backends — registry read is SQL,
+        // so this block streams in asynchronously after the local list.
+        var net = plugin.network();
+        if (net != null && net.isNetworked() && net.store() != null) {
+            plugin.scheduler().runAsync(() -> {
+                List<com.aegisguard.network.NetworkModels.RemoteArena> remotes =
+                        net.store().remoteArenas(net.serverName());
+                if (remotes == null || remotes.isEmpty()) return;
+                String onlineLabel = sender instanceof Player p
+                        ? plugin.msg().get(p, "arena_list_enabled")
+                        : plugin.msg().get("arena_list_enabled");
+                String offlineLabel = sender instanceof Player p
+                        ? plugin.msg().get(p, "arena_list_disabled")
+                        : plugin.msg().get("arena_list_disabled");
+                msg(sender, "arena_list_remote_header");
+                for (com.aegisguard.network.NetworkModels.RemoteArena ra : remotes) {
+                    if (ra == null || ra.arenaId() == null) continue;
+                    boolean online = net.isServerOnline(ra.serverName());
+                    msg(sender, "arena_list_remote_entry", Map.of(
+                            "ID", ra.arenaId(),
+                            "NAME", ra.label(),
+                            "SERVER", ra.serverName() == null ? "?" : ra.serverName(),
+                            "STATUS", online ? onlineLabel : offlineLabel));
+                }
+            });
+        }
         return true;
     }
 
@@ -146,9 +174,90 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
             msg(sender, "arena_no_permission");
             return true;
         }
-        String err = service.tryStart(player, args[1]);
-        if (err != null) sendFail(sender, err);
-        else msg(sender, "arena_run_started");
+        String target = args[1];
+
+        // Re-running join against your own open lobby = "start now".
+        ArenaRun mine = service.getRunForPlayer(player.getUniqueId());
+        if (mine != null && mine.isInLobby() && mine.getArenaId().equalsIgnoreCase(target)) {
+            if (service.startLobbyNow(player)) {
+                msg(sender, "arena_lobby_started_early");
+            } else {
+                msg(sender, "arena_not_leader");
+            }
+            return true;
+        }
+
+        // Optional explicit host: /ag arena join <server>:<arena>
+        String remoteServer = null;
+        String arenaId = target;
+        int sep = target.indexOf(':');
+        if (sep > 0) {
+            remoteServer = target.substring(0, sep);
+            arenaId = target.substring(sep + 1);
+        }
+
+        if (remoteServer == null) {
+            // An open lobby on this backend wins over starting a fresh run.
+            ArenaRun lobby = service.findOpenLobby(arenaId);
+            if (lobby != null) {
+                String err = service.joinLobbyRun(player, lobby, null);
+                if (err != null) sendFail(sender, err);
+                return true;
+            }
+            if (service.getArena(arenaId) != null) {
+                String err = service.tryStart(player, arenaId);
+                if (err != null) sendFail(sender, err);
+                else msg(sender, "arena_run_started");
+                return true;
+            }
+        }
+        return joinRemote(player, remoteServer, arenaId);
+    }
+
+    /**
+     * Route a join to an arena hosted on another backend: resolve the host from
+     * the network registry (async — it's SQL), then write an ARENA_JOIN arrival
+     * and hop. {@code serverHint} comes from the {@code server:arena} syntax.
+     */
+    private boolean joinRemote(Player player, String serverHint, String arenaId) {
+        var net = plugin.network();
+        var travel = plugin.networkTravel();
+        if (net == null || !net.isNetworked() || travel == null || net.store() == null) {
+            msg(player, "arena_unknown");
+            return true;
+        }
+        String localName = net.serverName();
+        // Explicitly self-targeted (join thisserver:id) → treat as local.
+        if (serverHint != null && localName != null && serverHint.equalsIgnoreCase(localName)) {
+            String err = service.tryStart(player, arenaId);
+            if (err != null) sendFail(player, err);
+            else msg(player, "arena_run_started");
+            return true;
+        }
+        plugin.scheduler().runAsync(() -> {
+            List<com.aegisguard.network.NetworkModels.RemoteArena> remotes =
+                    net.store().remoteArenas(localName);
+            com.aegisguard.network.NetworkModels.RemoteArena match = null;
+            for (com.aegisguard.network.NetworkModels.RemoteArena ra : remotes) {
+                if (ra == null || ra.arenaId() == null) continue;
+                if (!ra.arenaId().equalsIgnoreCase(arenaId)) continue;
+                if (serverHint != null && !serverHint.equalsIgnoreCase(ra.serverName())) continue;
+                if (match == null || net.isServerOnline(ra.serverName())) match = ra;
+            }
+            final com.aegisguard.network.NetworkModels.RemoteArena chosen = match;
+            plugin.scheduler().runEntity(player, () -> {
+                if (chosen == null) {
+                    msg(player, "arena_unknown");
+                    return;
+                }
+                if (!net.isServerOnline(chosen.serverName())) {
+                    msg(player, "arena_remote_offline",
+                            Map.of("SERVER", chosen.serverName() == null ? "?" : chosen.serverName()));
+                    return;
+                }
+                travel.sendToArenaJoin(player, chosen.serverName(), chosen.arenaId());
+            }, null);
+        });
         return true;
     }
 
@@ -279,6 +388,21 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
         }
         ArenaDefinition def = service.createArena(args[1]);
         msg(sender, "arena_created", Map.of("ID", def.getId()));
+
+        // Dedicated arena world convenience: standing in it on unclaimed ground
+        // auto-claims a server zone and pre-binds lobby/floor + entry/exit.
+        if (sender instanceof Player player && plugin.arenaWorld() != null) {
+            Plot zone = plugin.arenaWorld().autoZone(player);
+            if (zone != null) {
+                String bindErr = service.bindLobbyFromPlayer(player, def.getId());
+                if (bindErr == null) bindErr = service.bindFloorFromPlayer(player, def.getId());
+                if (bindErr == null) bindErr = service.setSpawn(player, def.getId(), "entry");
+                if (bindErr == null) bindErr = service.setSpawn(player, def.getId(), "exit");
+                if (bindErr != null) sendFail(sender, bindErr);
+                else msg(sender, "arena_auto_zoned",
+                        Map.of("ID", def.getId(), "WORLD", plugin.arenaWorld().worldName()));
+            }
+        }
         return true;
     }
 

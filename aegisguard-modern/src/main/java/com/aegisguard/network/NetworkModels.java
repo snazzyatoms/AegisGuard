@@ -43,14 +43,26 @@ public final class NetworkModels {
             double x, double y, double z,
             float yaw, float pitch,
             long issuedAt,
-            long expiresAt) {
+            long expiresAt,
+            String payload) {
+
+        /** Legacy shape (rows written before the payload column existed). */
+        public NetworkArrival(UUID playerUuid, String targetServer, ArrivalKind kind,
+                              UUID plotId, UUID beaconId, String world,
+                              double x, double y, double z, float yaw, float pitch,
+                              long issuedAt, long expiresAt) {
+            this(playerUuid, targetServer, kind, plotId, beaconId, world,
+                    x, y, z, yaw, pitch, issuedAt, expiresAt, null);
+        }
 
         public enum ArrivalKind {
             PLOT_SPAWN,
             BEACON_PAD,
             SERVER_WARP,
             /** Plain server hop — land at the target world's spawn (or stored coords). */
-            WORLD_SPAWN
+            WORLD_SPAWN,
+            /** Hop to join an arena run on the target backend; payload = "arenaId|originServer". */
+            ARENA_JOIN
         }
 
         public boolean isExpired() {
@@ -70,4 +82,23 @@ public final class NetworkModels {
             String kind,
             String payload,
             long createdAt) { }
+
+    /** An arena advertised by another backend in aegis_network_arenas. */
+    public record RemoteArena(
+            String serverName,
+            String arenaId,
+            String displayName,
+            String mode,
+            String presetId,
+            int minPlayers,
+            int maxPlayers,
+            boolean enabled,
+            int openRuns,
+            int maxRuns,
+            long lastSeen) {
+
+        public String label() {
+            return displayName != null && !displayName.isBlank() ? displayName : arenaId;
+        }
+    }
 }

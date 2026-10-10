@@ -535,6 +535,17 @@ network:
     # so they follow players across the network.
     enabled: true
 
+  arenas:
+    # Advertise this backend's arena definitions in the shared registry so
+    # other servers can list them and players can hop over to join a run.
+    publish: true
+
+  arena_return:
+    # Where an arena participant lands when their origin backend went offline
+    # during the run. Blank falls back to the hub server, then the arena's
+    # local exit spawn.
+    fallback_server: ""
+
   hub:
     # Designated "hub"/"lobby" backend — its name in the proxy server list.
     # /ag hub and the Travel Hub's spawn button hop players here. Leave blank
@@ -2442,6 +2453,10 @@ arena:
   disconnect_grace_seconds: 60
   # Allow joining a run after it has already started.
   allow_late_join: false
+  # Seconds a fresh run waits in its joinable lobby before waves start. 0
+  # starts instantly (classic behavior). Raise it on networks so friends on
+  # other backends have time to hop over; re-running join force-starts.
+  lobby_seconds: 0
   party:
     # Seconds a party invite remains answerable.
     invite_expire_seconds: 60
@@ -2495,6 +2510,22 @@ arena:
   pvp:
     # PvP inside arena runs (off by default — arenas are cooperative PvE).
     enabled: false
+  world:
+    # Dedicated arena world. When enabled the plugin creates (or reuses) this
+    # world, and running "arena create" inside it auto-claims a server zone
+    # for the new arena — handy on standalone servers and dedicated arena
+    # backends alike.
+    enabled: false
+    # World name and terrain: VOID (empty void), FLAT (superflat), or NORMAL.
+    name: aegis_arena
+    generator: VOID
+    # Keep the world's spawn chunks loaded so runs start without a load hitch.
+    keep_spawn_loaded: false
+    # Auto-zone claims a square server claim of this radius around the admin.
+    auto_zone_radius: 24
+    # Sweep stray entities/items off the arena's floor plot when a run ends.
+    cleanup_on_run_end: true
+    cleanup_max_entities: 500
   hooks:
     # Spawn boss/mob packs from MythicMobs when installed.
     mythicmobs: false

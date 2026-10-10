@@ -10,6 +10,7 @@ import com.aegisguard.travel.SafeTravelResult;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -85,11 +86,81 @@ public final class NetworkTravelService {
                 }
                 String label = serverLabel(targetServer);
                 send(player, "network_sending_to_server",
-                        "&7Sending you to &b" + label + "&7...");
+                        "&7Sending you to &b{SERVER}&7...", Map.of("SERVER", label));
                 player.closeInventory();
             }, null);
         });
         return true;
+    }
+
+    /**
+     * Hop the player to {@code targetServer} to join arena {@code arenaId}
+     * there. The arrival payload carries the arena id and this backend's name
+     * so the host can auto-join the player and route them home afterwards.
+     */
+    public boolean sendToArenaJoin(Player player, String targetServer, String arenaId) {
+        if (!ready() || player == null || targetServer == null || targetServer.isBlank()
+                || arenaId == null || arenaId.isBlank()) return false;
+        // A player mid-run on this backend can't join another arena elsewhere —
+        // hopping would orphan their slot here.
+        if (plugin.arena() != null
+                && plugin.arena().getRunForPlayer(player.getUniqueId()) != null) {
+            send(player, "arena_already_in_run", "&cYou are already in an arena run.");
+            return false;
+        }
+        if (!net().isServerOnline(targetServer)) {
+            send(player, "visit_fail_server_offline", "&cThat server is currently offline.");
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        long ttl = Math.max(15L, plugin.getConfig().getLong("network.arrival_ttl_seconds", 90L)) * 1000L;
+        String payload = arenaId + "|" + (net().serverName() == null ? "" : net().serverName());
+        NetworkArrival arrival = new NetworkArrival(
+                player.getUniqueId(), targetServer, ArrivalKind.ARENA_JOIN,
+                null, null, null, 0, 0, 0,
+                player.getLocation().getYaw(), player.getLocation().getPitch(),
+                now, now + ttl, payload);
+        plugin.scheduler().runAsync(() -> {
+            net().store().writeArrival(arrival);
+            plugin.scheduler().runEntity(player, () -> {
+                if (!net().sendToServer(player, targetServer)) {
+                    send(player, "visit_fail_server_offline", "&cCould not reach that server.");
+                    return;
+                }
+                send(player, "arena_network_travel",
+                        "&7Bearing thee to the arena upon &b{SERVER}&7...",
+                        Map.of("SERVER", serverLabel(targetServer)));
+                player.closeInventory();
+            }, null);
+        });
+        return true;
+    }
+
+    /**
+     * Route an arena participant home after a cross-server run. Tries their
+     * origin backend first; when it went offline mid-run, falls back to
+     * {@code network.arena_return.fallback_server}, then the configured hub.
+     * Returns false when nothing reachable exists — the caller should land the
+     * player at the arena's local exit spawn instead of stranding them.
+     */
+    public boolean sendHomeFromArena(Player player, String originServer) {
+        if (!ready() || player == null) return false;
+        String me = net().serverName();
+        if (originServer != null && !originServer.isBlank()
+                && !originServer.equalsIgnoreCase(me)
+                && net().isServerOnline(originServer)) {
+            return sendToServer(player, originServer);
+        }
+        for (String key : new String[] {
+                "network.arena_return.fallback_server", "network.hub.server" }) {
+            String target = plugin.getConfig().getString(key, "");
+            if (target != null && !target.isBlank() && !target.equalsIgnoreCase(me)
+                    && net().isServerOnline(target)
+                    && sendToServer(player, target)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -131,7 +202,8 @@ public final class NetworkTravelService {
                     return;
                 }
                 send(player, "network_sending_to_server",
-                        "&7Sending you to &b" + serverLabel(targetServer) + "&7...");
+                        "&7Sending you to &b{SERVER}&7...",
+                        Map.of("SERVER", serverLabel(targetServer)));
                 player.closeInventory();
             }, null);
         });
@@ -223,6 +295,11 @@ public final class NetworkTravelService {
             return;
         }
 
+        if (arrival.kind() == ArrivalKind.ARENA_JOIN) {
+            landInArena(player, arrival);
+            return;
+        }
+
         if (arrival.kind() == ArrivalKind.WORLD_SPAWN) {
             landAtWorldSpawn(player, arrival);
             return;
@@ -309,6 +386,35 @@ public final class NetworkTravelService {
         }
     }
 
+    /**
+     * ARENA_JOIN arrival: hand the player to this backend's arena service.
+     * Payload format: {@code arenaId|originServer} — the origin lets the host
+     * route the player home when their run ends. When the arena is missing or
+     * refuses the join, the player is sent back rather than stranded.
+     */
+    private void landInArena(Player player, NetworkArrival arrival) {
+        String payload = arrival.payload();
+        String arenaId = payload;
+        String origin = null;
+        int sep = payload != null ? payload.lastIndexOf('|') : -1;
+        if (sep >= 0) {
+            arenaId = payload.substring(0, sep);
+            origin = payload.substring(sep + 1);
+        }
+        if (arenaId == null || arenaId.isBlank()) {
+            send(player, "arena_unavailable", "&cArenas are unavailable.");
+            return;
+        }
+        var arenaService = plugin.arena();
+        if (arenaService == null || !arenaService.isEnabled()) {
+            send(player, "arena_unavailable", "&cArenas are unavailable.");
+            // Don't strand them on a server with no arenas — send them home.
+            sendHomeFromArena(player, origin);
+            return;
+        }
+        arenaService.joinRemote(player, arenaId, origin);
+    }
+
     private void landOnPad(Player player, NetworkArrival arrival) {
         BeaconService beacons = plugin.beacons();
         TeleportBeacon pad = beacons != null && arrival.beaconId() != null
@@ -355,9 +461,13 @@ public final class NetworkTravelService {
     }
 
     private void send(Player player, String key, String fallback) {
+        send(player, key, fallback, null);
+    }
+
+    private void send(Player player, String key, String fallback, java.util.Map<String, String> vars) {
         try {
             String msg = plugin.gui() != null
-                    ? plugin.gui().tr(player, key, fallback)
+                    ? plugin.gui().tr(player, key, fallback, vars)
                     : fallback;
             player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', msg));
         } catch (Throwable t) {

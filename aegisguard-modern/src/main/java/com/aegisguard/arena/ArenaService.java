@@ -74,6 +74,9 @@ public final class ArenaService {
     private volatile boolean dirtyPending;
     /** Folia without required schedulers → effective module off. */
     private volatile boolean schedulerCapabilityBlocked;
+    /** Lazily-started global task that counts down LOBBY-state runs (arena.lobby_seconds). */
+    private volatile Object lobbyTicker;
+    private final Object lobbyTickerLock = new Object();
 
     public ArenaService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -169,6 +172,14 @@ public final class ArenaService {
 
     public int partyInviteExpireSeconds() {
         return Math.max(10, plugin.getConfig().getInt("arena.party.invite_expire_seconds", 60));
+    }
+
+    /**
+     * Seconds a new run stays in the LOBBY state collecting joiners before the
+     * first wave. 0 disables the lobby window entirely (joins start instantly).
+     */
+    public int lobbySeconds() {
+        return Math.max(0, plugin.getConfig().getInt("arena.lobby_seconds", 0));
     }
 
     public int leaderboardTopN() {
@@ -359,6 +370,7 @@ public final class ArenaService {
                 if (playerId == null || runId == null || path == null) continue;
                 ArenaSpawnPoint lobby = readSpawn(sec.getConfigurationSection("lobby"));
                 ArenaPendingRecovery rec = new ArenaPendingRecovery(playerId, runId, path, lobby);
+                rec.setOriginServer(sec.getString("origin"));
                 if ("COMPLETE".equalsIgnoreCase(sec.getString("status"))) {
                     rec.setStatus(ArenaPendingRecovery.Status.COMPLETE);
                 }
@@ -380,6 +392,7 @@ public final class ArenaService {
                 out.set(base + ".snapshotPath", rec.getSnapshotPath());
                 out.set(base + ".status", rec.getStatus().name());
                 out.set(base + ".appliedToken", rec.getAppliedToken());
+                out.set(base + ".origin", rec.getOriginServer());
                 writeSpawn(out, base + ".lobby", rec.getLobbyDestination());
             }
             persistenceQueue.saveYamlAtomic(pendingFile, out, null);
@@ -500,6 +513,23 @@ public final class ArenaService {
         return list;
     }
 
+    /**
+     * Catalog rows for the network registry — enabled, valid arenas only; the
+     * publisher stamps server_name/last_seen. Safe to call off the main thread.
+     */
+    public List<com.aegisguard.network.NetworkModels.RemoteArena> networkCatalog() {
+        List<com.aegisguard.network.NetworkModels.RemoteArena> out = new ArrayList<>();
+        for (ArenaDefinition def : allArenas()) {
+            if (def == null || !def.isEnabled()) continue;
+            out.add(new com.aegisguard.network.NetworkModels.RemoteArena(
+                    null, def.getId(), def.getDisplayName(),
+                    def.getMode() == null ? "PVE_WAVES" : def.getMode().name(),
+                    def.getPresetId(), def.getMinPlayers(), def.getMaxPlayers(),
+                    true, countActiveRuns(def.getId()), def.getMaxActiveRuns(), 0L));
+        }
+        return out;
+    }
+
     public void saveDefinition(ArenaDefinition def) {
         if (def == null) return;
         def.revalidate();
@@ -605,6 +635,14 @@ public final class ArenaService {
      * @return null on success, otherwise a lang key (see {@link #takeFailVars()})
      */
     public String tryStart(Player leader, String arenaId) {
+        return tryStart(leader, arenaId, null);
+    }
+
+    /**
+     * @param originServer backend the leader hopped from (remote joins), null when local
+     * @return null on success, otherwise a lang key (see {@link #takeFailVars()})
+     */
+    public String tryStart(Player leader, String arenaId, String originServer) {
         if (!isEnabled()) return fail("arena_disabled");
         if (leader == null) return fail("arena_invalid_leader");
         ArenaDefinition def = getArena(arenaId);
@@ -631,7 +669,9 @@ public final class ArenaService {
         if (!party.isLeader(leader.getUniqueId())) return fail("arena_party_leader_only_start");
 
         int size = party.size();
-        if (size < def.getMinPlayers()) {
+        // With the lobby phase enabled the roster is still filling during the
+        // countdown — the minimum is enforced when the lobby closes instead.
+        if (lobbySeconds() <= 0 && size < def.getMinPlayers()) {
             return fail("arena_need_min_players", "MIN", String.valueOf(def.getMinPlayers()));
         }
         if (size > def.getMaxPlayers()) {
@@ -658,13 +698,17 @@ public final class ArenaService {
             onlineMembers.add(p);
             ArenaParticipant part = run.getOrCreate(mid);
             part.setState(ParticipantState.FIGHTING);
+            if (mid.equals(leader.getUniqueId()) && originServer != null) {
+                part.setOriginServer(originServer);
+            }
         }
 
         // Inventory snapshot then clear (SAVE_AND_RESTORE / ARENA_LOADOUT)
         ArenaInventoryPolicy policy = def.getInventoryPolicy();
         Location entry = toLocation(def.getEntrySpawn());
+        boolean useLobby = lobbySeconds() > 0;
         if (scheduler.isFolia()) {
-            return beginRunFolia(def, run, runId, onlineMembers, policy, entry);
+            return beginRunFolia(def, run, runId, onlineMembers, policy, entry, useLobby);
         }
 
         if (policy.isProtectedInventory()) {
@@ -696,12 +740,21 @@ public final class ArenaService {
 
         activeRuns.put(runId, run);
         runsByArenaId.computeIfAbsent(def.getId(), k -> ConcurrentHashMap.newKeySet()).add(runId);
+        if (useLobby) {
+            enterLobby(run, def);
+        } else {
+            beginCombat(run, def);
+        }
+        return null;
+    }
+
+    /** Transition a fully-rostered run into waves: state march + spawn + announce. */
+    private void beginCombat(ArenaRun run, ArenaDefinition def) {
         run.setState(ArenaRunState.COUNTDOWN);
         run.setState(ArenaRunState.WAVE);
         spawnCurrentWave(run);
         notifyWave(run, def);
         flushJournalAsync();
-        return null;
     }
 
     /**
@@ -709,9 +762,13 @@ public final class ArenaService {
      * waiting across regions from the caller's region thread.
      */
     private String beginRunFolia(ArenaDefinition def, ArenaRun run, UUID runId,
-                                 List<Player> onlineMembers, ArenaInventoryPolicy policy, Location entry) {
+                                 List<Player> onlineMembers, ArenaInventoryPolicy policy, Location entry,
+                                 boolean useLobby) {
         activeRuns.put(runId, run);
         runsByArenaId.computeIfAbsent(def.getId(), k -> ConcurrentHashMap.newKeySet()).add(runId);
+        // Runs stay COUNTDOWN while per-entity setup is in flight; enterLobby
+        // (or the wave transition) flips state once the roster is placed —
+        // otherwise the lobby ticker could open a lobby with no ticks set.
         run.setState(ArenaRunState.COUNTDOWN);
         for (Player p : onlineMembers) {
             playerToRun.put(p.getUniqueId(), runId);
@@ -743,16 +800,271 @@ public final class ArenaService {
                 if (remaining.decrementAndGet() == 0 && !failed.get()) {
                     scheduler.runGlobal(() -> {
                         if (run.isCleanupDone() || failed.get()) return;
-                        run.setState(ArenaRunState.WAVE);
-                        spawnCurrentWave(run);
-                        notifyWave(run, def);
-                        flushJournalAsync();
+                        if (useLobby) {
+                            enterLobby(run, def);
+                        } else {
+                            run.setState(ArenaRunState.WAVE);
+                            spawnCurrentWave(run);
+                            notifyWave(run, def);
+                            flushJournalAsync();
+                        }
                     });
                 }
             });
         }
         flushJournalAsync();
         return null;
+    }
+
+    // ------------------------------------------------------------------
+    // Lobby phase (arena.lobby_seconds > 0)
+    // ------------------------------------------------------------------
+
+    /**
+     * Put a freshly-started run into LOBBY: roster is set, everyone is already
+     * snapshotted + at the entry point; the countdown tick opens it for joiners.
+     */
+    private void enterLobby(ArenaRun run, ArenaDefinition def) {
+        run.setState(ArenaRunState.LOBBY);
+        run.setLobbyTicksRemaining(lobbySeconds());
+        run.journal("lobby_open seconds=" + run.getLobbyTicksRemaining());
+        ensureLobbyTicker();
+        for (ArenaParticipant part : run.getParticipants().values()) {
+            Player p = Bukkit.getPlayer(part.getPlayerId());
+            if (p != null && p.isOnline()) {
+                plugin.msg().send(p, "arena_lobby_open",
+                        Map.of("SECONDS", String.valueOf(run.getLobbyTicksRemaining())));
+            }
+        }
+        flushJournalAsync();
+    }
+
+    /** First still-joinable LOBBY run for an arena, or null. */
+    public ArenaRun findOpenLobby(String arenaId) {
+        if (arenaId == null) return null;
+        Set<UUID> ids = runsByArenaId.get(arenaId.toLowerCase(Locale.ROOT));
+        if (ids == null) return null;
+        for (UUID id : ids) {
+            ArenaRun run = activeRuns.get(id);
+            if (run != null && run.isInLobby() && !run.isCleanupDone()) return run;
+        }
+        return null;
+    }
+
+    /**
+     * Attach a player to an open LOBBY run — the path for local joins during the
+     * lobby window and for remote players arriving via an ARENA_JOIN hop.
+     */
+    public String joinLobbyRun(Player player, ArenaRun run, String originServer) {
+        if (!isEnabled()) return fail("arena_disabled");
+        if (player == null) return fail("arena_invalid_leader");
+        if (run == null || !run.isInLobby() || run.isCleanupDone()) return fail("arena_lobby_closed");
+        ArenaDefinition def = getArena(run.getArenaId());
+        if (def == null || !def.isEnabled()) return fail("arena_not_enabled");
+        if (playerToRun.containsKey(player.getUniqueId())) return fail("arena_already_in_run");
+        if (run.getParticipants().size() >= def.getMaxPlayers()) {
+            return fail("arena_lobby_full", "MAX", String.valueOf(def.getMaxPlayers()));
+        }
+
+        UUID playerId = player.getUniqueId();
+        UUID runId = run.getRunId();
+        ArenaInventoryPolicy policy = def.getInventoryPolicy();
+        Location entry = toLocation(def.getEntrySpawn());
+        run.journal("lobby_join " + playerId + (originServer != null ? " origin=" + originServer : ""));
+
+        // Entity-side work dispatched to the player's own region — same shape
+        // as the party start path. Re-checked inside in case the lobby filled
+        // or closed while the hop was in flight.
+        scheduler.runForEntity(player, () -> {
+            try {
+                if (!run.isInLobby() || run.isCleanupDone()) {
+                    plugin.msg().send(player, "arena_lobby_closed");
+                    return;
+                }
+                if (run.getParticipants().size() >= def.getMaxPlayers()) {
+                    plugin.msg().send(player, "arena_lobby_full",
+                            Map.of("MAX", String.valueOf(def.getMaxPlayers())));
+                    return;
+                }
+                if (policy.isProtectedInventory()) {
+                    String path = inventoryService.saveSnapshotAtomic(player, runId, persistenceQueue);
+                    ArenaParticipant part = run.getOrCreate(playerId);
+                    part.setSnapshotPath(path);
+                    inventoryService.clearPlayer(player);
+                }
+                ArenaParticipant part = run.getOrCreate(playerId);
+                part.setState(ParticipantState.FIGHTING);
+                if (originServer != null && !originServer.isBlank()) {
+                    part.setOriginServer(originServer);
+                }
+                playerToRun.put(playerId, runId);
+                teleportAllowedInline(player, entry);
+                plugin.msg().send(player, "arena_lobby_joined");
+                for (ArenaParticipant other : run.getParticipants().values()) {
+                    if (other.getPlayerId().equals(playerId)) continue;
+                    Player p = Bukkit.getPlayer(other.getPlayerId());
+                    if (p != null && p.isOnline()) {
+                        plugin.msg().send(p, "arena_lobby_member_joined",
+                                Map.of("PLAYER", player.getName()));
+                    }
+                }
+                flushJournalAsync();
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING,
+                        "[Arena] Lobby join failed for " + player.getName(), e);
+                run.getParticipants().remove(playerId);
+                playerToRun.remove(playerId, runId);
+            }
+        });
+        return null;
+    }
+
+    /** Leader/admin fast-forward: start waves now instead of waiting out the lobby. */
+    public boolean startLobbyNow(Player player) {
+        if (player == null) return false;
+        ArenaRun run = getRunForPlayer(player.getUniqueId());
+        if (run == null || !run.isInLobby() || run.isCleanupDone()) return false;
+        if (!player.getUniqueId().equals(run.getLeaderId())
+                && !player.hasPermission("aegis.arena.admin") && !plugin.isAdmin(player)) {
+            return false;
+        }
+        beginCombatFromLobby(run);
+        return true;
+    }
+
+    private void ensureLobbyTicker() {
+        if (lobbyTicker != null) return;
+        synchronized (lobbyTickerLock) {
+            if (lobbyTicker == null) {
+                lobbyTicker = scheduler.runGlobalRepeating(this::tickLobbies, 20L, 20L);
+            }
+        }
+    }
+
+    private void tickLobbies() {
+        boolean any = false;
+        for (ArenaRun run : activeRuns.values()) {
+            if (run == null || !run.isInLobby() || run.isCleanupDone()) continue;
+            any = true;
+            if (run.countFighting() <= 0) {
+                endRun(run, ArenaEndReason.FORFEIT);
+                continue;
+            }
+            int left = run.decrementLobbyTicks();
+            if (left <= 0) {
+                beginCombatFromLobby(run);
+            } else {
+                announceLobbyTick(run, left);
+            }
+        }
+        if (!any && lobbyTicker != null) {
+            synchronized (lobbyTickerLock) {
+                if (lobbyTicker != null) {
+                    try { plugin.scheduler().cancel(lobbyTicker); } catch (Throwable ignored) { }
+                    lobbyTicker = null;
+                }
+            }
+        }
+    }
+
+    private void announceLobbyTick(ArenaRun run, int secondsLeft) {
+        if (secondsLeft > 10 && secondsLeft % 10 != 0) return; // 30/20/10 then every second
+        for (ArenaParticipant part : run.getParticipants().values()) {
+            if (!part.isFighting()) continue;
+            Player p = Bukkit.getPlayer(part.getPlayerId());
+            if (p != null && p.isOnline()) {
+                plugin.msg().send(p, "arena_lobby_countdown",
+                        Map.of("SECONDS", String.valueOf(secondsLeft)));
+            }
+        }
+    }
+
+    /** LOBBY countdown hit zero: lock scaling on the final roster, then waves. */
+    private void beginCombatFromLobby(ArenaRun run) {
+        if (run == null || run.isCleanupDone() || !run.isInLobby()) return;
+        ArenaDefinition def = getArena(run.getArenaId());
+        if (def == null || !def.isEnabledFlag()) {
+            endRun(run, ArenaEndReason.ADMIN_ABORT);
+            return;
+        }
+        int fighters = run.countFighting();
+        if (fighters < def.getMinPlayers()) {
+            endRun(run, ArenaEndReason.FORFEIT);
+            return;
+        }
+        run.setStartFighterCount(fighters);
+        // Lobby joiners are real roster: scale locks to whoever actually fights.
+        run.setLockedScale(def.getScaling().forPartySize(fighters));
+        beginCombat(run, def);
+    }
+
+    // ------------------------------------------------------------------
+    // Remote (cross-server) joins
+    // ------------------------------------------------------------------
+
+    /**
+     * Entry point for ARENA_JOIN arrivals (already on the player's entity
+     * thread). Attaches to an open lobby when one exists, else starts a run.
+     * On any refusal the player is routed back to their origin backend.
+     */
+    public void joinRemote(Player player, String arenaId, String originServer) {
+        if (player == null) return;
+        if (!isEnabled()) {
+            plugin.msg().send(player, "arena_disabled");
+            sendHomeIfRemote(player, originServer);
+            return;
+        }
+        if (!player.hasPermission("aegis.arena.use")) {
+            plugin.msg().send(player, "arena_no_permission");
+            sendHomeIfRemote(player, originServer);
+            return;
+        }
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null || !def.isEnabledFlag()) {
+            plugin.msg().send(player, "arena_unknown");
+            sendHomeIfRemote(player, originServer);
+            return;
+        }
+
+        ArenaRun lobby = findOpenLobby(arenaId);
+        String err = lobby != null
+                ? joinLobbyRun(player, lobby, originServer)
+                : tryStart(player, arenaId, originServer);
+        // Simultaneous-hop race: two players can land before the first lobby
+        // exists and the second gets arena_busy. Retry once a beat later —
+        // by then the leader's lobby has opened and they can attach to it.
+        if ("arena_busy".equals(err) && lobbySeconds() > 0) {
+            scheduler.runForEntityLater(player, () -> {
+                ArenaRun retry = findOpenLobby(arenaId);
+                String err2 = retry != null
+                        ? joinLobbyRun(player, retry, originServer)
+                        : fail("arena_busy");
+                if (err2 != null) {
+                    plugin.msg().send(player, err2, takeFailVars());
+                    sendHomeIfRemote(player, originServer);
+                }
+            }, 20L);
+            return;
+        }
+        if (err != null) {
+            Map<String, String> vars = takeFailVars();
+            plugin.msg().send(player, err, vars);
+            sendHomeIfRemote(player, originServer);
+        }
+    }
+
+    /** Send a cross-server participant back to their origin backend. @return true when a hop was requested. */
+    private boolean sendHomeIfRemote(Player player, String originServer) {
+        if (player == null || originServer == null || originServer.isBlank()) return false;
+        var net = plugin.network();
+        if (net == null || !net.isNetworked()) return false;
+        if (originServer.equalsIgnoreCase(net.serverName())) return false;
+        if (plugin.networkTravel() != null
+                && plugin.networkTravel().sendHomeFromArena(player, originServer)) {
+            plugin.msg().send(player, "arena_return_home");
+            return true;
+        }
+        return false;
     }
 
     private void teleportAllowed(Player player, Location loc) {
@@ -1006,6 +1318,13 @@ public final class ArenaService {
             if (!"lethal_consume_totem".equals(reason) && !"leave".equals(reason)) {
                 plugin.msg().send(player, "arena_eliminated");
             }
+            // A remote participant who deliberately leaves goes home now —
+            // otherwise they would stand eliminated on a foreign backend
+            // until the whole run ended. Deaths wait for endRun as before.
+            if ("leave".equals(reason)
+                    && part.getOriginServer() != null && !part.getOriginServer().isBlank()) {
+                restoreParticipant(player, part, getArena(run.getArenaId()));
+            }
         });
         run.journal("eliminate " + player.getUniqueId() + " reason=" + reason);
         if (run.countFighting() == 0) {
@@ -1227,6 +1546,13 @@ public final class ArenaService {
         // Despawn tracked mobs on each entity's scheduler
         despawnTrackedMobs(run);
 
+        // Dedicated arena world: sweep stray entities/items off the floor plot.
+        try {
+            if (plugin.arenaWorld() != null) plugin.arenaWorld().cleanupFloor(run, def);
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.FINE, "[Arena] floor cleanup skipped: " + t.getMessage());
+        }
+
         // Restore inventories / pending recovery on each player's entity scheduler
         AtomicInteger pendingEntityWork = new AtomicInteger(0);
         for (ArenaParticipant part : run.getParticipants().values()) {
@@ -1244,6 +1570,7 @@ public final class ArenaService {
                 ArenaSpawnPoint lobby = def == null ? null : def.getExitSpawn();
                 ArenaPendingRecovery pending = new ArenaPendingRecovery(
                         part.getPlayerId(), run.getRunId(), part.getSnapshotPath(), lobby);
+                pending.setOriginServer(part.getOriginServer());
                 pendingRecoveries.put(part.getPlayerId(), pending);
                 dirtyPending = true;
             }
@@ -1316,6 +1643,9 @@ public final class ArenaService {
             part.setSnapshotRestored(true);
         }
         inventoryService.stripArenaTaggedItems(player, keys);
+        // Cross-server fighters go home to their origin backend instead of the
+        // local exit spawn — their lobby/exit is the other server's world spawn.
+        if (sendHomeIfRemote(player, part.getOriginServer())) return;
         Location exit = def == null ? null : toLocation(def.getExitSpawn());
         teleportAllowedInline(player, exit);
     }
@@ -1346,6 +1676,8 @@ public final class ArenaService {
         if (!pending.tryComplete(token)) return false;
         inventoryService.restoreFromFile(player, pending.getSnapshotPath());
         inventoryService.stripArenaTaggedItems(player, keys);
+        // Remote participant relogging on the arena host: restore done → send home.
+        if (sendHomeIfRemote(player, pending.getOriginServer())) return true;
         Location lobby = toLocation(pending.getLobbyDestination());
         teleportAllowedInline(player, lobby);
         dirtyPending = true;

@@ -22,6 +22,8 @@ public final class ArenaParticipant {
     private volatile int eliminations;
     private volatile int personalScore;
     private volatile boolean rewardEligible = true;
+    /** Backend this player came from when the join arrived over the network; null = local. */
+    private volatile String originServer;
     private final AtomicBoolean recoveryComplete = new AtomicBoolean(false);
 
     public ArenaParticipant(UUID playerId) {
@@ -63,6 +65,9 @@ public final class ArenaParticipant {
 
     public boolean isRewardEligible() { return rewardEligible; }
     public void setRewardEligible(boolean rewardEligible) { this.rewardEligible = rewardEligible; }
+
+    public String getOriginServer() { return originServer; }
+    public void setOriginServer(String originServer) { this.originServer = originServer; }
 
     public boolean markRecoveryComplete() { return recoveryComplete.compareAndSet(false, true); }
     public boolean isRecoveryComplete() { return recoveryComplete.get(); }

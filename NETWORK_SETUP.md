@@ -82,6 +82,32 @@ UPDATE aegis_plots SET server = 'survival2' WHERE world = 'world_nether';
 | Cross-server beacons | Link a local pad to a **public** pad on another backend from the Link picker (pearls with a `Server:` line). Links are one-way only; remote rows are never written by your backend. |
 | First-join redirect | With `network.hub.redirect_new_players: true`, brand-new network players (no shared data row) are forwarded to the hub ~2s after joining. Off by default. |
 | Admin broadcast | `/agadmin network broadcast <message>` publishes to every backend's online players via the event bus (`aegis.admin.broadcast`). `/agadmin network find <player>` reports which backend last hosted a player. |
+| Arenas | Each backend advertises its enabled arenas in `aegis_network_arenas` on every heartbeat; `/ag arena list` and the arena GUI show remote arenas with a server badge, and `/ag arena join <server>:<arena>` (or a click) writes an `ARENA_JOIN` arrival and hops the player. The host routes the player into the arena's lobby/run and sends them back to their origin backend when it ends — falling back to `network.arena_return.fallback_server`, then the hub, then the arena's own exit if the origin went offline (toggle: `network.arenas.publish`). |
+
+## Arenas across the network
+
+A dedicated arena backend is just a normal Paper backend running AegisGuard
+with the arena module on. There is no special mode to enable:
+
+1. Give it a distinct `network.server_name` (e.g. `arena1`) exactly as the
+   proxy calls it.
+2. Optionally set `arena.world.enabled: true` so `arena create` auto-claims a
+   protected server zone inside a dedicated `aegis_arena` world (`generator`
+   supports VOID / FLAT / NORMAL). This also works on a single server — no
+   network required — whenever you want arenas off the live map.
+3. Build the arena: `/ag arena create <id>` inside the arena world, then set
+   mob spawns (`/ag arena setspawn <id> mob`), apply a preset, and enable it.
+4. Raise `arena.lobby_seconds` (e.g. `30`) on the arena backend so friends on
+   other servers have time to hop over and join the open lobby. `0` keeps the
+   classic instant-start behavior.
+5. Players on any backend run `/ag arena list` (remote rows show the hosting
+   server) or `/ag arena join <server>:<arena>` to travel over.
+
+Runs always execute on the hosting backend — the run, mobs, snapshots, and
+leaderboards stay local to it. What crosses the wire is only the catalog row
+and the player's arrival. If a player disconnects mid-run, their inventory
+snapshot and a pending-recovery record remain on the host; relogging there
+restores the inventory and routes them home.
 
 ## What stays local (by design)
 
@@ -111,7 +137,7 @@ UPDATE aegis_plots SET server = 'survival2' WHERE world = 'world_nether';
 ## Tables it creates
 
 `aegis_network_servers`, `aegis_network_arrivals`, `aegis_network_events`,
-`aegis_player_data`, `aegis_network_alliances`,
+`aegis_network_arenas`, `aegis_player_data`, `aegis_network_alliances`,
 `aegis_network_alliance_members`, `aegis_network_groups`,
 `aegis_network_group_members` — plus a `server` column on `aegis_plots`.
 
@@ -130,4 +156,12 @@ network:
     z: 0                      # optional exact landing point when world set
     register_commands: true   # register /hub and /lobby aliases
     redirect_new_players: false  # send brand-new network players to the hub
+  arenas:
+    publish: true             # advertise this backend's arenas network-wide
+  arena_return:
+    fallback_server: ""       # where fighters land if their origin went dark
+                              # ("" = hub server, then the arena's local exit)
 ```
+
+Arena-side knobs live under `arena:` — `lobby_seconds` (joinable window before
+waves start, `0` = instant) and `world:` (dedicated arena world + auto-zone).

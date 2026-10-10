@@ -19,7 +19,7 @@ public final class ArenaRun {
     private final UUID runId;
     private final String arenaId;
     private final ArenaMode mode;
-    private volatile ArenaRunState state = ArenaRunState.LOBBY;
+    private volatile ArenaRunState state = ArenaRunState.COUNTDOWN;
     private volatile ArenaEndReason endReason;
     private volatile UUID leaderId;
     private volatile UUID reservedLeaderId;
@@ -39,6 +39,10 @@ public final class ArenaRun {
     private volatile ArenaScalingTable.Row lockedScale = ArenaScalingTable.Row.identity();
     private volatile int startFighterCount = 1;
     private volatile long runSeed;
+    /** Remaining lobby-window ticks (seconds); only meaningful while state == LOBBY. */
+    private volatile int lobbyTicksRemaining;
+    /** When true the leader may skip the rest of the lobby countdown. */
+    private volatile boolean lobbyLeaderMayStart = true;
     private final AtomicBoolean cleanupDone = new AtomicBoolean(false);
     private final AtomicBoolean leadershipTransferToken = new AtomicBoolean(false);
     private volatile String pendingLeadershipTransferReason;
@@ -58,7 +62,7 @@ public final class ArenaRun {
 
     public ArenaRunState getState() { return state; }
     public void setState(ArenaRunState state) {
-        this.state = state == null ? ArenaRunState.LOBBY : state;
+        this.state = state == null ? ArenaRunState.COUNTDOWN : state;
         journal("state=" + this.state);
     }
 
@@ -120,6 +124,13 @@ public final class ArenaRun {
 
     public long getRunSeed() { return runSeed; }
     public void setRunSeed(long runSeed) { this.runSeed = runSeed; }
+
+    public int getLobbyTicksRemaining() { return lobbyTicksRemaining; }
+    public void setLobbyTicksRemaining(int seconds) { this.lobbyTicksRemaining = Math.max(0, seconds); }
+    public int decrementLobbyTicks() { return lobbyTicksRemaining = Math.max(0, lobbyTicksRemaining - 1); }
+    public boolean isLobbyLeaderMayStart() { return lobbyLeaderMayStart; }
+    public void setLobbyLeaderMayStart(boolean mayStart) { this.lobbyLeaderMayStart = mayStart; }
+    public boolean isInLobby() { return state == ArenaRunState.LOBBY; }
 
     public boolean markCleanupDone() { return cleanupDone.compareAndSet(false, true); }
     public boolean isCleanupDone() { return cleanupDone.get(); }

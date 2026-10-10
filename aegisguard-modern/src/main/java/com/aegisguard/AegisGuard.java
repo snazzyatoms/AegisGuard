@@ -144,6 +144,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.lockdown.LockdownService lockdownService;
     private com.aegisguard.routes.RouteService routeService;
     private com.aegisguard.arena.ArenaService arenaService;
+    private com.aegisguard.arena.ArenaWorldService arenaWorldService;
     private com.aegisguard.alliance.AllianceManager allianceManager;
     private com.aegisguard.alliance.AllianceService allianceService;
     private com.aegisguard.travel.SafeTravelService safeTravelService;
@@ -276,6 +277,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.lockdown.LockdownService lockdown() { return lockdownService; }
     public com.aegisguard.routes.RouteService routes() { return routeService; }
     public com.aegisguard.arena.ArenaService arena() { return arenaService; }
+    public com.aegisguard.arena.ArenaWorldService arenaWorld() { return arenaWorldService; }
     public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
@@ -378,6 +380,12 @@ public class AegisGuard extends JavaPlugin {
         lockdownService = new com.aegisguard.lockdown.LockdownService(this);
         routeService = new com.aegisguard.routes.RouteService(this);
         arenaService = new com.aegisguard.arena.ArenaService(this);
+        arenaWorldService = new com.aegisguard.arena.ArenaWorldService(this);
+        try {
+            arenaWorldService.ensureWorld();
+        } catch (Throwable t) {
+            getLogger().warning("[Arena] Arena world setup failed: " + t.getMessage());
+        }
         allianceManager = new com.aegisguard.alliance.AllianceManager(this);
         allianceService = new com.aegisguard.alliance.AllianceService(this);
         safeTravelService = new com.aegisguard.travel.SafeTravelService(this);

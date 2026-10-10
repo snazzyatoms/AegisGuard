@@ -335,6 +335,21 @@ public class SQLDataStore implements IDataStore {
                     " x DOUBLE, y DOUBLE, z DOUBLE, yaw FLOAT, pitch FLOAT," +
                     " issued_at BIGINT, expires_at BIGINT" +
                     " )");
+            ensureColumn(s, "aegis_network_arrivals", "payload", "VARCHAR(128)");
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_network_arenas (" +
+                    " server_name VARCHAR(64)," +
+                    " arena_id VARCHAR(64)," +
+                    " display_name VARCHAR(96)," +
+                    " mode VARCHAR(24)," +
+                    " preset_id VARCHAR(64)," +
+                    " min_players INT," +
+                    " max_players INT," +
+                    " enabled BOOLEAN," +
+                    " open_runs INT," +
+                    " max_runs INT," +
+                    " last_seen BIGINT," +
+                    " PRIMARY KEY (server_name, arena_id)" +
+                    " )");
             if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
                 s.execute("CREATE TABLE IF NOT EXISTS aegis_network_events (" +
                         " id BIGINT PRIMARY KEY AUTO_INCREMENT," +

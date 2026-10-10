@@ -104,6 +104,109 @@ public final class NetworkStore {
     }
 
     // ------------------------------------------------------------------
+    // Arena catalog (aegis_network_arenas) — hosts publish, others read
+    // ------------------------------------------------------------------
+
+    /**
+     * Upsert this backend's arena catalog. {@code rows} carries the arenas that
+     * should currently be advertised; ids absent from the list are pruned so a
+     * disabled/deleted arena disappears on the next heartbeat.
+     */
+    public void publishArenas(String serverName, List<NetworkModels.RemoteArena> rows) {
+        if (serverName == null || serverName.isBlank()) return;
+        List<NetworkModels.RemoteArena> safe = rows == null ? List.of() : rows;
+        String upsert = "REPLACE INTO aegis_network_arenas " +
+                "(server_name, arena_id, display_name, mode, preset_id, min_players, max_players, " +
+                " enabled, open_runs, max_runs, last_seen) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?, UNIX_TIMESTAMP(NOW(3))*1000)";
+        try (Connection c = conn()) {
+            c.setAutoCommit(false);
+            try (PreparedStatement ps = c.prepareStatement(upsert)) {
+                for (NetworkModels.RemoteArena a : safe) {
+                    if (a == null || a.arenaId() == null) continue;
+                    ps.setString(1, serverName);
+                    ps.setString(2, a.arenaId());
+                    ps.setString(3, a.displayName());
+                    ps.setString(4, a.mode());
+                    ps.setString(5, a.presetId());
+                    ps.setInt(6, a.minPlayers());
+                    ps.setInt(7, a.maxPlayers());
+                    ps.setBoolean(8, a.enabled());
+                    ps.setInt(9, a.openRuns());
+                    ps.setInt(10, a.maxRuns());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+            if (safe.isEmpty()) {
+                try (PreparedStatement ps = c.prepareStatement(
+                        "DELETE FROM aegis_network_arenas WHERE server_name = ?")) {
+                    ps.setString(1, serverName);
+                    ps.executeUpdate();
+                }
+            } else {
+                String in = safe.stream()
+                        .filter(a -> a != null && a.arenaId() != null)
+                        .map(a -> "'" + a.arenaId().replace("'", "''") + "'")
+                        .collect(java.util.stream.Collectors.joining(","));
+                if (!in.isBlank()) {
+                    try (PreparedStatement ps = c.prepareStatement(
+                            "DELETE FROM aegis_network_arenas WHERE server_name = ? AND arena_id NOT IN (" + in + ")")) {
+                        ps.setString(1, serverName);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+            c.commit();
+            c.setAutoCommit(true);
+        } catch (SQLException e) {
+            log("publish arenas", e);
+        }
+    }
+
+    /** Arenas advertised by OTHER backends (enabled only; caller filters freshness). */
+    public List<NetworkModels.RemoteArena> remoteArenas(String localServer) {
+        List<NetworkModels.RemoteArena> out = new ArrayList<>();
+        String sql = localServer != null
+                ? "SELECT * FROM aegis_network_arenas WHERE enabled = 1 AND server_name <> ?"
+                : "SELECT * FROM aegis_network_arenas WHERE enabled = 1";
+        try (Connection c = conn(); PreparedStatement ps = c.prepareStatement(sql)) {
+            if (localServer != null) ps.setString(1, localServer);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(new NetworkModels.RemoteArena(
+                            rs.getString("server_name"),
+                            rs.getString("arena_id"),
+                            rs.getString("display_name"),
+                            rs.getString("mode"),
+                            rs.getString("preset_id"),
+                            rs.getInt("min_players"),
+                            rs.getInt("max_players"),
+                            rs.getBoolean("enabled"),
+                            rs.getInt("open_runs"),
+                            rs.getInt("max_runs"),
+                            rs.getLong("last_seen")));
+                }
+            }
+        } catch (SQLException e) {
+            log("remote arenas", e);
+        }
+        return out;
+    }
+
+    /** Remove this backend's arena advertisements (shutdown / module off). */
+    public void clearOwnArenas(String serverName) {
+        if (serverName == null || serverName.isBlank()) return;
+        try (Connection c = conn(); PreparedStatement ps = c.prepareStatement(
+                "DELETE FROM aegis_network_arenas WHERE server_name = ?")) {
+            ps.setString(1, serverName);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log("clear arenas", e);
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Pending arrivals
     // ------------------------------------------------------------------
 
@@ -111,8 +214,8 @@ public final class NetworkStore {
         // issued_at/expires_at stamped by the DB clock; the TTL comes from the
         // model delta so consumers on any backend compare like-for-like times.
         String sql = "REPLACE INTO aegis_network_arrivals " +
-                "(player_uuid, target_server, kind, plot_id, beacon_id, world, x, y, z, yaw, pitch, issued_at, expires_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?, UNIX_TIMESTAMP(NOW(3))*1000, UNIX_TIMESTAMP(NOW(3))*1000 + ?)";
+                "(player_uuid, target_server, kind, plot_id, beacon_id, world, x, y, z, yaw, pitch, payload, issued_at, expires_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?, UNIX_TIMESTAMP(NOW(3))*1000, UNIX_TIMESTAMP(NOW(3))*1000 + ?)";
         try (Connection c = conn(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, arrival.playerUuid().toString());
             ps.setString(2, arrival.targetServer());
@@ -125,7 +228,8 @@ public final class NetworkStore {
             ps.setDouble(9, arrival.z());
             ps.setFloat(10, arrival.yaw());
             ps.setFloat(11, arrival.pitch());
-            ps.setLong(12, Math.max(0L, arrival.expiresAt() - arrival.issuedAt()));
+            ps.setString(12, arrival.payload());
+            ps.setLong(13, Math.max(0L, arrival.expiresAt() - arrival.issuedAt()));
             ps.executeUpdate();
         } catch (SQLException e) {
             log("write arrival", e);
@@ -204,7 +308,8 @@ public final class NetworkStore {
                 rs.getString("world"),
                 rs.getDouble("x"), rs.getDouble("y"), rs.getDouble("z"),
                 rs.getFloat("yaw"), rs.getFloat("pitch"),
-                rs.getLong("issued_at"), rs.getLong("expires_at"));
+                rs.getLong("issued_at"), rs.getLong("expires_at"),
+                rs.getString("payload"));
     }
 
     // ------------------------------------------------------------------

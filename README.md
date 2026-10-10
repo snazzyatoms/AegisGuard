@@ -136,6 +136,8 @@ Optional systems live under `modules:` in `config.yml` and are **on by default**
 
 Cooperative PvE party dungeons on bound server plots. **Enabled by default** (`modules.arena: true` / `arena.enabled: true`). Scheduling goes through an internal `ArenaScheduler` that stays Folia-safe (entity, region, global, and async paths). Use `/ag arena diag` if Arena will not activate on Folia. Turn Arena off from the module switchboard if your server does not want it.
 
+Optional extras: `arena.lobby_seconds` opens a joinable lobby before waves start (players can attach while it counts down; the leader force-starts by re-running join). `arena.world.enabled` provisions a dedicated arena world (VOID/FLAT/NORMAL) where `arena create` auto-claims a protected server zone. On BungeeCord/Velocity networks with shared MySQL, each backend advertises its arenas network-wide — `/ag arena list` and the arena GUI show remote arenas, `/ag arena join <server>:<arena>` hops players to the host and sends them home when the run ends. See `NETWORK_SETUP.md`.
+
 ## What Improved In 1.3.0
 
 Everyday territory tools are clearer: **My Rentals** and **My Tenants** for contracts, a **Settlements Inbox** for related notices, ClaimBlock gifts (`/ag giftblocks`), and adjacent claim merge (`/ag merge`). Staff review expansion through **Instant Approvals** versus **Pending Review**. Convert-to-server now has a dedicated GUI that shares the stewardship pipeline above.

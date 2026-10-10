@@ -30,8 +30,16 @@ public final class ArenaGUI {
 
     public static class ArenaMenuHolder implements InventoryHolder {
         private final int page;
-        public ArenaMenuHolder(int page) { this.page = page; }
+        private final java.util.Map<Integer, com.aegisguard.network.NetworkModels.RemoteArena> remoteSlots;
+        public ArenaMenuHolder(int page,
+                               java.util.Map<Integer, com.aegisguard.network.NetworkModels.RemoteArena> remoteSlots) {
+            this.page = page;
+            this.remoteSlots = remoteSlots == null ? java.util.Map.of() : remoteSlots;
+        }
         public int getPage() { return page; }
+        public com.aegisguard.network.NetworkModels.RemoteArena remoteAt(int slot) {
+            return remoteSlots.get(slot);
+        }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -70,6 +78,24 @@ public final class ArenaGUI {
             plugin.msg().send(player, "no_perm");
             return;
         }
+        // Remote arenas come from the shared SQL registry — fetch async, then
+        // render on the entity thread (same pattern as the beacon GUI).
+        var net = plugin.network();
+        if (net == null || !net.isNetworked() || net.store() == null) {
+            render(player, page, List.of());
+            return;
+        }
+        String localName = net.serverName();
+        plugin.scheduler().runAsync(() -> {
+            List<com.aegisguard.network.NetworkModels.RemoteArena> remotes =
+                    net.store().remoteArenas(localName);
+            plugin.scheduler().runEntity(player,
+                    () -> render(player, page, remotes == null ? List.of() : remotes), null);
+        });
+    }
+
+    private void render(Player player, int page,
+                        List<com.aegisguard.network.NetworkModels.RemoteArena> remotes) {
         List<ArenaDefinition> arenas = new ArrayList<>(service.allArenas());
         arenas.sort(Comparator.comparing(ArenaDefinition::getDisplayName, String.CASE_INSENSITIVE_ORDER));
         int perPage = 21;
@@ -77,7 +103,9 @@ public final class ArenaGUI {
         int safePage = Math.max(0, Math.min(page, maxPages - 1));
 
         String title = plugin.gui().title(player, "arena_menu_title", "&6Arenas");
-        Inventory inv = Bukkit.createInventory(new ArenaMenuHolder(safePage), 54, title);
+        java.util.Map<Integer, com.aegisguard.network.NetworkModels.RemoteArena> remoteSlots =
+                new java.util.HashMap<>();
+        Inventory inv = Bukkit.createInventory(new ArenaMenuHolder(safePage, remoteSlots), 54, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
@@ -110,6 +138,36 @@ public final class ArenaGUI {
             inv.setItem(i, GUIManager.createItem(
                     def.isEnabled() ? Material.NETHERITE_SWORD : Material.STONE_SWORD,
                     "&e" + def.getDisplayName(), lore));
+        }
+
+        // Remote arena band — bottom content row (36-44). Clicking one hops the
+        // player to the hosting backend and lands them in that arena.
+        if (remotes != null && !remotes.isEmpty()) {
+            var net = plugin.network();
+            int slot = 36;
+            for (com.aegisguard.network.NetworkModels.RemoteArena ra : remotes) {
+                if (ra == null || ra.arenaId() == null) continue;
+                if (slot > 44) break;
+                boolean online = net != null && net.isServerOnline(ra.serverName());
+                List<String> lore = new ArrayList<>();
+                lore.add(GUIManager.color(t(player, "arena_remote_server_line",
+                        Map.of("SERVER", ra.serverName() == null ? "?" : ra.serverName()),
+                        "&7Server: &f{SERVER}")));
+                lore.add(GUIManager.color(t(player, "arena_mode_line",
+                        Map.of("MODE", ra.mode() == null ? "?" : ra.mode()), "&7Mode: &f{MODE}")));
+                lore.add(GUIManager.color(t(player, "arena_players_line",
+                        Map.of("MIN", String.valueOf(ra.minPlayers()),
+                                "MAX", String.valueOf(ra.maxPlayers())),
+                        "&7Players: &f{MIN}-{MAX}")));
+                lore.add(GUIManager.color(online
+                        ? t(player, "arena_remote_online", "&aOnline — click to travel")
+                        : t(player, "arena_remote_offline_lore", "&cServer offline")));
+                remoteSlots.put(slot, ra);
+                inv.setItem(slot, GUIManager.createItem(
+                        online ? Material.ENDER_PEARL : Material.GRAY_DYE,
+                        "&d" + ra.label(), lore));
+                slot++;
+            }
         }
 
         inv.setItem(45, GUIManager.createItem(Material.ARROW,
@@ -198,6 +256,20 @@ public final class ArenaGUI {
                 open(player, menu.getPage() + 1);
                 return;
             }
+            com.aegisguard.network.NetworkModels.RemoteArena remote = menu.remoteAt(slot);
+            if (remote != null) {
+                player.closeInventory();
+                var net = plugin.network();
+                var travel = plugin.networkTravel();
+                if (net == null || travel == null
+                        || !net.isServerOnline(remote.serverName())) {
+                    plugin.msg().send(player, "arena_remote_offline",
+                            Map.of("SERVER", remote.serverName() == null ? "?" : remote.serverName()));
+                    return;
+                }
+                travel.sendToArenaJoin(player, remote.serverName(), remote.arenaId());
+                return;
+            }
             if (slot >= 0 && slot < 21) {
                 ItemStack item = e.getCurrentItem();
                 if (item == null || item.getType() == Material.AIR || item.getType() == Material.GRAY_STAINED_GLASS_PANE) {
@@ -225,6 +297,24 @@ public final class ArenaGUI {
             }
             if (slot == 11) {
                 player.closeInventory();
+                // Same routing as /ag arena join: own lobby → start now,
+                // someone else's open lobby → attach, else fresh run.
+                ArenaRun mine = service.getRunForPlayer(player.getUniqueId());
+                if (mine != null && mine.isInLobby()
+                        && mine.getArenaId().equalsIgnoreCase(def.getId())) {
+                    if (service.startLobbyNow(player)) {
+                        plugin.msg().send(player, "arena_lobby_started_early");
+                    } else {
+                        plugin.msg().send(player, "arena_not_leader");
+                    }
+                    return;
+                }
+                ArenaRun lobby = service.findOpenLobby(def.getId());
+                if (lobby != null) {
+                    String err = service.joinLobbyRun(player, lobby, null);
+                    if (err != null) sendFail(player, err);
+                    return;
+                }
                 String err = service.tryStart(player, def.getId());
                 if (err != null) sendFail(player, err);
                 else plugin.msg().send(player, "arena_run_started");

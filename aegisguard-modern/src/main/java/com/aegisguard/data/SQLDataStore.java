@@ -571,7 +571,8 @@ public class SQLDataStore implements IDataStore {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "[Storage] SQL load failed", e);
         }
 
         int zoneCount = 0;
@@ -618,7 +619,8 @@ public class SQLDataStore implements IDataStore {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "[Storage] SQL load failed", e);
         }
 
         try (Connection conn = hikari.getConnection();
@@ -648,7 +650,8 @@ public class SQLDataStore implements IDataStore {
                 } catch (Exception ignored) {}
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "[Storage] SQL load failed", e);
         }
 
         try (Connection conn = hikari.getConnection();
@@ -664,7 +667,8 @@ public class SQLDataStore implements IDataStore {
                 } catch (Exception ignored) {}
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "[Storage] SQL load failed", e);
         }
 
         int stallCount = 0;
@@ -701,7 +705,8 @@ public class SQLDataStore implements IDataStore {
                 } catch (Exception ignored) {}
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "[Storage] SQL load failed", e);
         }
 
         try (Connection conn = hikari.getConnection();
@@ -722,7 +727,8 @@ public class SQLDataStore implements IDataStore {
                 } catch (Exception ignored) {}
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE,
+                    "[Storage] SQL load failed", e);
         }
 
         plugin.getLogger().info("Loaded " + plotCount + " plots, " + zoneCount + " zones, and " + stallCount + " stalls from Database.");

@@ -500,7 +500,10 @@ public class ClaimBlockManager {
             cache.clear();
             if (!file.exists()) {
                 try { file.getParentFile().mkdirs(); file.createNewFile(); }
-                catch (IOException e) { e.printStackTrace(); }
+                catch (IOException e) {
+                    plugin.getLogger().log(java.util.logging.Level.WARNING,
+                            "[ClaimBlocks] Could not create data file " + file.getName(), e);
+                }
             }
 
             data = YamlConfiguration.loadConfiguration(file);
@@ -575,7 +578,8 @@ public class ClaimBlockManager {
 
             try { data.save(file); }
             catch (IOException e) {
-                e.printStackTrace();
+                plugin.getLogger().log(java.util.logging.Level.WARNING,
+                        "[ClaimBlocks] Failed to save " + file.getName(), e);
                 dirty = true;
             } finally {
                 saveQueued = false;

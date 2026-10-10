@@ -862,7 +862,10 @@ public class ClaimBlockExchangeService {
         synchronized (ioLock) {
             if (!file.exists()) {
                 try { file.getParentFile().mkdirs(); file.createNewFile(); }
-                catch (IOException e) { e.printStackTrace(); }
+                catch (IOException e) {
+                    plugin.getLogger().log(java.util.logging.Level.WARNING,
+                            "[ClaimBlocks] Could not create exchange file " + file.getName(), e);
+                }
             }
             data = YamlConfiguration.loadConfiguration(file);
 
@@ -940,7 +943,10 @@ public class ClaimBlockExchangeService {
             }
 
             try { data.save(file); }
-            catch (IOException ex) { ex.printStackTrace(); }
+            catch (IOException ex) {
+                plugin.getLogger().log(java.util.logging.Level.WARNING,
+                        "[ClaimBlocks] Failed to save exchange file " + file.getName(), ex);
+            }
         }
     }
 

@@ -924,7 +924,8 @@ public class ProtectionManager implements Listener {
             if (!p.isOnline()) return;
             Plot inside = plugin.store().getPlotAt(p.getLocation());
             if (inside != null && inside.isBanned(p.getUniqueId())) {
-                p.teleport(p.getWorld().getSpawnLocation());
+                // Cross-region on Folia — must be the async-capable path, not sync teleport.
+                com.aegisguard.util.TeleportUtil.safeTeleportToCurrentWorldSpawn(plugin, p);
                 sendPlotMessage(p, tr(p, "plot_banned_entry",
                         "&c⛔ You are banned from entering this claim."));
             }

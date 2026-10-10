@@ -8,8 +8,8 @@
 # Recommended setup order:
 #  1. localization   - choose default and fallback languages
 #  2. modules        - optional systems are on by default except wilderness_revert (off; SQL-only)
-#  3. hooks          - enable only the integrations your server actually uses
-#  4. storage        - choose YML file storage or a database backend
+#  3. storage        - choose YML file storage or a database backend (right below modules)
+#  4. hooks          - enable only the integrations your server actually uses
 #  5. network        - BungeeCord/Velocity cross-server features (needs shared MySQL/MariaDB)
 #  6. economy        - decide whether claims use Vault, ClaimBlocks, or both
 #  7. claims         - set claim limits, costs, and per-world behavior
@@ -131,6 +131,53 @@ modules:
   succession: true
   caravans: true
   gatherings: true
+
+
+# ==============================================================================
+# Storage
+# ==============================================================================
+# Chooses where plot / zone / stall data is persisted.
+#
+# Allowed values for backend and type (keep them EQUAL):
+#   yml      - file-per-plot YAML under plugins/AegisGuard/plots/ (best for small/medium)
+#   sqlite   - local SQLite file (single-node without an external DB)
+#   mysql    - external MySQL
+#   mariadb  - external MariaDB (same connection settings as mysql)
+#   sql      - legacy alias; treated as sqlite
+#
+# Keep storage.backend and storage.type the same string. Both keys are read for
+# compatibility with older configs; mismatched values can surprise you.
+#
+# Scope: storage.* covers plot / zone / stall records only. Satellite files always
+# remain YAML regardless of backend (alliances.yml, territory-life.yml, audit,
+# routes, beacons.yml, player notification prefs, etc.).
+#
+# Autosave: YML writes use synchronous save-on-change (temp file + atomic move).
+# SQL backends use a connection pool; savePlot is async and savePlotSync waits.
+# There is no separate storage.autosave interval toggle.
+#
+# Switching backends: use Doctor → Storage Migrate (or /agadmin migrate) for
+# guided YML ↔ SQL plot conversion with timestamped backups. Do not swap
+# storage.backend/type and expect plots to appear without a migrate step.
+storage:
+  # Keep these two keys equal (yml | sqlite | mysql | mariadb).
+  backend: "yml"
+  type: "yml"
+
+  database:
+    # SQLite database filename, relative to plugins/AegisGuard/. This value is honored.
+    file: "aegisguard.db"
+    # MySQL/MariaDB connection — the server address, port, and schema name.
+    # On a BungeeCord network every backend points at the SAME database.
+    host: "localhost"
+    port: 3306
+    database: "aegisguard"
+    # WARNING: replace these before enabling mysql/mariadb. Do not commit real
+    # credentials into version control or shared config packs.
+    username: "root"
+    password: "password"
+    # Encrypt the database connection. Requires TLS configured on the DB server.
+    useSSL: false
 
 
 # ==============================================================================
@@ -431,53 +478,6 @@ hooks:
       residence:
         enabled: false
         priority: 70
-
-
-# ==============================================================================
-# Storage
-# ==============================================================================
-# Chooses where plot / zone / stall data is persisted.
-#
-# Allowed values for backend and type (keep them EQUAL):
-#   yml      - file-per-plot YAML under plugins/AegisGuard/plots/ (best for small/medium)
-#   sqlite   - local SQLite file (single-node without an external DB)
-#   mysql    - external MySQL
-#   mariadb  - external MariaDB (same connection settings as mysql)
-#   sql      - legacy alias; treated as sqlite
-#
-# Keep storage.backend and storage.type the same string. Both keys are read for
-# compatibility with older configs; mismatched values can surprise you.
-#
-# Scope: storage.* covers plot / zone / stall records only. Satellite files always
-# remain YAML regardless of backend (alliances.yml, territory-life.yml, audit,
-# routes, beacons.yml, player notification prefs, etc.).
-#
-# Autosave: YML writes use synchronous save-on-change (temp file + atomic move).
-# SQL backends use a connection pool; savePlot is async and savePlotSync waits.
-# There is no separate storage.autosave interval toggle.
-#
-# Switching backends: use Doctor → Storage Migrate (or /agadmin migrate) for
-# guided YML ↔ SQL plot conversion with timestamped backups. Do not swap
-# storage.backend/type and expect plots to appear without a migrate step.
-storage:
-  # Keep these two keys equal (yml | sqlite | mysql | mariadb).
-  backend: "yml"
-  type: "yml"
-
-  database:
-    # SQLite database filename, relative to plugins/AegisGuard/. This value is honored.
-    file: "aegisguard.db"
-    # MySQL/MariaDB connection — the server address, port, and schema name.
-    # On a BungeeCord network every backend points at the SAME database.
-    host: "localhost"
-    port: 3306
-    database: "aegisguard"
-    # WARNING: replace these before enabling mysql/mariadb. Do not commit real
-    # credentials into version control or shared config packs.
-    username: "root"
-    password: "password"
-    # Encrypt the database connection. Requires TLS configured on the DB server.
-    useSSL: false
 
 
 # ==============================================================================

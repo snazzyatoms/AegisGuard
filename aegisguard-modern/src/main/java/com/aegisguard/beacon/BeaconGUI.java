@@ -668,6 +668,7 @@ public final class BeaconGUI {
                 try {
                     beacon.applyPreset(TeleportBeacon.Preset.valueOf(action.substring(7).toUpperCase()));
                     service.store().put(beacon);
+                    service.store().save();
                     openSetup(player, beacon);
                 } catch (IllegalArgumentException ignored) {}
             }
@@ -699,6 +700,7 @@ public final class BeaconGUI {
                 if (remote == null || !service.linkRemote(player, origin, remote)) {
                     service.send(player, "beacon_denied", "&cYou are not allowed to link to that beacon.");
                 } else {
+                    service.store().save();
                     // Remote rows are read-only here — link is always one-way.
                     service.send(player, "beacon_linked_remote",
                             "&aLinked to &f{NAME}&a on &b{SERVER}&a — one-way link. Stand here to travel.",
@@ -716,6 +718,7 @@ public final class BeaconGUI {
                     service.send(player, "beacon_denied", "&cYou are not allowed to link to that beacon.");
                 } else if (dest != null) {
                     BeaconService.LinkResult result = service.linkBothWays(player, origin, dest, link.bothWays());
+                    service.store().save();
                     switch (result) {
                         case LINKED_BOTH -> service.send(player, "beacon_link_both_done",
                                 "&aRound trip linked: &f{NAME}&a ↔ here.", Map.of("NAME", dest.getName()));

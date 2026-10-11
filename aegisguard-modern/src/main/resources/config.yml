@@ -222,6 +222,9 @@ caravans:
   # Optional insurance: pays out if an ambush event destroys cargo.
   insurance_enabled: true
   insurance_rate: 0.15
+  # Optional escorts: dispatchers may hire an online player to halve ambush
+  # risk for a cut of the delivery. The hired escort must stay online to count.
+  escorts_enabled: true
   # Travel speed: milliseconds of transit per block of distance, clamped below.
   ms_per_block: 50
   min_travel_ms: 5000

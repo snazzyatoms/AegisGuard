@@ -79,6 +79,14 @@ public final class CaravanService {
         return plugin.getConfig().getBoolean("caravans.insurance_enabled", true);
     }
 
+    public boolean escortsEnabled() {
+        return plugin.getConfig().getBoolean("caravans.escorts_enabled", true);
+    }
+
+    public double escortCutRate() {
+        return plugin.getConfig().getDouble("caravans.escort_cut_rate", 0.10D);
+    }
+
     public List<TradeRoute> listRoutes() {
         List<TradeRoute> routes = new ArrayList<>();
         if (plugin.beacons() == null || !plugin.beacons().isEnabled()) return routes;
@@ -185,7 +193,17 @@ public final class CaravanService {
             return null;
         }
         UUID escort = escortId != null && escortId.equals(player.getUniqueId()) ? null : escortId;
-        if (escort != null && escort.equals(route.destPlotOwner()) && escort.equals(player.getUniqueId())) {
+        if (escort != null && !escortsEnabled()) {
+            escort = null;
+        }
+        // The destination owner already earns the route toll — letting them
+        // escort too would double-pay them on their own pad.
+        if (escort != null && escort.equals(route.destPlotOwner())) {
+            escort = null;
+        }
+        if (escort != null && Bukkit.getPlayer(escort) == null) {
+            send(player, "caravan_escort_offline",
+                    "&eThat escort is no longer online — the caravan rides unguarded.");
             escort = null;
         }
         double cargo = clampCargo(cargoValue);
@@ -232,6 +250,16 @@ public final class CaravanService {
                 "&aCaravan dispatched on &f{ROUTE}&a. ETA &f{SECONDS}&a second(s).",
                 Map.of("ROUTE", caravan.routeLabel(),
                         "SECONDS", String.valueOf(Math.max(1L, route.travelMs() / 1000L))));
+        if (escort != null) {
+            Player escortPlayer = Bukkit.getPlayer(escort);
+            if (escortPlayer != null) {
+                long pct = Math.round(escortCutRate() * 100.0D);
+                plugin.runMain(escortPlayer, () -> send(escortPlayer, "caravan_escort_hired",
+                        "&6{PLAYER}&e hired you to escort a caravan on &f{ROUTE}&e for a &f{PCT}%&e cut.",
+                        Map.of("PLAYER", player.getName(), "ROUTE", caravan.routeLabel(),
+                                "PCT", String.valueOf(pct))));
+            }
+        }
         if (plugin.effects() != null) plugin.effects().playConfirm(player);
         return caravan;
     }
@@ -342,7 +370,7 @@ public final class CaravanService {
                 plugin.getConfig().getDouble("caravans.ambush_loss_rate", 1.0D),
                 plugin.getConfig().getDouble("caravans.boon_bonus_rate", 0.20D),
                 plugin.getConfig().getDouble("caravans.toll_rate", 0.05D),
-                plugin.getConfig().getDouble("caravans.escort_cut_rate", 0.10D));
+                escortCutRate());
         caravan.setLastEvent(event);
         caravan.setArrivedAt(now);
         if (settlement.failed()) {
@@ -354,6 +382,13 @@ public final class CaravanService {
             payout(caravan.getOwnerId(), settlement.merchantPayout());
             payout(caravan.getDestPlotOwner(), settlement.ownerToll());
             payout(caravan.getEscortId(), settlement.escortCut());
+            Player escortPlayer = caravan.getEscortId() == null ? null : Bukkit.getPlayer(caravan.getEscortId());
+            if (escortPlayer != null && settlement.escortCut() > 0.0D) {
+                double cut = settlement.escortCut();
+                plugin.runMain(escortPlayer, () -> send(escortPlayer, "caravan_escort_paid",
+                        "&aYour escort cut arrived: &f{AMOUNT}&a.",
+                        Map.of("AMOUNT", String.format(java.util.Locale.US, "%.2f", cut))));
+            }
             caravan.setStatus(Caravan.Status.ARRIVED);
             caravan.setDeliveredValue(settlement.merchantPayout());
             caravan.setTollPaid(settlement.ownerToll());

@@ -367,6 +367,13 @@ public class VaultHook implements Listener {
             this.hasMethod = type.getMethod("has", OfflinePlayer.class, double.class);
             this.withdrawPlayerMethod = type.getMethod("withdrawPlayer", OfflinePlayer.class, double.class);
             this.depositPlayerMethod = type.getMethod("depositPlayer", OfflinePlayer.class, double.class);
+            // Providers registered as non-public (private/anonymous) classes are
+            // otherwise uninvocable — setAccessible bypasses the class-visibility check.
+            for (Method m : new Method[]{
+                    this.getNameMethod, this.formatMethod, this.getBalanceMethod,
+                    this.hasMethod, this.withdrawPlayerMethod, this.depositPlayerMethod}) {
+                m.setAccessible(true);
+            }
 
             Class<?> responseType = withdrawPlayerMethod.getReturnType();
             this.transactionSuccessMethod = responseType.getMethod("transactionSuccess");

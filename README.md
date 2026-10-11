@@ -44,7 +44,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Guardian Succession.** Co-owner and steward grants auto-lock. `/ag heir`, `/ag succession assume|rollback|menu`, and a Stewardship page cover inactivity assume, transfer cooldown, and a short rollback window.
 
-**Caravans & Trade Routes.** `/ag caravan` dispatches charge-then-deliver shipments along public beacon hops, with insurance, weighted route events, Folia-safe ticks, and resume after restart.
+**Caravans & Trade Routes.** `/ag caravan` dispatches charge-then-deliver shipments along public beacon hops, with insurance, weighted route events, Folia-safe ticks, and resume after restart. Hire an online player as **escort** from the dispatch menu — escorts halve ambush risk for a configurable cut (`caravans.escorts_enabled`, `escort_cut_rate`).
 
 **Server sanctuary.** On a server or spawn plot, staff with manage/steward can turn on **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** in Claim Settings → Safety. Players then do not lose hearts or food there, and deaths can keep levels and items. All start **off**. Personal plots cannot use this. There is no hub-flight Safety toggle.
 

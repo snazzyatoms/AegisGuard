@@ -39,6 +39,8 @@ Granting `co_owner` or `steward` auto-locks that member. `/ag heir`, `/ag succes
 
 `/ag caravan` dispatches charge-then-deliver shipments along public beacon hops. Insurance, weighted route events (safe, ambush, toll, boon, delay), Folia-safe ticks, YAML+SQL persistence, and resume-on-load are included. Gate with `modules.caravans`.
 
+Dispatchers can hire an **escort** from the caravan menu — pick any online player (cycle the shield icon). Escorts halve ambush losses for a `escort_cut_rate` share of the delivery, are notified when hired and when paid, and lose the job if they log out. The destination owner can't escort their own route. Toggle with `caravans.escorts_enabled`.
+
 ### Server sanctuary
 
 Staff who can manage a **server plot** (spawn, hub, and other staff-owned land) can turn on **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** in Claim Settings → Safety. Players standing in that plot then do not lose hearts or food, and deaths there can keep levels and items. Eating can still fill the hunger bar. Void and `/kill` still apply. All four toggles start **off**. Personal player claims never get them. There is **no hub-flight Safety flag**. Plot flight still unlocks at Ascension / Horizon level 30. Staff can fly when `flight_skill.staff_always` is on, or grant a temporary flight skill with `/agadmin skill fly <player> [seconds]`.

@@ -90,4 +90,70 @@ class Phase5CaravansContractTest {
         String audit = Files.readString(JAVA.resolve("audit/AuditCategory.java"));
         assertTrue(audit.contains("CARAVAN"));
     }
+
+    /**
+     * Escorts must actually be reachable: the GUI carries an escort pick into
+     * dispatch, the destination-owner double-dip guard is a live check (not
+     * dead code), the escorts_enabled gate exists, and hired/paid notices are
+     * localized chat keys.
+     */
+    @Test
+    void escortPickerIsWiredEndToEnd() throws Exception {
+        String gui = Files.readString(JAVA.resolve("caravans/CaravanGUI.java"));
+        assertTrue(gui.contains("escortChoice"),
+                "caravan GUI must remember the escort pick");
+        assertTrue(gui.contains("cycle_escort"),
+                "a toggle must cycle eligible online players");
+        assertTrue(gui.contains("escortId"),
+                "dispatch must receive the picked escort");
+        assertTrue(gui.contains("Bukkit.getPlayer(pick)"),
+                "stale escort picks must prune when the player goes offline");
+
+        String service = Files.readString(JAVA.resolve("caravans/CaravanService.java"));
+        assertTrue(service.contains("escort.equals(route.destPlotOwner())"),
+                "destination owner must not double-dip toll + escort cut");
+        assertFalse(service.contains("escort.equals(route.destPlotOwner()) && escort.equals(player.getUniqueId())"),
+                "the double-dip guard must not be dead code (self-escort is already nulled)");
+        assertTrue(service.contains("escortsEnabled()"),
+                "dispatch must honor caravans.escorts_enabled");
+        assertTrue(service.contains("caravan_escort_hired"),
+                "the hired escort must be notified");
+        assertTrue(service.contains("caravan_escort_paid"),
+                "the escort payout must be notified");
+
+        String lang = Files.readString(RESOURCES.resolve("lang/modern_english/system.yml"));
+        for (String key : new String[]{
+                "caravan_escort_hired", "caravan_escort_paid", "caravan_escort_offline"}) {
+            assertTrue(lang.contains(key + ":"),
+                    "modern_english must define " + key);
+        }
+        String guis = Files.readString(RESOURCES.resolve("lang/modern_english/guis.yml"));
+        for (String key : new String[]{
+                "caravan_escort_picked", "caravan_escort_none", "caravan_escort_lore"}) {
+            assertTrue(guis.contains(key + ":"),
+                    "modern_english guis must define " + key);
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void escortsEnabledShipsInConfig() throws Exception {
+        Map<String, Object> config;
+        try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
+            config = new Yaml().load(in);
+        }
+        Map<String, Object> caravans = (Map<String, Object>) config.get("caravans");
+        assertEquals(Boolean.TRUE, caravans.get("escorts_enabled"),
+                "caravans.escorts_enabled must ship enabled by default");
+    }
+
+    @Test
+    void vaultHookInvokesNonPublicProviders() throws Exception {
+        // Economy providers registered as private/anonymous classes are
+        // uninvocable unless the reflected Method is made accessible — every
+        // has/charge/deposit would silently return false (found live on rig).
+        String hook = Files.readString(JAVA.resolve("economy/VaultHook.java"));
+        assertTrue(hook.contains("setAccessible(true)"),
+                "VaultHook must setAccessible on reflected provider methods");
+    }
 }

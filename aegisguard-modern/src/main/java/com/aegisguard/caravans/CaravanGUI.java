@@ -25,16 +25,18 @@ public final class CaravanGUI {
     private final AegisGuard plugin;
     private final Map<UUID, Double> cargoChoice = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> insureChoice = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> escortChoice = new ConcurrentHashMap<>();
 
     public CaravanGUI(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
-    /** Drops a player's remembered cargo/insurance choices (called on quit). */
+    /** Drops a player's remembered cargo/insurance/escort choices (called on quit). */
     public void clearSession(UUID playerId) {
         if (playerId == null) return;
         cargoChoice.remove(playerId);
         insureChoice.remove(playerId);
+        escortChoice.remove(playerId);
     }
 
     public static final class Holder implements HubOriginHolder {
@@ -129,6 +131,20 @@ public final class CaravanGUI {
         plugin.gui().tagAction(insure, "toggle_insure");
         inv.setItem(43, insure);
 
+        if (service.escortsEnabled()) {
+            Player escort = escortFor(player);
+            String escortName = escort == null ? "" : escort.getName();
+            ItemStack escortItem = GUIManager.createItem(Material.SHIELD,
+                    t(player, escort == null ? "caravan_escort_none" : "caravan_escort_picked",
+                            escort == null ? "&7Escort: &fnone" : "&aEscort: &f{PLAYER}",
+                            Map.of("PLAYER", escortName)),
+                    List.of(t(player, "caravan_escort_lore",
+                            "&7Halves ambush risk for a {PCT}% cut of delivery. Click to cycle online players.",
+                            Map.of("PCT", String.valueOf(Math.round(service.escortCutRate() * 100.0D))))));
+            plugin.gui().tagAction(escortItem, "cycle_escort");
+            inv.setItem(44, escortItem);
+        }
+
         // Standalone nav row: hub return (when launched from the hub), menu, close.
         if (holder.isFromHub()) {
             ItemStack hub = GUIManager.createItem(Material.COMPASS,
@@ -186,13 +202,21 @@ public final class CaravanGUI {
                 open(player);
                 return;
             }
+            case "cycle_escort" -> {
+                if (service != null && service.escortsEnabled()) {
+                    cycleEscort(player);
+                }
+                open(player);
+                return;
+            }
             default -> { }
         }
         if (action.startsWith("dispatch:") && service != null) {
             UUID origin = parseUuid(action.substring("dispatch:".length()));
             if (origin == null) return;
             boolean insured = insureChoice.getOrDefault(player.getUniqueId(), false);
-            service.dispatch(player, origin, cargoFor(player, service), insured, null);
+            UUID escortId = escortChoice.get(player.getUniqueId());
+            service.dispatch(player, origin, cargoFor(player, service), insured, escortId);
             open(player);
             return;
         }
@@ -254,6 +278,47 @@ public final class CaravanGUI {
         }
         if (service != null) next = Math.min(service.maxCargo(), Math.max(service.minCargo(), next));
         cargoChoice.put(player.getUniqueId(), next);
+    }
+
+    /** Current escort pick as an online Player, or null when unset/gone (stale picks are pruned). */
+    private Player escortFor(Player player) {
+        UUID pick = escortChoice.get(player.getUniqueId());
+        if (pick == null) return null;
+        Player escort = Bukkit.getPlayer(pick);
+        if (escort == null) {
+            escortChoice.remove(player.getUniqueId());
+            return null;
+        }
+        return escort;
+    }
+
+    /**
+     * Cycle the escort pick through online players (excluding the dispatcher):
+     * none → first eligible → … → last eligible → none.
+     */
+    private void cycleEscort(Player player) {
+        List<Player> eligible = new ArrayList<>(Bukkit.getOnlinePlayers());
+        eligible.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
+        eligible.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        UUID current = escortChoice.get(player.getUniqueId());
+        UUID next = null;
+        if (current == null) {
+            next = eligible.isEmpty() ? null : eligible.get(0).getUniqueId();
+        } else {
+            for (int i = 0; i < eligible.size(); i++) {
+                if (eligible.get(i).getUniqueId().equals(current)) {
+                    next = i + 1 < eligible.size() ? eligible.get(i + 1).getUniqueId() : null;
+                    break;
+                }
+            }
+            // Current pick vanished from the list (went offline): restart the cycle.
+            if (next == null && !eligible.isEmpty()
+                    && eligible.stream().noneMatch(p -> p.getUniqueId().equals(current))) {
+                next = eligible.get(0).getUniqueId();
+            }
+        }
+        if (next == null) escortChoice.remove(player.getUniqueId());
+        else escortChoice.put(player.getUniqueId(), next);
     }
 
     private Material iconFor(CaravanRules.Risk risk) {

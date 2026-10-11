@@ -16,6 +16,7 @@ import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.generator.ChunkGenerator;
 
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Owns the optional dedicated arena world ({@code arena.world.*}).
@@ -125,23 +126,42 @@ public final class ArenaWorldService {
     public void cleanupFloor(ArenaRun run, ArenaDefinition def) {
         if (!isEnabled() || run == null || def == null) return;
         if (!plugin.getConfig().getBoolean("arena.world.cleanup_on_run_end", true)) return;
-        Plot floor = def.getArenaPlotId() == null
-                ? null
-                : plugin.store().getPlotById(def.getArenaPlotId());
+
+        // Instanced run: the combat space is the pasted cuboid, not a plot.
+        Location io = run.getInstanceOrigin();
+        ArenaFloor instancedFloor = run.getFloor();
+        if (io != null && io.getWorld() != null
+                && instancedFloor != null && instancedFloor.getCaptureSizeX() > 0) {
+            World iw = io.getWorld();
+            sweepRegion(run, iw, io.getBlockX(), io.getBlockZ(),
+                    io.getBlockX() + instancedFloor.getCaptureSizeX() - 1,
+                    io.getBlockZ() + instancedFloor.getCaptureSizeZ() - 1);
+            return;
+        }
+
+        UUID floorPlotId = run.getFloor() != null && run.getFloor().getFloorPlotId() != null
+                ? run.getFloor().getFloorPlotId() : def.getArenaPlotId();
+        Plot floor = floorPlotId == null ? null : plugin.store().getPlotById(floorPlotId);
         if (floor == null) return;
         World world = Bukkit.getWorld(floor.getWorld());
         if (world == null || !isArenaWorld(world)) return;
 
+        sweepRegion(run, world,
+                Math.min(floor.getX1(), floor.getX2()), Math.min(floor.getZ1(), floor.getZ2()),
+                Math.max(floor.getX1(), floor.getX2()), Math.max(floor.getZ1(), floor.getZ2()));
+    }
+
+    /**
+     * Chunk-iterated entity sweep over a world-space XZ rectangle — items, XP
+     * orbs, projectiles, and untagged strays (tagged mobs despawn via the run
+     * path). Region-dispatched; never loads chunks on Folia.
+     */
+    private void sweepRegion(ArenaRun run, World world, int minX, int minZ, int maxX, int maxZ) {
         int max = Math.max(16, plugin.getConfig().getInt("arena.world.cleanup_max_entities", 500));
         Location anchor = new Location(world,
-                (floor.getX1() + floor.getX2()) / 2.0, world.getMinHeight() + 1,
-                (floor.getZ1() + floor.getZ2()) / 2.0);
+                (minX + maxX) / 2.0, world.getMinHeight() + 1, (minZ + maxZ) / 2.0);
         plugin.arena().scheduler().runAtLocation(anchor, () -> {
             int removed = 0;
-            int minX = Math.min(floor.getX1(), floor.getX2());
-            int maxX = Math.max(floor.getX1(), floor.getX2());
-            int minZ = Math.min(floor.getZ1(), floor.getZ2());
-            int maxZ = Math.max(floor.getZ1(), floor.getZ2());
             // Per-chunk iteration: on Folia a region thread may only touch its
             // own chunks, and isChunkLoaded keeps us from loading anything.
             for (int cx = minX >> 4; cx <= maxX >> 4 && removed < max; cx++) {

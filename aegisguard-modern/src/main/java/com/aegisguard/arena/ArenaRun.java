@@ -41,6 +41,8 @@ public final class ArenaRun {
     private volatile long runSeed;
     /** Remaining lobby-window ticks (seconds); only meaningful while state == LOBBY. */
     private volatile int lobbyTicksRemaining;
+    private volatile ArenaFloor floor;
+    private volatile org.bukkit.Location instanceOrigin;
     /** When true the leader may skip the rest of the lobby countdown. */
     private volatile boolean lobbyLeaderMayStart = true;
     private final AtomicBoolean cleanupDone = new AtomicBoolean(false);
@@ -131,6 +133,19 @@ public final class ArenaRun {
     public boolean isLobbyLeaderMayStart() { return lobbyLeaderMayStart; }
     public void setLobbyLeaderMayStart(boolean mayStart) { this.lobbyLeaderMayStart = mayStart; }
     public boolean isInLobby() { return state == ArenaRunState.LOBBY; }
+
+    /** The floor variant this run was started on; null falls back to primary. */
+    public ArenaFloor getFloor() { return floor; }
+    public void setFloor(ArenaFloor floor) { this.floor = floor; }
+
+    /**
+     * World-space minimum corner of this run's pasted schematic instance —
+     * set by ArenaSchematicService when the picked floor is instanced.
+     * Null = the run plays on the persistent floor map.
+     */
+    public org.bukkit.Location getInstanceOrigin() { return instanceOrigin; }
+    public void setInstanceOrigin(org.bukkit.Location instanceOrigin) { this.instanceOrigin = instanceOrigin; }
+    public boolean isInstanced() { return instanceOrigin != null; }
 
     public boolean markCleanupDone() { return cleanupDone.compareAndSet(false, true); }
     public boolean isCleanupDone() { return cleanupDone.get(); }

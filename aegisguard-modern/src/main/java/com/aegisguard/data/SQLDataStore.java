@@ -414,7 +414,8 @@ public class SQLDataStore implements IDataStore {
                     " alliance_flag BOOLEAN, public_access BOOLEAN, staff_only BOOLEAN," +
                     " require_confirm BOOLEAN, allow_combat BOOLEAN," +
                     " vault_cost DOUBLE, claim_block_cost BIGINT," +
-                    " extra_cooldown INT, created_at BIGINT" +
+                    " extra_cooldown INT, created_at BIGINT," +
+                    " linked_target VARCHAR(64)" +
                     " )");
 
             if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
@@ -432,6 +433,7 @@ public class SQLDataStore implements IDataStore {
             }
             ensureColumn(s, "aegis_wilderness_log", "server", "VARCHAR(64)");
             ensureColumn(s, "aegis_teleport_beacons", "server", "VARCHAR(64)");
+            ensureColumn(s, "aegis_teleport_beacons", "linked_target", "VARCHAR(64)");
 
         } catch (SQLException e) {
             plugin.getLogger().severe("Database Error: " + e.getMessage());

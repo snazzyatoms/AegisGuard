@@ -137,6 +137,47 @@ public final class NetworkTravelService {
     }
 
     /**
+     * Hop the player to the arena staging zone on {@code targetServer} —
+     * the arena-gate beacon target {@code rarena:<server>:hub}. The arrival
+     * payload carries only the origin backend so the host can route the
+     * player home when staging is unset there.
+     */
+    public boolean sendToArenaHub(Player player, String targetServer) {
+        if (!ready() || player == null || targetServer == null || targetServer.isBlank()) return false;
+        if (plugin.arena() != null
+                && plugin.arena().getRunForPlayer(player.getUniqueId()) != null) {
+            send(player, "arena_already_in_run", "&cYou are already in an arena run.");
+            return false;
+        }
+        if (!net().isServerOnline(targetServer)) {
+            send(player, "visit_fail_server_offline", "&cThat server is currently offline.");
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        long ttl = Math.max(15L, plugin.getConfig().getLong("network.arrival_ttl_seconds", 90L)) * 1000L;
+        String payload = "|" + (net().serverName() == null ? "" : net().serverName());
+        NetworkArrival arrival = new NetworkArrival(
+                player.getUniqueId(), targetServer, ArrivalKind.ARENA_STAGING,
+                null, null, null, 0, 0, 0,
+                player.getLocation().getYaw(), player.getLocation().getPitch(),
+                now, now + ttl, payload);
+        plugin.scheduler().runAsync(() -> {
+            net().store().writeArrival(arrival);
+            plugin.scheduler().runEntity(player, () -> {
+                if (!net().sendToServer(player, targetServer)) {
+                    send(player, "visit_fail_server_offline", "&cCould not reach that server.");
+                    return;
+                }
+                send(player, "arena_network_travel",
+                        "&7Bearing thee to the arena upon &b{SERVER}&7...",
+                        Map.of("SERVER", serverLabel(targetServer)));
+                player.closeInventory();
+            }, null);
+        });
+        return true;
+    }
+
+    /**
      * Route an arena participant home after a cross-server run. Tries their
      * origin backend first; when it went offline mid-run, falls back to
      * {@code network.arena_return.fallback_server}, then the configured hub.
@@ -300,6 +341,11 @@ public final class NetworkTravelService {
             return;
         }
 
+        if (arrival.kind() == ArrivalKind.ARENA_STAGING) {
+            landInArenaStaging(player, arrival);
+            return;
+        }
+
         if (arrival.kind() == ArrivalKind.WORLD_SPAWN) {
             landAtWorldSpawn(player, arrival);
             return;
@@ -413,6 +459,22 @@ public final class NetworkTravelService {
             return;
         }
         arenaService.joinRemote(player, arenaId, origin);
+    }
+
+    /**
+     * ARENA_STAGING arrival: deliver the player to this backend's arena
+     * staging zone. When staging isn't configured here, send them back to
+     * their origin rather than leaving them at world spawn.
+     */
+    private void landInArenaStaging(Player player, NetworkArrival arrival) {
+        String payload = arrival.payload();
+        String origin = null;
+        int sep = payload != null ? payload.lastIndexOf('|') : -1;
+        if (sep >= 0) origin = payload.substring(sep + 1);
+        var staging = plugin.arenaStaging();
+        if (staging != null && staging.sendToStaging(player)) return;
+        send(player, "arena_staging_unset", "&cThe arena staging zone is not set on this server.");
+        sendHomeFromArena(player, origin);
     }
 
     private void landOnPad(Player player, NetworkArrival arrival) {

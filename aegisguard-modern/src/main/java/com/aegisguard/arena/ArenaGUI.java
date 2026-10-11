@@ -184,6 +184,16 @@ public final class ArenaGUI {
             inv.setItem(50, GUIManager.createItem(Material.ARROW,
                     t(player, "arena_next_page", "&fNext"), List.of()));
         }
+        var queueSvc = plugin.arenaQueue();
+        if (queueSvc != null && queueSvc.isEnabled()) {
+            boolean queued = queueSvc.isQueued(player.getUniqueId());
+            inv.setItem(53, GUIManager.createItem(Material.NETHER_STAR,
+                    t(player, "arena_queue_any_button",
+                            queued ? "&cLeave Matchmaking" : "&dQuick Match — Any Arena"),
+                    tl(player, "arena_queue_any_lore", List.of(
+                            "&7Join whichever arena queue fills",
+                            "&7first. Parties queue together."))));
+        }
 
         player.openInventory(inv);
     }
@@ -213,13 +223,22 @@ public final class ArenaGUI {
         }
         inv.setItem(4, GUIManager.createItem(Material.MAP, "&e" + def.getDisplayName(), header));
 
-        inv.setItem(11, GUIManager.createItem(Material.EMERALD,
+        inv.setItem(10, GUIManager.createItem(Material.EMERALD,
                 t(player, "arena_join", "&aJoin / Start"),
                 tl(player, "arena_join_lore", List.of("&7Start a run with your party."))));
-        inv.setItem(13, GUIManager.createItem(Material.ENDER_EYE,
+        var queue = plugin.arenaQueue();
+        boolean queued = queue != null
+                && def.getId().equalsIgnoreCase(queue.queuedArena(player.getUniqueId()));
+        inv.setItem(12, GUIManager.createItem(Material.CLOCK,
+                t(player, "arena_queue_button",
+                        queued ? "&cLeave Queue" : "&eQueue for Matchmaking"),
+                tl(player, "arena_queue_lore", List.of(
+                        "&7Wait for other players to queue",
+                        "&7and run this arena together."))));
+        inv.setItem(14, GUIManager.createItem(Material.ENDER_EYE,
                 t(player, "arena_spectate", "&bSpectate"),
                 tl(player, "arena_spectate_lore", List.of("&7Teleport to the spectator spawn."))));
-        inv.setItem(15, GUIManager.createItem(Material.PLAYER_HEAD,
+        inv.setItem(16, GUIManager.createItem(Material.PLAYER_HEAD,
                 t(player, "arena_party", "&eParty"),
                 tl(player, "arena_party_lore", List.of(
                         "&7Use &f/ag arena party invite <player>",
@@ -254,6 +273,11 @@ public final class ArenaGUI {
             }
             if (slot == 50) {
                 open(player, menu.getPage() + 1);
+                return;
+            }
+            if (slot == 53) {
+                player.closeInventory();
+                toggleQueue(player, "any");
                 return;
             }
             com.aegisguard.network.NetworkModels.RemoteArena remote = menu.remoteAt(slot);
@@ -295,7 +319,7 @@ public final class ArenaGUI {
                 open(player);
                 return;
             }
-            if (slot == 11) {
+            if (slot == 10) {
                 player.closeInventory();
                 // Same routing as /ag arena join: own lobby → start now,
                 // someone else's open lobby → attach, else fresh run.
@@ -320,7 +344,12 @@ public final class ArenaGUI {
                 else plugin.msg().send(player, "arena_run_started");
                 return;
             }
-            if (slot == 13) {
+            if (slot == 12) {
+                player.closeInventory();
+                toggleQueue(player, def.getId());
+                return;
+            }
+            if (slot == 14) {
                 player.closeInventory();
                 var loc = service.toLocation(def.getSpectatorSpawn() != null
                         ? def.getSpectatorSpawn() : def.getExitSpawn());
@@ -331,9 +360,30 @@ public final class ArenaGUI {
                 service.teleportPlayerAllowed(player, loc);
                 return;
             }
-            if (slot == 15) {
+            if (slot == 16) {
                 plugin.msg().send(player, "arena_party_invite_hint");
             }
         }
+    }
+
+    /** Queue toggle shared by the detail button and the menu quick-match. */
+    private void toggleQueue(Player player, String arenaId) {
+        var queue = plugin.arenaQueue();
+        if (queue == null || !queue.isEnabled()) {
+            plugin.msg().send(player, "arena_queue_disabled");
+            return;
+        }
+        if (queue.isQueued(player.getUniqueId())) {
+            if (queue.leaveQueue(player)) plugin.msg().send(player, "arena_queue_left");
+            return;
+        }
+        String err = queue.joinQueue(player, arenaId);
+        if (err != null) {
+            sendFail(player, err);
+            return;
+        }
+        String queuedFor = queue.queuedArena(player.getUniqueId());
+        plugin.msg().send(player, "arena_queue_joined",
+                Map.of("ARENA", queuedFor == null ? arenaId : queuedFor));
     }
 }

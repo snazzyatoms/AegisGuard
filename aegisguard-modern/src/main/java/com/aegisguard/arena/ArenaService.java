@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -120,6 +121,15 @@ public final class ArenaService {
         return key;
     }
 
+    /** Fail helpers for collaborator classes (queue/GUI) — same vars channel. */
+    public String failKey(String key) { return fail(key); }
+    public String failKey(String key, String k1, String v1) { return fail(key, k1, v1); }
+
+    /** Re-map a member to an existing party (matchmaking composes parties directly). */
+    public void putPlayerInParty(java.util.UUID playerId, ArenaParty party) {
+        if (playerId != null && party != null) parties.put(playerId, party);
+    }
+
     private String fail(String key, String k1, String v1) {
         Map<String, String> m = new HashMap<>();
         m.put(k1, v1 == null ? "" : v1);
@@ -172,6 +182,27 @@ public final class ArenaService {
 
     public int partyInviteExpireSeconds() {
         return Math.max(10, plugin.getConfig().getInt("arena.party.invite_expire_seconds", 60));
+    }
+
+    /** Global gate for PVP-mode arenas (arena.pvp.enabled). */
+    public boolean pvpArenasAllowed() {
+        return plugin.getConfig().getBoolean("arena.pvp.enabled", false);
+    }
+
+    /**
+     * ProtectionManager hook: may this attacker damage this victim by arena
+     * rules? True only when both are FIGHTING participants of the same active
+     * PVP-mode run — everything else defers to normal plot protection.
+     */
+    public boolean isArenaPvpAllowed(org.bukkit.entity.Player attacker,
+                                     org.bukkit.entity.Player victim) {
+        if (attacker == null || victim == null) return false;
+        ArenaRun run = getRunForPlayer(victim.getUniqueId());
+        if (run == null || run.getMode() == null || !run.getMode().isPvp()) return false;
+        if (!run.getState().isActiveCombat()) return false;
+        ArenaParticipant a = run.getParticipant(attacker.getUniqueId());
+        ArenaParticipant v = run.getParticipant(victim.getUniqueId());
+        return a != null && v != null && a.isFighting() && v.isFighting();
     }
 
     /**
@@ -243,7 +274,7 @@ public final class ArenaService {
                 ConfigurationSection sec = root.getConfigurationSection(id);
                 if (sec == null) continue;
                 ArenaDefinition def = deserializeDefinition(id, sec);
-                def.revalidate();
+                def.revalidate(pvpArenasAllowed());
                 definitions.put(def.getId(), def);
             }
             plugin.getLogger().info("[Arena] Loaded " + definitions.size() + " arena definition(s).");
@@ -371,6 +402,7 @@ public final class ArenaService {
                 ArenaSpawnPoint lobby = readSpawn(sec.getConfigurationSection("lobby"));
                 ArenaPendingRecovery rec = new ArenaPendingRecovery(playerId, runId, path, lobby);
                 rec.setOriginServer(sec.getString("origin"));
+                rec.setArenaId(sec.getString("arenaId"));
                 if ("COMPLETE".equalsIgnoreCase(sec.getString("status"))) {
                     rec.setStatus(ArenaPendingRecovery.Status.COMPLETE);
                 }
@@ -393,6 +425,7 @@ public final class ArenaService {
                 out.set(base + ".status", rec.getStatus().name());
                 out.set(base + ".appliedToken", rec.getAppliedToken());
                 out.set(base + ".origin", rec.getOriginServer());
+                out.set(base + ".arenaId", rec.getArenaId());
                 writeSpawn(out, base + ".lobby", rec.getLobbyDestination());
             }
             persistenceQueue.saveYamlAtomic(pendingFile, out, null);
@@ -495,7 +528,7 @@ public final class ArenaService {
         }
         ArenaDefinition def = new ArenaDefinition(key);
         def.setMaxActiveRuns(defaultMaxActiveRunsPerArena());
-        def.revalidate();
+        def.revalidate(pvpArenasAllowed());
         definitions.put(def.getId(), def);
         dirty = true;
         saveDefinitions();
@@ -532,7 +565,7 @@ public final class ArenaService {
 
     public void saveDefinition(ArenaDefinition def) {
         if (def == null) return;
-        def.revalidate();
+        def.revalidate(pvpArenasAllowed());
         definitions.put(def.getId(), def);
         dirty = true;
         saveDefinitions();
@@ -648,7 +681,7 @@ public final class ArenaService {
         ArenaDefinition def = getArena(arenaId);
         if (def == null) return fail("arena_unknown");
         if (!def.isEnabledFlag()) return fail("arena_arena_disabled_flag");
-        def.revalidate();
+        def.revalidate(pvpArenasAllowed());
         if (!def.isConfigValid()) {
             return fail("arena_not_ready", "DETAIL",
                     def.getConfigError() == null ? "" : def.getConfigError());
@@ -686,11 +719,69 @@ public final class ArenaService {
 
         UUID runId = UUID.randomUUID();
         ArenaRun run = new ArenaRun(runId, def.getId(), def.getMode(), leader.getUniqueId());
+        run.setFloor(def.pickFloor(new java.util.Random(run.getRunSeed())));
         run.setStartFighterCount(size);
         run.setLockedScale(def.getScaling().forPartySize(size));
         run.setWaveIndex(0);
-        run.journal("start partySize=" + size);
+        run.journal("start partySize=" + size + " floor=" + run.getFloor().getName());
 
+        ArenaFloor picked = run.getFloor();
+        if (picked != null && picked.isInstanced()) {
+            return startInstanced(def, run, runId, party, leader, originServer, picked);
+        }
+        return finishStartRun(def, run, runId, party, leader, originServer);
+    }
+
+    /**
+     * Instanced floor: allocate a slot + paste the schematic first, then run
+     * the normal roster start once the copy is durable. The roster setup
+     * (snapshots/teleports) must not touch world state before the paste lands.
+     */
+    private String startInstanced(ArenaDefinition def, ArenaRun run, UUID runId,
+                                  ArenaParty party, Player leader, String originServer,
+                                  ArenaFloor floor) {
+        var schematics = plugin.arenaSchematics();
+        CompletableFuture<Boolean> prep = schematics == null ? null
+                : schematics.prepareInstance(run, floor);
+        if (prep == null) return fail("arena_instance_unavailable");
+        // Reserve the roster for this run while the paste is in flight —
+        // finishStartRun only marks them at the end, so without this a member
+        // could join another run or lobby mid-paste and get double-booked.
+        List<UUID> roster = new ArrayList<>(party.getMembers());
+        for (UUID mid : roster) playerToRun.put(mid, runId);
+        run.journal("instance paste started floor=" + floor.getName());
+        plugin.msg().send(leader, "arena_instance_preparing");
+        prep.thenAccept(ok -> {
+            Runnable cont = () -> {
+                if (!Boolean.TRUE.equals(ok)) {
+                    unreserveRoster(runId, roster);
+                    plugin.msg().send(leader, "arena_instance_unavailable");
+                    schematics.releaseInstance(run);
+                    return;
+                }
+                String err = finishStartRun(def, run, runId, party, leader, originServer);
+                if (err != null) {
+                    unreserveRoster(runId, roster);
+                    plugin.msg().send(leader, err, takeFailVars());
+                    schematics.releaseInstance(run);
+                }
+            };
+            // Same calling convention as tryStart: on the leader's entity
+            // thread when they're still around, global region as fallback.
+            var dispatch = plugin.scheduler().runEntity(leader, cont, null);
+            if (!dispatch.accepted()) plugin.scheduler().runGlobal(cont);
+        });
+        return null;
+    }
+
+    /** Lift the instanced-start reservation for members not already in another run. */
+    private void unreserveRoster(UUID runId, List<UUID> roster) {
+        for (UUID mid : roster) playerToRun.remove(mid, runId);
+    }
+
+    /** Roster setup + teleports shared by the direct and instanced start paths. */
+    private String finishStartRun(ArenaDefinition def, ArenaRun run, UUID runId,
+                                  ArenaParty party, Player leader, String originServer) {
         List<Player> onlineMembers = new ArrayList<>();
         for (UUID mid : party.getMembers()) {
             Player p = Bukkit.getPlayer(mid);
@@ -705,7 +796,7 @@ public final class ArenaService {
 
         // Inventory snapshot then clear (SAVE_AND_RESTORE / ARENA_LOADOUT)
         ArenaInventoryPolicy policy = def.getInventoryPolicy();
-        Location entry = toLocation(def.getEntrySpawn());
+        Location entry = entryFor(run, def);
         boolean useLobby = lobbySeconds() > 0;
         if (scheduler.isFolia()) {
             return beginRunFolia(def, run, runId, onlineMembers, policy, entry, useLobby);
@@ -746,6 +837,15 @@ public final class ArenaService {
             beginCombat(run, def);
         }
         return null;
+    }
+
+    /** Floor entry for this run — instance-rebased when the floor is a pasted schematic. */
+    private Location entryFor(ArenaRun run, ArenaDefinition def) {
+        ArenaSpawnPoint sp = run.getFloor() != null && run.getFloor().getEntrySpawn() != null
+                ? run.getFloor().getEntrySpawn() : def.getEntrySpawn();
+        Location loc = toLocation(sp);
+        var schematics = plugin.arenaSchematics();
+        return schematics == null ? loc : schematics.instanced(run, loc);
     }
 
     /** Transition a fully-rostered run into waves: state march + spawn + announce. */
@@ -869,7 +969,7 @@ public final class ArenaService {
         UUID playerId = player.getUniqueId();
         UUID runId = run.getRunId();
         ArenaInventoryPolicy policy = def.getInventoryPolicy();
-        Location entry = toLocation(def.getEntrySpawn());
+        Location entry = entryFor(run, def);
         run.journal("lobby_join " + playerId + (originServer != null ? " origin=" + originServer : ""));
 
         // Entity-side work dispatched to the player's own region — same shape
@@ -912,6 +1012,15 @@ public final class ArenaService {
             } catch (Exception e) {
                 plugin.getLogger().log(Level.WARNING,
                         "[Arena] Lobby join failed for " + player.getName(), e);
+                // A taken-but-unrestored snapshot means the player's inventory
+                // was already cleared — restore it before dropping them.
+                try {
+                    ArenaParticipant part = run.getParticipant(playerId);
+                    if (part != null && part.getSnapshotPath() != null
+                            && !part.isSnapshotRestored()) {
+                        inventoryService.restoreFromFile(player, part.getSnapshotPath());
+                    }
+                } catch (Throwable ignored) {}
                 run.getParticipants().remove(playerId);
                 playerToRun.remove(playerId, runId);
             }
@@ -1144,6 +1253,7 @@ public final class ArenaService {
         if (run == null) return;
         ArenaWaveSpec spec = currentWaveSpec(def, run);
         boolean boss = spec != null && spec.isBoss();
+        boolean pvp = def != null && def.getMode().isPvp();
         String difficulty = run.getLockedScale() == null ? "1.0x"
                 : String.format(Locale.ROOT, "%.2fx", run.getLockedScale().mobHealth);
         String wave = String.valueOf(run.getWaveIndex() + 1);
@@ -1151,7 +1261,9 @@ public final class ArenaService {
             if (part.getState() != ParticipantState.FIGHTING) continue;
             Player p = Bukkit.getPlayer(part.getPlayerId());
             if (p == null || !p.isOnline()) continue;
-            if (boss) {
+            if (pvp) {
+                plugin.msg().send(p, "arena_pvp_begin");
+            } else if (boss) {
                 plugin.msg().send(p, "arena_boss_wave", Map.of("WAVE", wave));
             } else {
                 plugin.msg().send(p, "arena_wave_started", Map.of(
@@ -1171,6 +1283,11 @@ public final class ArenaService {
 
         ArenaDefinition def = getArena(run.getArenaId());
         if (def == null) return 0;
+        if (def.getMode().isPvp()) {
+            // PVP runs spawn no mobs — participants fight each other.
+            run.setSpawnedWaveIndex(run.getWaveIndex());
+            return 0;
+        }
         ArenaWaveSpec spec = currentWaveSpec(def, run);
         if (spec == null) {
             run.setSpawnedWaveIndex(run.getWaveIndex());
@@ -1188,7 +1305,9 @@ public final class ArenaService {
             return 0;
         }
 
-        List<ArenaSpawnPoint> points = def.getMobSpawns();
+        ArenaFloor floor = run.getFloor();
+        List<ArenaSpawnPoint> points = floor != null && !floor.getMobSpawns().isEmpty()
+                ? floor.getMobSpawns() : def.getMobSpawns();
         if (points.isEmpty()) {
             run.setSpawnedWaveIndex(run.getWaveIndex());
             run.journal("spawn_failed no_mob_spawns");
@@ -1201,17 +1320,20 @@ public final class ArenaService {
         double healthMult = boss ? run.getLockedScale().bossHealth : run.getLockedScale().mobHealth;
         int spawned = 0;
 
+        var schematics = plugin.arenaSchematics();
         for (int i = 0; i < toSpawn; i++) {
             ArenaSpawnPoint point = points.get(i % points.size());
             Location loc = toLocation(point);
+            loc = schematics == null ? loc : schematics.instanced(run, loc);
             if (loc == null || loc.getWorld() == null) continue;
             String template = templates.get(i % templates.size());
             EntityType type = resolveMobType(template);
             final int index = i;
-            spawnAtLocation(loc, () -> {
+            final Location spawnLoc = loc;
+            spawnAtLocation(spawnLoc, () -> {
                 if (run.isCleanupDone() || run.getState().isTerminal()) return;
                 try {
-                    Entity entity = loc.getWorld().spawnEntity(loc, type);
+                    Entity entity = spawnLoc.getWorld().spawnEntity(spawnLoc, type);
                     if (!(entity instanceof LivingEntity living)) {
                         entity.remove();
                         return;
@@ -1327,7 +1449,22 @@ public final class ArenaService {
             }
         });
         run.journal("eliminate " + player.getUniqueId() + " reason=" + reason);
-        if (run.countFighting() == 0) {
+        checkRunEndByMode(run);
+    }
+
+    /**
+     * Mode-aware end check after an elimination: PvE wipes when no fighters
+     * remain; PvP ends CLEAR for the last fighter standing (WIPE on 0 — a
+     * draw). LOBBY runs keep their own rules via the lobby ticker.
+     */
+    private void checkRunEndByMode(ArenaRun run) {
+        if (run == null || run.isCleanupDone() || run.isInLobby()) return;
+        int fighting = run.countFighting();
+        if (run.getMode() != null && run.getMode().isPvp()) {
+            if (fighting <= 1) {
+                endRun(run, fighting == 1 ? ArenaEndReason.CLEAR : ArenaEndReason.WIPE);
+            }
+        } else if (fighting == 0) {
             endRun(run, ArenaEndReason.WIPE);
         }
     }
@@ -1374,6 +1511,7 @@ public final class ArenaService {
 
     public void handleDisconnect(Player player) {
         if (player == null) return;
+        if (plugin.arenaQueue() != null) plugin.arenaQueue().dropPlayer(player.getUniqueId());
         ArenaRun run = getRunForPlayer(player.getUniqueId());
         if (run == null) return;
         ArenaParticipant part = run.getParticipant(player.getUniqueId());
@@ -1428,8 +1566,10 @@ public final class ArenaService {
                 part.setState(ParticipantState.FIGHTING);
                 part.setDisconnectedSince(0L);
                 ArenaDefinition def = getArena(run.getArenaId());
-                Location entry = def == null ? null : toLocation(def.getEntrySpawn());
-                teleportAllowed(player, entry);
+                ArenaFloor floor = run.getFloor();
+                ArenaSpawnPoint respawn = floor != null && floor.getEntrySpawn() != null
+                        ? floor.getEntrySpawn() : def == null ? null : def.getEntrySpawn();
+                teleportAllowed(player, toLocation(respawn));
                 run.journal("reconnect fighter " + player.getUniqueId());
             } else {
                 part.setState(ParticipantState.SPECTATING);
@@ -1446,6 +1586,9 @@ public final class ArenaService {
         tickDisconnectGrace();
         for (ArenaParty party : parties.values()) {
             party.purgeExpiredInvites();
+        }
+        if (plugin.arenaQueue() != null) {
+            plugin.arenaQueue().tick();
         }
     }
 
@@ -1497,9 +1640,7 @@ public final class ArenaService {
             }
             if (changed) {
                 flushJournalAsync();
-                if (run.countFighting() == 0) {
-                    endRun(run, ArenaEndReason.WIPE);
-                }
+                checkRunEndByMode(run);
             }
         }
     }
@@ -1553,6 +1694,13 @@ public final class ArenaService {
             plugin.getLogger().log(Level.FINE, "[Arena] floor cleanup skipped: " + t.getMessage());
         }
 
+        // Instanced floor: wipe the pasted region + free the slot.
+        try {
+            if (plugin.arenaSchematics() != null) plugin.arenaSchematics().releaseInstance(run);
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.FINE, "[Arena] instance release skipped: " + t.getMessage());
+        }
+
         // Restore inventories / pending recovery on each player's entity scheduler
         AtomicInteger pendingEntityWork = new AtomicInteger(0);
         for (ArenaParticipant part : run.getParticipants().values()) {
@@ -1571,6 +1719,7 @@ public final class ArenaService {
                 ArenaPendingRecovery pending = new ArenaPendingRecovery(
                         part.getPlayerId(), run.getRunId(), part.getSnapshotPath(), lobby);
                 pending.setOriginServer(part.getOriginServer());
+                pending.setArenaId(run.getArenaId());
                 pendingRecoveries.put(part.getPlayerId(), pending);
                 dirtyPending = true;
             }
@@ -1646,6 +1795,11 @@ public final class ArenaService {
         // Cross-server fighters go home to their origin backend instead of the
         // local exit spawn — their lobby/exit is the other server's world spawn.
         if (sendHomeIfRemote(player, part.getOriginServer())) return;
+        // Staging hub when configured: locals land there to re-queue or leave.
+        if (plugin.arenaStaging() != null) {
+            plugin.arenaStaging().landAfterRun(player, def);
+            return;
+        }
         Location exit = def == null ? null : toLocation(def.getExitSpawn());
         teleportAllowedInline(player, exit);
     }
@@ -1678,8 +1832,13 @@ public final class ArenaService {
         inventoryService.stripArenaTaggedItems(player, keys);
         // Remote participant relogging on the arena host: restore done → send home.
         if (sendHomeIfRemote(player, pending.getOriginServer())) return true;
-        Location lobby = toLocation(pending.getLobbyDestination());
-        teleportAllowedInline(player, lobby);
+        ArenaDefinition recoveredDef = pending.getArenaId() == null ? null : getArena(pending.getArenaId());
+        if (plugin.arenaStaging() != null && plugin.arenaStaging().isConfigured()) {
+            plugin.arenaStaging().landAfterRun(player, recoveredDef);
+        } else {
+            Location lobby = toLocation(pending.getLobbyDestination());
+            teleportAllowedInline(player, lobby);
+        }
         dirtyPending = true;
         persistenceQueue.enqueue(this::savePendingRecoveries);
         plugin.getLogger().info("[Arena] Applied pending recovery for " + player.getName());
@@ -1736,7 +1895,7 @@ public final class ArenaService {
         ArenaDefinition def = getArena(arenaId);
         if (def == null) return fail("arena_unknown");
         if (enabled) {
-            def.revalidate();
+            def.revalidate(pvpArenasAllowed());
             if (!def.isConfigValid()) {
                 return fail("arena_cannot_enable", "DETAIL",
                         def.getConfigError() == null ? "" : def.getConfigError());
@@ -1961,6 +2120,46 @@ public final class ArenaService {
         return bindPlot(player, arenaId, false);
     }
 
+    /**
+     * Bind the plot the player stands in as an extra floor variant — a second
+     * map for the same arena. The player's position becomes the floor's
+     * entry spawn; mob spawns are added per-floor via {@link #setSpawn} while
+     * standing inside that floor's plot.
+     */
+    public String addFloorVariant(Player player, String arenaId, String name, int weight) {
+        if (player == null) return fail("arena_invalid_player");
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null) return fail("arena_unknown");
+        Plot plot = plugin.store() == null ? null : plugin.store().getPlotAt(player.getLocation());
+        if (plot == null) return fail("arena_stand_in_plot");
+        if (plot.getPlotId().equals(def.getArenaPlotId())
+                || def.extraFloorIndexForPlot(plot.getPlotId()) >= 0) {
+            return fail("arena_floor_already_bound");
+        }
+        ArenaFloor floor = new ArenaFloor(
+                name == null || name.isBlank() ? "floor_" + (def.getFloors().size() + 1) : name);
+        floor.setFloorPlotId(plot.getPlotId());
+        floor.setWeight(weight);
+        Location loc = player.getLocation();
+        floor.setEntrySpawn(new ArenaSpawnPoint(
+                loc.getWorld() == null ? null : loc.getWorld().getUID(),
+                loc.getWorld() == null ? null : loc.getWorld().getName(),
+                loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch()));
+        def.getFloors().add(floor);
+        saveDefinition(def);
+        return null;
+    }
+
+    /** Remove an extra floor variant by its 1-based index in {@link ArenaDefinition#getFloors()}. */
+    public String removeFloorVariant(String arenaId, int index) {
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null) return fail("arena_unknown");
+        if (index < 1 || index > def.getFloors().size()) return fail("arena_floor_bad_index");
+        def.getFloors().remove(index - 1);
+        saveDefinition(def);
+        return null;
+    }
+
     private String bindPlot(Player player, String arenaId, boolean lobby) {
         if (player == null) return fail("arena_invalid_player");
         ArenaDefinition def = getArena(arenaId);
@@ -1983,11 +2182,24 @@ public final class ArenaService {
                 loc.getWorld() == null ? null : loc.getWorld().getName(),
                 loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
         String k = kind == null ? "" : kind.toLowerCase(Locale.ROOT);
+        // Standing inside an extra floor's plot routes entry/mob spawns to
+        // that floor variant; everywhere else writes the primary floor.
+        int extraFloor = -1;
+        if ("entry".equals(k) || "mob".equals(k)) {
+            Plot at = plugin.store() == null ? null : plugin.store().getPlotAt(loc);
+            if (at != null) extraFloor = def.extraFloorIndexForPlot(at.getPlotId());
+        }
         switch (k) {
-            case "entry" -> def.setEntrySpawn(sp);
+            case "entry" -> {
+                if (extraFloor >= 0) def.getFloors().get(extraFloor).setEntrySpawn(sp);
+                else def.setEntrySpawn(sp);
+            }
             case "exit", "lobby" -> def.setExitSpawn(sp);
             case "spectator" -> def.setSpectatorSpawn(sp);
-            case "mob" -> def.getMobSpawns().add(sp);
+            case "mob" -> {
+                if (extraFloor >= 0) def.getFloors().get(extraFloor).getMobSpawns().add(sp);
+                else def.getMobSpawns().add(sp);
+            }
             default -> {
                 return fail("arena_unknown_spawn_kind");
             }
@@ -2005,7 +2217,10 @@ public final class ArenaService {
             if (!run.getState().isActiveCombat()) continue;
             ArenaDefinition def = getArena(run.getArenaId());
             if (def == null) continue;
-            if (plotId.equals(def.getArenaPlotId())) return true;
+            ArenaFloor floor = run.getFloor();
+            if (floor != null && floor.getFloorPlotId() != null) {
+                if (plotId.equals(floor.getFloorPlotId())) return true;
+            } else if (def.isFloorPlot(plotId)) return true;
         }
         return false;
     }
@@ -2144,6 +2359,49 @@ public final class ArenaService {
                 }
             }
         }
+        if (sec.getString("primarySchematic") != null) {
+            def.setPrimarySchematic(sec.getString("primarySchematic"),
+                    sec.getString("primaryCaptureWorld"),
+                    sec.getInt("primaryCaptureMinX"), sec.getInt("primaryCaptureMinY"),
+                    sec.getInt("primaryCaptureMinZ"), sec.getInt("primaryCaptureSizeX"),
+                    sec.getInt("primaryCaptureSizeY"), sec.getInt("primaryCaptureSizeZ"));
+        }
+        List<?> floors = sec.getList("floors");
+        if (floors != null) {
+            for (Object o : floors) {
+                if (!(o instanceof Map<?, ?> map)) continue;
+                ArenaFloor floor = new ArenaFloor(
+                        map.get("name") == null ? null : String.valueOf(map.get("name")));
+                Object pid = map.get("plotId");
+                if (pid != null) floor.setFloorPlotId(parseUuid(String.valueOf(pid)));
+                Object ent = map.get("entrySpawn");
+                if (ent instanceof Map<?, ?> em) floor.setEntrySpawn(readSpawnMap(em));
+                Object fl = map.get("mobSpawns");
+                if (fl instanceof List<?> fm) {
+                    for (Object fo : fm) {
+                        if (fo instanceof Map<?, ?> fmap) {
+                            ArenaSpawnPoint sp = readSpawnMap(fmap);
+                            if (sp != null) floor.getMobSpawns().add(sp);
+                        }
+                    }
+                }
+                Object wt = map.get("weight");
+                if (wt != null) floor.setWeight((int) asDouble(wt));
+                Object sch = map.get("schematic");
+                if (sch != null) floor.setSchematic(String.valueOf(sch));
+                if (map.get("captureWorld") != null) {
+                    floor.setCaptureBounds(
+                            String.valueOf(map.get("captureWorld")),
+                            (int) asDouble(map.get("captureMinX")),
+                            (int) asDouble(map.get("captureMinY")),
+                            (int) asDouble(map.get("captureMinZ")),
+                            (int) asDouble(map.get("captureSizeX")),
+                            (int) asDouble(map.get("captureSizeY")),
+                            (int) asDouble(map.get("captureSizeZ")));
+                }
+                def.getFloors().add(floor);
+            }
+        }
         ConfigurationSection waves = sec.getConfigurationSection("waves");
         if (waves != null) {
             for (String key : waves.getKeys(false)) {
@@ -2192,6 +2450,44 @@ public final class ArenaService {
             mobs.add(spawnToMap(sp));
         }
         out.set(base + ".mobSpawns", mobs);
+
+        if (def.getPrimarySchematic() != null) {
+            out.set(base + ".primarySchematic", def.getPrimarySchematic());
+            ArenaFloor pf = def.primaryFloor();
+            if (pf.getCaptureWorld() != null) {
+                out.set(base + ".primaryCaptureWorld", pf.getCaptureWorld());
+                out.set(base + ".primaryCaptureMinX", pf.getCaptureMinX());
+                out.set(base + ".primaryCaptureMinY", pf.getCaptureMinY());
+                out.set(base + ".primaryCaptureMinZ", pf.getCaptureMinZ());
+                out.set(base + ".primaryCaptureSizeX", pf.getCaptureSizeX());
+                out.set(base + ".primaryCaptureSizeY", pf.getCaptureSizeY());
+                out.set(base + ".primaryCaptureSizeZ", pf.getCaptureSizeZ());
+            }
+        }
+
+        List<Map<String, Object>> floors = new ArrayList<>();
+        for (ArenaFloor f : def.getFloors()) {
+            Map<String, Object> fm = new java.util.HashMap<>();
+            fm.put("name", f.getName());
+            fm.put("plotId", f.getFloorPlotId() == null ? null : f.getFloorPlotId().toString());
+            fm.put("entrySpawn", f.getEntrySpawn() == null ? null : spawnToMap(f.getEntrySpawn()));
+            List<Map<String, Object>> fMobs = new ArrayList<>();
+            for (ArenaSpawnPoint sp : f.getMobSpawns()) fMobs.add(spawnToMap(sp));
+            fm.put("mobSpawns", fMobs);
+            fm.put("weight", f.getWeight());
+            fm.put("schematic", f.getSchematic());
+            if (f.getCaptureWorld() != null) {
+                fm.put("captureWorld", f.getCaptureWorld());
+                fm.put("captureMinX", f.getCaptureMinX());
+                fm.put("captureMinY", f.getCaptureMinY());
+                fm.put("captureMinZ", f.getCaptureMinZ());
+                fm.put("captureSizeX", f.getCaptureSizeX());
+                fm.put("captureSizeY", f.getCaptureSizeY());
+                fm.put("captureSizeZ", f.getCaptureSizeZ());
+            }
+            floors.add(fm);
+        }
+        if (!floors.isEmpty()) out.set(base + ".floors", floors);
 
         int i = 0;
         for (ArenaWaveSpec w : def.getWaves()) {

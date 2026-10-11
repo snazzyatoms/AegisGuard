@@ -145,6 +145,9 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.routes.RouteService routeService;
     private com.aegisguard.arena.ArenaService arenaService;
     private com.aegisguard.arena.ArenaWorldService arenaWorldService;
+    private com.aegisguard.arena.ArenaStagingService arenaStagingService;
+    private com.aegisguard.arena.ArenaQueueService arenaQueueService;
+    private com.aegisguard.arena.ArenaSchematicService arenaSchematicService;
     private com.aegisguard.alliance.AllianceManager allianceManager;
     private com.aegisguard.alliance.AllianceService allianceService;
     private com.aegisguard.travel.SafeTravelService safeTravelService;
@@ -278,6 +281,9 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.routes.RouteService routes() { return routeService; }
     public com.aegisguard.arena.ArenaService arena() { return arenaService; }
     public com.aegisguard.arena.ArenaWorldService arenaWorld() { return arenaWorldService; }
+    public com.aegisguard.arena.ArenaStagingService arenaStaging() { return arenaStagingService; }
+    public com.aegisguard.arena.ArenaQueueService arenaQueue() { return arenaQueueService; }
+    public com.aegisguard.arena.ArenaSchematicService arenaSchematics() { return arenaSchematicService; }
     public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
@@ -381,6 +387,19 @@ public class AegisGuard extends JavaPlugin {
         routeService = new com.aegisguard.routes.RouteService(this);
         arenaService = new com.aegisguard.arena.ArenaService(this);
         arenaWorldService = new com.aegisguard.arena.ArenaWorldService(this);
+        arenaStagingService = new com.aegisguard.arena.ArenaStagingService(this);
+        arenaQueueService = new com.aegisguard.arena.ArenaQueueService(this);
+        // WorldEdit/FAWE are soft-depends: constructing the schematic service
+        // loads com.sk89q types, so gate it exactly like PlotBuildBackup —
+        // callers already null-check arenaSchematics().
+        try {
+            Class.forName("com.sk89q.worldedit.WorldEdit", false,
+                    getClass().getClassLoader());
+            arenaSchematicService = new com.aegisguard.arena.ArenaSchematicService(this);
+        } catch (Throwable t) {
+            arenaSchematicService = null;
+            getLogger().info("[Arena] WorldEdit/FAWE not installed; instanced arena maps are unavailable.");
+        }
         try {
             arenaWorldService.ensureWorld();
         } catch (Throwable t) {

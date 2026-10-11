@@ -44,6 +44,13 @@ public final class TeleportBeacon {
     private String name = "Beacon";
     private Purpose purpose = Purpose.PERSONAL;
     private UUID linkedBeaconId;
+    /**
+     * Non-beacon link target: {@code arena:hub}, {@code arena:<id>}, or
+     * {@code rarena:<server>:<id|hub>} for cross-server arena gates.
+     * Mutually exclusive with {@link #linkedBeaconId} in practice — arena
+     * targets win when both are somehow set.
+     */
+    private String linkedTarget;
     private int customModelData;
 
     private boolean enabled = true;
@@ -112,6 +119,16 @@ public final class TeleportBeacon {
     public UUID getLinkedBeaconId() { return linkedBeaconId; }
     public void setLinkedBeaconId(UUID linkedBeaconId) { this.linkedBeaconId = linkedBeaconId; }
 
+    public String getLinkedTarget() { return linkedTarget; }
+    public void setLinkedTarget(String linkedTarget) {
+        this.linkedTarget = linkedTarget == null || linkedTarget.isBlank() ? null : linkedTarget;
+    }
+
+    public boolean isArenaLinked() {
+        return linkedTarget != null
+                && (linkedTarget.startsWith("arena:") || linkedTarget.startsWith("rarena:"));
+    }
+
     public int getCustomModelData() { return customModelData; }
     public void setCustomModelData(int customModelData) { this.customModelData = Math.max(0, customModelData); }
 
@@ -146,7 +163,8 @@ public final class TeleportBeacon {
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = Math.max(0L, createdAt); }
 
-    public boolean isLinked() { return linkedBeaconId != null; }
+    /** Pad sends the traveler somewhere — a beacon pad or an arena gate target. */
+    public boolean isLinked() { return linkedBeaconId != null || isArenaLinked(); }
 
     public Location toStandLocation() {
         if (worldName == null) return null;

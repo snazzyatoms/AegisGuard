@@ -633,6 +633,14 @@ public class ProtectionManager implements Listener {
             return;
         }
 
+        // Arena PVP runs: fighters in the same active PVP-mode run may hit
+        // each other regardless of the floor plot's pvp flag.
+        try {
+            if (plugin.arena() != null && plugin.arena().isArenaPvpAllowed(attacker, victim)) {
+                return;
+            }
+        } catch (Throwable ignored) {}
+
         Boolean pvpOverride = plot.resolveRoleFlagOverride(attacker.getUniqueId(), "pvp");
         if (pvpOverride != null) {
             if (!pvpOverride) {

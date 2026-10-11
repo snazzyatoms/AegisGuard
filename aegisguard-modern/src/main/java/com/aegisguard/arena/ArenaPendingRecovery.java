@@ -18,6 +18,8 @@ public final class ArenaPendingRecovery {
     private volatile String appliedToken;
     /** Backend the player arrived from on a cross-server run (null for local). */
     private volatile String originServer;
+    /** Arena the run belonged to (for staging-return messaging). */
+    private volatile String arenaId;
 
     public ArenaPendingRecovery(UUID playerId, UUID runId, String snapshotPath, ArenaSpawnPoint lobbyDestination) {
         this.playerId = Objects.requireNonNull(playerId);
@@ -49,6 +51,9 @@ public final class ArenaPendingRecovery {
 
     public String getOriginServer() { return originServer; }
     public void setOriginServer(String originServer) { this.originServer = originServer; }
+
+    public String getArenaId() { return arenaId; }
+    public void setArenaId(String arenaId) { this.arenaId = arenaId; }
 
     public boolean isPending() { return status == Status.PENDING; }
 }

@@ -134,9 +134,17 @@ Optional systems live under `modules:` in `config.yml` and are **on by default**
 
 ### Optional Arena Module
 
-Cooperative PvE party dungeons on bound server plots. **Enabled by default** (`modules.arena: true` / `arena.enabled: true`). Scheduling goes through an internal `ArenaScheduler` that stays Folia-safe (entity, region, global, and async paths). Use `/ag arena diag` if Arena will not activate on Folia. Turn Arena off from the module switchboard if your server does not want it.
+Party dungeons and arenas on bound server plots — PvE wave crawls, boss finales, and (opt-in) PvP. **Enabled by default** (`modules.arena: true` / `arena.enabled: true`). Scheduling goes through an internal `ArenaScheduler` that stays Folia-safe (entity, region, global, and async paths). Use `/ag arena diag` if Arena will not activate on Folia. Turn Arena off from the module switchboard if your server does not want it.
 
-Optional extras: `arena.lobby_seconds` opens a joinable lobby before waves start (players can attach while it counts down; the leader force-starts by re-running join). `arena.world.enabled` provisions a dedicated arena world (VOID/FLAT/NORMAL) where `arena create` auto-claims a protected server zone. On BungeeCord/Velocity networks with shared MySQL, each backend advertises its arenas network-wide — `/ag arena list` and the arena GUI show remote arenas, `/ag arena join <server>:<arena>` hops players to the host and sends them home when the run ends. See `NETWORK_SETUP.md`.
+**Modes** (`/ag arena mode <id> <MODE>`): `PVE_WAVES` (classic waves), `PVE_BOSS` (waves into a boss finale — the run clears only when the boss dies), `PVP_FFA` and `PVP_DUEL` (no mobs; last fighter standing wins, duels are exactly two). PvP modes need `arena.pvp.enabled: true` and at least two players; fighters may only hit participants of the same active run.
+
+**Custom maps and floors**: `arena floors add|list|remove` binds extra map variants to other plots — each floor carries its own entry spawn, mob spawns, and selection weight, and the run picks one at start. `arena map save|use|setorigin|clear` (requires WorldEdit, or FAWE on Folia) captures a floor region to `plugins/AegisGuard/arena-schematics/*.schem` and makes the floor instanced: every run pastes a fresh copy into `arena.schematics.world` (the dedicated arena world by default) and wipes it afterwards.
+
+**Staging and matchmaking**: `/ag arena staging set` places a shared meeting hub — `/ag arena hub` (or an `arena:hub` beacon gate) sends players there to browse arenas and form parties, and `arena.staging.return_on_end` lands participants back in the hub after a run so they can re-queue or leave. `/ag arena queue <arena|any>` (or the queue buttons in the arena GUI) pools solos and whole parties until an arena's minimum fills. `arena.lobby_seconds` opens a joinable lobby before waves start (the leader force-starts by re-running join). `arena.world.enabled` provisions a dedicated arena world (VOID/FLAT/NORMAL) where `arena create` auto-claims a protected server zone.
+
+**Beacons**: with `teleport_beacons.arena_gates.enabled`, pad link menus can point a pad at the arena staging zone, a local arena, or a remote arena across the proxy — travelers hop straight in.
+
+On BungeeCord/Velocity networks with shared MySQL, each backend advertises its arenas network-wide — `/ag arena list` and the arena GUI show remote arenas, `/ag arena join <server>:<arena>` hops players to the host and sends them home when the run ends. See `NETWORK_SETUP.md`.
 
 ## What Improved In 1.3.0
 

@@ -43,7 +43,8 @@ public final class BeaconStore {
                     " require_confirm BOOLEAN, allow_combat BOOLEAN," +
                     " vault_cost DOUBLE, claim_block_cost BIGINT," +
                     " extra_cooldown INT, created_at BIGINT," +
-                    " server VARCHAR(64)" +
+                    " server VARCHAR(64)," +
+                    " linked_target VARCHAR(64)" +
                     " )";
 
     private final AegisGuard plugin;
@@ -169,6 +170,7 @@ public final class BeaconStore {
                 yaml.set(path + ".name", beacon.getName());
                 yaml.set(path + ".purpose", beacon.getPurpose().name());
                 yaml.set(path + ".linked", beacon.getLinkedBeaconId() == null ? null : beacon.getLinkedBeaconId().toString());
+                yaml.set(path + ".linked_target", beacon.getLinkedTarget());
                 yaml.set(path + ".custom_model_data", beacon.getCustomModelData());
                 yaml.set(path + ".enabled", beacon.isEnabled());
                 yaml.set(path + ".owners", beacon.isOwners());
@@ -221,6 +223,7 @@ public final class BeaconStore {
             String linked = section.getString("linked");
             if (linked != null && !linked.isBlank()) beacon.setLinkedBeaconId(UUID.fromString(linked));
         } catch (Exception ignored) {}
+        beacon.setLinkedTarget(section.getString("linked_target"));
         beacon.setCustomModelData(section.getInt("custom_model_data", 0));
         beacon.setEnabled(section.getBoolean("enabled", true));
         beacon.setOwners(section.getBoolean("owners", true));
@@ -277,6 +280,9 @@ public final class BeaconStore {
             // claim untagged rows exactly like aegis_plots does.
             try (Statement alter = conn.createStatement()) {
                 ensureServerColumn(alter);
+            } catch (Exception ignored) { /* column already exists */ }
+            try (Statement alter = conn.createStatement()) {
+                alter.execute("ALTER TABLE aegis_teleport_beacons ADD COLUMN linked_target VARCHAR(64)");
             } catch (Exception ignored) { /* column already exists */ }
             String local = networkServerName();
             if (local != null) {
@@ -345,7 +351,8 @@ public final class BeaconStore {
                         "beacon_id,plot_id,world,x,y,z,yaw,pitch,material,name,purpose,linked_id," +
                         "custom_model_data,enabled,owners,members,trusted,guests,alliance_flag," +
                         "public_access,staff_only,require_confirm,allow_combat,vault_cost," +
-                        "claim_block_cost,extra_cooldown,created_at,server) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                        "claim_block_cost,extra_cooldown,created_at,server,linked_target) " +
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(insert)) {
                     for (TeleportBeacon beacon : beacons.values()) {
                         bind(ps, beacon);
@@ -395,6 +402,7 @@ public final class BeaconStore {
         ps.setInt(26, beacon.getExtraCooldownSeconds());
         ps.setLong(27, beacon.getCreatedAt());
         ps.setString(28, networkServerName());
+        ps.setString(29, beacon.getLinkedTarget());
     }
 
     private TeleportBeacon fromSql(ResultSet rs) throws Exception {
@@ -410,6 +418,7 @@ public final class BeaconStore {
         beacon.setPurpose(TeleportBeacon.Purpose.parse(rs.getString("purpose")));
         String linked = rs.getString("linked_id");
         if (linked != null && !linked.isBlank()) beacon.setLinkedBeaconId(UUID.fromString(linked));
+        beacon.setLinkedTarget(rs.getString("linked_target"));
         beacon.setCustomModelData(rs.getInt("custom_model_data"));
         beacon.setEnabled(rs.getBoolean("enabled"));
         beacon.setOwners(rs.getBoolean("owners"));

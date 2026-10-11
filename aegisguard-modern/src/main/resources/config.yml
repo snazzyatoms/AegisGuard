@@ -1523,6 +1523,11 @@ teleport_beacons:
   #   public - own pads plus any enabled public pad
   #   off    - list is manage-only; travel still requires standing on a pad
   gui_travel: public
+  # Arena gates — pads linked to the arena system instead of another pad.
+  # In the link GUI, managers can point a pad at the staging zone or a
+  # specific arena (local or, on a network, remote via the shared catalog).
+  arena_gates:
+    enabled: true
   # Actionbar hint when a manager right-clicks an unbound pad block in a claim.
   bind_hint: true
   # Hand players placeable pads from /ag beacon give or the manager button.
@@ -2509,7 +2514,44 @@ arena:
     allow_drop_on_death: false
   pvp:
     # PvP inside arena runs (off by default — arenas are cooperative PvE).
+    # Required before an arena's mode can be set to any PVP_* mode.
     enabled: false
+  staging:
+    # Shared "starting zone": players meet here, pick an arena, form groups,
+    # and return after a run to continue, re-queue, or head back out.
+    # Set it with /ag arena staging set (admin) — unset means staging is off.
+    enabled: true
+    # Send participants back to the staging zone instead of the arena's exit
+    # spawn when a run ends (and staging is configured).
+    return_on_end: true
+    # Location fields — written by /ag arena staging set.
+    world: ""
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+    pitch: 0.0
+  queue:
+    # Matchmaking pool: /ag arena queue <id|any> groups solos and parties
+    # into lobby runs once enough compatible players are waiting.
+    enabled: true
+    # Seconds between matchmaking passes.
+    tick_seconds: 3
+  schematics:
+    # Instanced arena floors: paste a fresh copy of a floor's .schem per run
+    # and wipe it afterwards. Requires WorldEdit or FastAsyncWorldEdit.
+    enabled: true
+    # World instances paste into. "" uses the dedicated arena world when
+    # enabled, else the floor's own world.
+    world: ""
+    # Blocks between instance slot origins — must exceed your largest map.
+    instance_spacing: 512
+    # Y level of each instance's minimum paste corner.
+    paste_y: 80
+    # Concurrent instanced runs across all arenas.
+    max_instances: 8
+    # Refuse map captures larger than this (volume cap).
+    max_blocks: 1500000
   world:
     # Dedicated arena world. When enabled the plugin creates (or reuses) this
     # world, and running "arena create" inside it auto-claims a server zone

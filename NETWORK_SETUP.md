@@ -109,6 +109,50 @@ and the player's arrival. If a player disconnects mid-run, their inventory
 snapshot and a pending-recovery record remain on the host; relogging there
 restores the inventory and routes them home.
 
+### Staging hubs and arena gates
+
+A **staging zone** is the shared meeting point the arena system routes players
+through: `/ag arena staging set` (admin) pins it to your feet on the arena
+backend, `/ag arena hub` sends players there, and
+`arena.staging.return_on_end` lands local participants back in the hub when a
+run ends so they can re-queue or leave. Staging is a local concept — remote
+visitors still return to their origin backend.
+
+**Beacon arena gates** (`teleport_beacons.arena_gates.enabled`, default on)
+let a pad's link target be the arena system instead of another pad. In the
+link GUI managers can pick the staging hub, a local arena, or — on a network —
+a remote arena from the shared catalog (`rarena:<server>:<id|hub>`). Stepping
+on the pad either joins locally (open lobby first, else a fresh run) or hops
+the proxy with an `ARENA_JOIN`/`ARENA_STAGING` arrival, same as the commands.
+
+### Custom maps and instanced floors
+
+An arena can rotate between **multiple floors**: `/ag arena floors add <id>`
+(standing on the extra map's plot) binds a variant with its own entry spawn,
+mob spawns, and weight; the run picks one at start. With WorldEdit (FAWE on
+Folia), `/ag arena map save <id> [floor#]` captures a floor region to
+`plugins/AegisGuard/arena-schematics/*.schem` and marks the floor instanced —
+each run pastes a fresh copy into `arena.schematics.world` (the dedicated
+arena world by default) at a per-run slot, then wipes it when the run ends.
+`arena map use <id> <file.schem>` + `arena map setorigin <id> [floor#]` does
+the same for hand-built schematic files. Slots are spaced
+`arena.schematics.instance_spacing` apart; `max_instances` caps concurrent
+pasted runs.
+
+### Modes and matchmaking
+
+`/ag arena mode <id> <MODE>` switches an arena between `PVE_WAVES`, `PVE_BOSS`
+(waves into a boss finale — a wave spec with `boss: true` or `finalBoss: true`
+is the last fight), `PVP_FFA`, and `PVP_DUEL` (exactly two fighters). PvP
+modes require `arena.pvp.enabled: true` and spawn no mobs; damage is allowed
+only between fighting participants of the same active run, and the last
+fighter standing clears it.
+
+`/ag arena queue <arena|any>` pools solos and whole parties (the leader queues
+for everyone) into lobby runs once the arena's `min_players` is met —
+`arena.queue.tick_seconds` throttles the matchmaking pass. The arena GUI also
+offers a per-arena queue button and a quick-match "any arena" button.
+
 ## What stays local (by design)
 
 - **Plot chat** — bound to the world the plot lives in.
@@ -164,4 +208,7 @@ network:
 ```
 
 Arena-side knobs live under `arena:` — `lobby_seconds` (joinable window before
-waves start, `0` = instant) and `world:` (dedicated arena world + auto-zone).
+waves start, `0` = instant), `world:` (dedicated arena world + auto-zone),
+`staging:` (shared hub point + post-run return), `queue:` (matchmaking),
+`schematics:` (instanced floor pastes), and `pvp.enabled` (PvP-mode gate).
+Beacon arena gates toggle at `teleport_beacons.arena_gates.enabled`.

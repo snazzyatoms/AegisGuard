@@ -1,6 +1,7 @@
 package com.aegisguard.beacon;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.arena.ArenaDefinition;
 import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.gui.GuiClicks;
@@ -520,19 +521,22 @@ public final class BeaconGUI {
         // straight to the local list.
         var net = plugin.network();
         if (net == null || !net.isNetworked() || net.store() == null) {
-            openLinkInventory(player, origin, bothWays, List.of());
+            openLinkInventory(player, origin, bothWays, List.of(), List.of());
             return;
         }
         plugin.scheduler().runAsync(() -> {
             List<com.aegisguard.network.NetworkStore.RemoteBeacon> remote =
                     net.store().remotePublicBeacons(net.serverName());
+            List<com.aegisguard.network.NetworkModels.RemoteArena> remoteArenas =
+                    net.store().remoteArenas(net.serverName());
             plugin.scheduler().runEntity(player,
-                    () -> openLinkInventory(player, origin, bothWays, remote), null);
+                    () -> openLinkInventory(player, origin, bothWays, remote, remoteArenas), null);
         });
     }
 
     private void openLinkInventory(Player player, TeleportBeacon origin, boolean bothWays,
-                                   List<com.aegisguard.network.NetworkStore.RemoteBeacon> remotePads) {
+                                   List<com.aegisguard.network.NetworkStore.RemoteBeacon> remotePads,
+                                   List<com.aegisguard.network.NetworkModels.RemoteArena> remoteArenas) {
         // Origin may have been unbound while the remote list was loading.
         if (origin == null || svc().store().get(origin.getId()) == null) return;
         String title = plugin.gui().title(player, "beacon_link_title", "&aLink Beacon");
@@ -565,6 +569,55 @@ public final class BeaconGUI {
                 inv.setItem(slot++, item);
             }
             linkHolder.setRemote(remote);
+        }
+        // Arena gates — pads that route into the arena system instead of a
+        // pad. Staging hub first, then this backend's arenas, then remote
+        // arenas/staging from the shared catalog.
+        if (arenaGatesOn()) {
+            var staging = plugin.arenaStaging();
+            if (staging != null && staging.isConfigured()) {
+                if (slot == 17) slot = 19;
+                if (slot == 26) slot = 28;
+                if (slot <= 34) {
+                    ItemStack item = arenaGateIcon(player, null, null, true);
+                    plugin.gui().tagAction(item, "adest:arena:hub");
+                    inv.setItem(slot++, item);
+                }
+            }
+            var arena = plugin.arena();
+            if (arena != null) {
+                for (ArenaDefinition def : arena.allArenas()) {
+                    if (slot == 17) slot = 19;
+                    if (slot == 26) slot = 28;
+                    if (slot > 34) break;
+                    if (def == null || !def.isEnabledFlag()) continue;
+                    ItemStack item = arenaGateIcon(player, def.getDisplayName(), null, false);
+                    plugin.gui().tagAction(item, "adest:arena:" + def.getId());
+                    inv.setItem(slot++, item);
+                }
+            }
+            if (remoteArenas != null) {
+                java.util.Set<String> remoteHubs = new java.util.HashSet<>();
+                for (var ra : remoteArenas) {
+                    if (ra == null || !ra.enabled() || ra.serverName() == null) continue;
+                    // One staging-hub gate per remote server that hosts arenas.
+                    if (remoteHubs.add(ra.serverName().toLowerCase(java.util.Locale.ROOT))) {
+                        if (slot == 17) slot = 19;
+                        if (slot == 26) slot = 28;
+                        if (slot > 34) break;
+                        ItemStack item = arenaGateIcon(player, null, ra.serverName(), true);
+                        plugin.gui().tagAction(item, "adest:rarena:" + ra.serverName() + ":hub");
+                        inv.setItem(slot++, item);
+                    }
+                    if (slot == 17) slot = 19;
+                    if (slot == 26) slot = 28;
+                    if (slot > 34) break;
+                    ItemStack item = arenaGateIcon(player, ra.label(), ra.serverName(), false);
+                    plugin.gui().tagAction(item,
+                            "adest:rarena:" + ra.serverName() + ":" + ra.arenaId());
+                    inv.setItem(slot++, item);
+                }
+            }
         }
         inv.setItem(45, back(player));
         if (linkHolder.isFromHub()) inv.setItem(47, hubReturn(player));
@@ -694,6 +747,22 @@ public final class BeaconGUI {
             if (event.getSlot() == 45) { openSetup(player, origin); return; }
             if ("close".equals(action) || event.getSlot() == 49) { player.closeInventory(); return; }
             if ("both_ways".equals(action)) { openLink(player, origin, !link.bothWays()); return; }
+            if (action != null && action.startsWith("adest:")) {
+                // Arena gate link — target spec follows the "adest:" prefix
+                // verbatim (arena:hub, arena:<id>, rarena:<server>:<id|hub>).
+                String spec = action.substring(6);
+                if (!service.linkToArena(player, origin, spec)) {
+                    service.send(player, "beacon_denied", "&cYou are not allowed to link to that beacon.");
+                } else {
+                    service.store().save();
+                    service.send(player, "beacon_linked_arena",
+                            "&aArena gate linked — travelers now head to &f{NAME}&a.",
+                            Map.of("NAME", arenaGateName(spec)));
+                    if (plugin.effects() != null) plugin.effects().playConfirm(player);
+                }
+                openSetup(player, origin);
+                return;
+            }
             if (action != null && action.startsWith("rdest:")) {
                 UUID destId = parseUuid(action.substring(6));
                 var remote = destId == null ? null : link.remote().get(destId);
@@ -909,6 +978,57 @@ public final class BeaconGUI {
         inv.setItem(slot, item);
     }
 
+    private boolean arenaGatesOn() {
+        return plugin.getConfig().getBoolean("teleport_beacons.arena_gates.enabled", true)
+                && plugin.arena() != null;
+    }
+
+    /**
+     * Icon for an arena-gate link entry in the link list.
+     * {@code arenaName} null → the staging hub; {@code server} non-null → the
+     * destination lives on another backend.
+     */
+    private ItemStack arenaGateIcon(Player player, String arenaName, String server, boolean hub) {
+        List<String> lore = new ArrayList<>();
+        if (server != null) {
+            lore.add(plugin.gui().tr(player, "visit_remote_line", "&7Server: &b{SERVER}",
+                    Map.of("SERVER", server)));
+        }
+        lore.add(t(player, "beacon_arena_gate_lore",
+                "&7Link this pad to send travelers here."));
+        if (hub) {
+            lore.add(t(player, "beacon_arena_gate_hub_hint",
+                    "&7Travelers land in the arena staging zone."));
+        }
+        Material mat = hub
+                ? (server == null ? Material.END_PORTAL_FRAME : Material.NETHER_STAR)
+                : (server == null ? Material.DIAMOND_SWORD : Material.ENDER_EYE);
+        String name = hub
+                ? t(player, "beacon_arena_gate_hub", "&bArena Staging Zone")
+                : "&b" + (arenaName == null ? "Arena" : arenaName);
+        return GUIManager.createItem(mat, name, lore);
+    }
+
+    /** Human label for an arena gate spec (used in the linked-confirmation message). */
+    private String arenaGateName(String spec) {
+        if (spec == null) return "arena";
+        String s = spec.toLowerCase(java.util.Locale.ROOT);
+        if (s.startsWith("arena:")) {
+            String id = spec.substring(6);
+            if ("hub".equalsIgnoreCase(id)) return "staging";
+            var def = plugin.arena() == null ? null : plugin.arena().getArena(id);
+            return def != null ? def.getDisplayName() : id;
+        }
+        if (s.startsWith("rarena:")) {
+            String[] parts = spec.split(":", 3);
+            if (parts.length == 3) {
+                return ("hub".equalsIgnoreCase(parts[2]) ? "staging" : parts[2])
+                        + " @ " + parts[1];
+            }
+        }
+        return spec;
+    }
+
     public ItemStack padIcon(Player player, TeleportBeacon beacon) {
         Material mat = beacon.getPadMaterial() == null ? Material.LODESTONE : beacon.getPadMaterial();
         if (!mat.isItem()) mat = Material.LODESTONE;
@@ -917,10 +1037,15 @@ public final class BeaconGUI {
                 Map.of("PURPOSE", pretty(player, beacon.getPurpose()))));
         TeleportBeacon linked = beacon.getLinkedBeaconId() == null ? null
                 : svc().store().get(beacon.getLinkedBeaconId());
-        lore.add(linked != null
-                ? plugin.gui().tr(player, "beacon_linked_to", "&aLinked &7→ &f{NAME}",
-                        Map.of("NAME", linked.getName()))
-                : t(player, "beacon_icon_unlinked", "&cNot linked yet"));
+        if (linked != null) {
+            lore.add(plugin.gui().tr(player, "beacon_linked_to", "&aLinked &7→ &f{NAME}",
+                    Map.of("NAME", linked.getName())));
+        } else if (beacon.isArenaLinked()) {
+            lore.add(plugin.gui().tr(player, "beacon_linked_arena_to",
+                    "&aGate &7→ &f{NAME}", Map.of("NAME", arenaGateName(beacon.getLinkedTarget()))));
+        } else {
+            lore.add(t(player, "beacon_icon_unlinked", "&cNot linked yet"));
+        }
         int inbound = svc().inboundLinks(beacon).size();
         if (inbound > 0) {
             lore.add(plugin.gui().tr(player, "beacon_inbound", "&7Inbound: &f{COUNT} pad(s)",

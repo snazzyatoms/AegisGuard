@@ -1,6 +1,7 @@
 package com.aegisguard.beacon;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.arena.ArenaRun;
 import com.aegisguard.config.Modules;
 import com.aegisguard.data.Plot;
 import com.aegisguard.notify.PlayerNotificationSettings;
@@ -203,6 +204,7 @@ public final class BeaconService {
         if (dest == null || !dest.isEnabled()) return false;
         // One directed link A->B: updates linked_id on A only; never clones A or B.
         origin.setLinkedBeaconId(destId);
+        origin.setLinkedTarget(null); // pad/arena links are mutually exclusive
         store.put(origin);
         return true;
     }
@@ -227,8 +229,33 @@ public final class BeaconService {
         if (dest.beaconId().equals(origin.getId())) return false;
         if (!dest.enabled() || !dest.publicAccess()) return false;
         origin.setLinkedBeaconId(dest.beaconId());
+        origin.setLinkedTarget(null);
         store.put(origin);
         return true;
+    }
+
+    /**
+     * Arena gate link — the pad routes travelers into the arena system instead
+     * of another pad. Target spec: {@code arena:hub} (local staging zone),
+     * {@code arena:<id>} (local arena/dungeon), or
+     * {@code rarena:<server>:<id|hub>} (cross-server hop).
+     * One-way only; the destination side is the arena service, not a pad row.
+     */
+    public boolean linkToArena(Player player, TeleportBeacon origin, String target) {
+        if (player == null || origin == null || target == null || target.isBlank()) return false;
+        if (!canManage(player, origin)) return false;
+        if (!arenaGatesEnabled()) return false;
+        String spec = target.trim().toLowerCase(java.util.Locale.ROOT);
+        if (!spec.startsWith("arena:") && !spec.startsWith("rarena:")) return false;
+        origin.setLinkedBeaconId(null);
+        origin.setLinkedTarget(spec);
+        store.put(origin);
+        return true;
+    }
+
+    private boolean arenaGatesEnabled() {
+        return plugin.getConfig().getBoolean("teleport_beacons.arena_gates.enabled", true)
+                && plugin.arena() != null;
     }
 
     /**
@@ -598,6 +625,10 @@ public final class BeaconService {
 
     public void openPadConfirm(Player player, TeleportBeacon origin) {
         if (player == null || origin == null) return;
+        if (origin.isArenaLinked()) {
+            routeArenaGate(player, origin);
+            return;
+        }
         TeleportBeacon dest = origin.getLinkedBeaconId() == null ? null : store.get(origin.getLinkedBeaconId());
         if (dest == null && origin.getLinkedBeaconId() != null
                 && tryRemotePad(player, origin, origin.getLinkedBeaconId())) {
@@ -627,6 +658,79 @@ public final class BeaconService {
             return;
         }
         executeTrip(player, null, arrival, true);
+    }
+
+    /**
+     * Arena gate routing — the pad's linked_target points into the arena
+     * system instead of another pad. Specs:
+     * <pre>
+     *   arena:hub            → this backend's staging zone
+     *   arena:&lt;id&gt;           → local arena join (open lobby attach, else new run)
+     *   rarena:&lt;server&gt;:hub  → proxy hop to the remote staging zone
+     *   rarena:&lt;server&gt;:&lt;id&gt; → proxy hop + auto-join that arena
+     * </pre>
+     * Same departure gates as a pad trip (perms/combat/cooldown); arena-side
+     * join failures are reported by the arena service itself.
+     */
+    private void routeArenaGate(Player player, TeleportBeacon origin) {
+        if (recentlyTraveled(player) || !tripLocks.add(player.getUniqueId())) return;
+        try {
+            if (!canDepart(player, origin)) {
+                send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
+                return;
+            }
+            String target = origin.getLinkedTarget();
+            if (target == null) return;
+            String lower = target.toLowerCase(java.util.Locale.ROOT);
+            var arena = plugin.arena();
+            if (lower.startsWith("arena:")) {
+                String spec = target.substring(6);
+                if ("hub".equalsIgnoreCase(spec)) {
+                    var staging = plugin.arenaStaging();
+                    if (staging == null || !staging.sendToStaging(player)) {
+                        send(player, "arena_staging_unset",
+                                "&cThe arena staging zone is not set on this server.");
+                        if (plugin.effects() != null) plugin.effects().playError(player);
+                    }
+                    return;
+                }
+                if (arena == null || arena.getArena(spec) == null) {
+                    plugin.msg().send(player, "arena_unknown");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                    return;
+                }
+                ArenaRun lobby = arena.findOpenLobby(spec);
+                String err = lobby != null
+                        ? arena.joinLobbyRun(player, lobby, null)
+                        : arena.tryStart(player, spec);
+                if (err != null) {
+                    plugin.msg().send(player, err, arena.takeFailVars());
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+                return;
+            }
+            if (lower.startsWith("rarena:")) {
+                String[] parts = target.split(":", 3);
+                var travel = plugin.networkTravel();
+                if (parts.length != 3 || travel == null) {
+                    send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
+                    return;
+                }
+                String server = parts[1];
+                String spec = parts[2];
+                boolean ok = "hub".equalsIgnoreCase(spec)
+                        ? travel.sendToArenaHub(player, server)
+                        : travel.sendToArenaJoin(player, server, spec);
+                if (!ok) {
+                    send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+                return;
+            }
+            send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
+        } finally {
+            tripLocks.remove(player.getUniqueId());
+        }
     }
 
     /**

@@ -62,7 +62,9 @@ public final class NetworkModels {
             /** Plain server hop — land at the target world's spawn (or stored coords). */
             WORLD_SPAWN,
             /** Hop to join an arena run on the target backend; payload = "arenaId|originServer". */
-            ARENA_JOIN
+            ARENA_JOIN,
+            /** Hop to the arena staging zone on the target backend; payload = "|originServer". */
+            ARENA_STAGING
         }
 
         public boolean isExpired() {

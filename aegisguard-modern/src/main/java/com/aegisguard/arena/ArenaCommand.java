@@ -280,11 +280,15 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
                 && ("set".equalsIgnoreCase(args[1]) || "clear".equalsIgnoreCase(args[1]))) {
             if (!requireAdmin(sender) || !requirePlayer(sender)) return true;
             if ("set".equalsIgnoreCase(args[1])) {
-                staging.setStaging((Player) sender);
+                int zonedArea = staging.setStaging((Player) sender);
                 msg(sender, "arena_staging_set");
+                if (zonedArea > 0) {
+                    msg(sender, "arena_zone_from_selection",
+                            Map.of("AREA", String.valueOf(zonedArea)));
+                }
             } else {
-                staging.clearStaging();
-                msg(sender, "arena_staging_cleared");
+                msg(sender, staging.clearStaging()
+                        ? "arena_staging_zone_kept" : "arena_staging_cleared");
             }
             return true;
         }
@@ -466,9 +470,12 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
         ArenaDefinition def = service.createArena(args[1]);
         msg(sender, "arena_created", Map.of("ID", def.getId()));
 
-        // Dedicated arena world convenience: standing in it on unclaimed ground
-        // auto-claims a server zone and pre-binds lobby/floor + entry/exit.
+        // On unclaimed ground a zone is auto-claimed and pre-bound (lobby/
+        // floor + entry/exit). A complete Aegis-wand selection sizes the zone
+        // exactly; otherwise the arena-world default radius applies.
         if (sender instanceof Player player && plugin.arenaWorld() != null) {
+            boolean selZone = plugin.arenaWorld().hasWorldSelection(player);
+            long selArea = plugin.selection().getSelectionArea(player);
             Plot zone = plugin.arenaWorld().autoZone(player);
             if (zone != null) {
                 String bindErr = service.bindLobbyFromPlayer(player, def.getId());
@@ -476,6 +483,8 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
                 if (bindErr == null) bindErr = service.setSpawn(player, def.getId(), "entry");
                 if (bindErr == null) bindErr = service.setSpawn(player, def.getId(), "exit");
                 if (bindErr != null) sendFail(sender, bindErr);
+                else if (selZone) msg(sender, "arena_zone_from_selection",
+                        Map.of("ID", def.getId(), "AREA", String.valueOf(selArea)));
                 else msg(sender, "arena_auto_zoned",
                         Map.of("ID", def.getId(), "WORLD", plugin.arenaWorld().worldName()));
             }

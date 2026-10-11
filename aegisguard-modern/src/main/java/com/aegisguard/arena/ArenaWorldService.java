@@ -95,16 +95,50 @@ public final class ArenaWorldService {
     }
 
     /**
+     * True when the admin holds a complete Aegis-wand selection whose corners
+     * are both in their current world — meaning {@code arena create} /
+     * {@code arena staging set} should claim exactly that area instead of the
+     * configured default.
+     */
+    public boolean hasWorldSelection(Player player) {
+        if (player == null || plugin.selection() == null) return false;
+        var sel = plugin.selection().get(player.getUniqueId());
+        World world = player.getWorld();
+        return sel != null && sel.isComplete() && sel.isSameWorld()
+                && world != null && world.equals(sel.getL1().getWorld());
+    }
+
+    /**
      * Auto-provision a server-zone plot around the player when they run
-     * {@code arena create} standing in the arena world. Returns the zone plot,
-     * or null when provisioning doesn't apply (not the arena world, already a
-     * plot underfoot, or the claim flow declined).
+     * {@code arena create}. A complete Aegis-wand selection in the player's
+     * world claims exactly their corners — any size, in any world. Otherwise,
+     * standing in the dedicated arena world claims a {@code auto_zone_radius}
+     * square. Returns the zone plot, or null when provisioning doesn't apply
+     * (already a plot underfoot, or the claim flow declined).
      */
     public Plot autoZone(Player player) {
-        if (!isEnabled() || player == null) return null;
+        if (player == null) return null;
         Location loc = player.getLocation();
-        if (loc == null || !isArenaWorld(loc.getWorld())) return null;
+        if (loc == null || loc.getWorld() == null) return null;
         if (plugin.store().getPlotAt(loc) != null) return null;
+
+        if (hasWorldSelection(player)) {
+            var sel = plugin.selection().get(player.getUniqueId());
+            String wname = loc.getWorld().getName();
+            int minX = Math.min(sel.getL1().getBlockX(), sel.getL2().getBlockX());
+            int maxX = Math.max(sel.getL1().getBlockX(), sel.getL2().getBlockX());
+            int minZ = Math.min(sel.getL1().getBlockZ(), sel.getL2().getBlockZ());
+            int maxZ = Math.max(sel.getL1().getBlockZ(), sel.getL2().getBlockZ());
+            try {
+                plugin.selection().confirmClaim(player, true);
+                return findZonePlot(wname, minX, minZ, maxX, maxZ);
+            } catch (Throwable t) {
+                plugin.getLogger().warning("[Arena] Selection zone failed: " + t.getMessage());
+                return null;
+            }
+        }
+
+        if (!isEnabled() || !isArenaWorld(loc.getWorld())) return null;
         int radius = Math.max(4, plugin.getConfig().getInt("arena.world.auto_zone_radius", 24));
         try {
             plugin.selection().setSelectionAround(player, radius);
@@ -114,6 +148,19 @@ public final class ArenaWorldService {
             plugin.getLogger().warning("[Arena] Auto-zone failed: " + t.getMessage());
             return null;
         }
+    }
+
+    /** Find a plot by its exact X/Z bounds — recovers a just-claimed zone. */
+    public Plot findZonePlot(String worldName, int minX, int minZ, int maxX, int maxZ) {
+        if (worldName == null) return null;
+        for (Plot p : plugin.store().getPlotsInWorld(worldName)) {
+            if (p == null) continue;
+            if (Math.min(p.getX1(), p.getX2()) == minX && Math.max(p.getX1(), p.getX2()) == maxX
+                    && Math.min(p.getZ1(), p.getZ2()) == minZ && Math.max(p.getZ1(), p.getZ2()) == maxZ) {
+                return p;
+            }
+        }
+        return null;
     }
 
     /**

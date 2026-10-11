@@ -2520,11 +2520,14 @@ arena:
     # Shared "starting zone": players meet here, pick an arena, form groups,
     # and return after a run to continue, re-queue, or head back out.
     # Set it with /ag arena staging set (admin) — unset means staging is off.
+    # With an Aegis-wand selection made first, staging set also claims that
+    # exact area as a protected server zone — the hub can be any size.
     enabled: true
     # Send participants back to the staging zone instead of the arena's exit
     # spawn when a run ends (and staging is configured).
     return_on_end: true
-    # Location fields — written by /ag arena staging set.
+    # Location fields — written by /ag arena staging set. zone_plot is the
+    # server claim created from a wand selection; cleared means no zone.
     world: ""
     x: 0.0
     y: 0.0
@@ -2564,6 +2567,8 @@ arena:
     # Keep the world's spawn chunks loaded so runs start without a load hitch.
     keep_spawn_loaded: false
     # Auto-zone claims a square server claim of this radius around the admin.
+    # Ignored when the admin holds an Aegis-wand selection — "arena create"
+    # claims exactly those two corners instead, in any world, any size.
     auto_zone_radius: 24
     # Sweep stray entities/items off the arena's floor plot when a run ends.
     cleanup_on_run_end: true

@@ -201,6 +201,40 @@ class ArenaExpansionContractTest {
     }
 
     @Test
+    void wandSelectionSizesArenaZones() throws Exception {
+        // A complete Aegis-wand selection claims the admin's exact corners —
+        // the radius default is only the no-selection fallback.
+        String world = src("arena/ArenaWorldService.java");
+        assertTrue(world.contains("hasWorldSelection"),
+                "autoZone must detect wand selections");
+        int selBranch = world.indexOf("hasWorldSelection(player)");
+        int radiusBranch = world.indexOf("auto_zone_radius", selBranch);
+        assertTrue(selBranch > 0 && radiusBranch > selBranch,
+                "the selection path must run before the radius fallback");
+        assertTrue(world.contains("findZonePlot"),
+                "zone recovery must match claimed bounds, not player position");
+        String cmd = src("arena/ArenaCommand.java");
+        assertTrue(cmd.contains("arena_zone_from_selection"),
+                "arena create must report selection-sized zones");
+    }
+
+    @Test
+    void stagingSelectionClaimsProtectedZone() throws Exception {
+        String staging = src("arena/ArenaStagingService.java");
+        assertTrue(staging.contains("confirmClaim(admin, true)"),
+                "staging set must claim the wand selection as a server zone");
+        assertTrue(staging.contains("arena.staging.zone_plot"),
+                "the claimed zone must be tracked for cleanup");
+        assertTrue(staging.contains("arenaUsesPlot"),
+                "zone retirement must not delete arena-bound plots");
+        assertTrue(staging.contains("SERVER_OWNER_UUID"),
+                "only auto-created server zones may be retired");
+        String cmd = src("arena/ArenaCommand.java");
+        assertTrue(cmd.contains("arena_staging_zone_kept"),
+                "clear must report when the zone survives due to an arena");
+    }
+
+    @Test
     void expansionLangKeysExist() throws Exception {
         String lang = Files.readString(RES.resolve("lang/modern_english/system.yml"));
         for (String key : new String[]{
@@ -208,7 +242,8 @@ class ArenaExpansionContractTest {
                 "arena_queue_joined", "arena_queue_left", "arena_queue_matched",
                 "arena_queue_disabled", "arena_floor_added", "arena_map_saved",
                 "arena_mode_set", "arena_pvp_disabled", "beacon_linked_arena",
-                "arena_instance_preparing", "arena_instance_unavailable"}) {
+                "arena_instance_preparing", "arena_instance_unavailable",
+                "arena_zone_from_selection", "arena_staging_zone_kept"}) {
             assertTrue(lang.contains(key + ":"),
                     "modern_english must define " + key);
         }

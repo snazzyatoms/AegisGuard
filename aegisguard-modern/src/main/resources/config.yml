@@ -26,7 +26,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1315
+config_schema: 1316
 
 
 # ------------------------------------------------------------------------------
@@ -440,9 +440,6 @@ hooks:
     # staff can reference either identity in commands.
     linking:
       enabled: false
-      # Your Discord server's ID and the role granted to linked players.
-      guild_id: ""
-      linked_role_id: ""
       # Storage backend for links: playerdata (YAML player preferences) or sql.
       storage: "playerdata"
 
@@ -2357,6 +2354,18 @@ protection_effects:
   farm:
     deny_sound: BLOCK_CROP_BREAK
     deny_particle: VILLAGER_ANGRY
+  animals:
+    deny_sound: ENTITY_CAT_HISS
+    deny_particle: HEART
+  entry:
+    deny_sound: BLOCK_NOTE_BLOCK_BASS
+    deny_particle: SMOKE_NORMAL
+  redstone:
+    deny_sound: BLOCK_NOTE_BLOCK_BASS
+    deny_particle: SMOKE_NORMAL
+  vehicles:
+    deny_sound: BLOCK_ANVIL_PLACE
+    deny_particle: CRIT_MAGIC
 
 
 # ==============================================================================

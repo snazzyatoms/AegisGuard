@@ -27,6 +27,10 @@ public class MessagesUtil {
 
     private String defaultStyle = "old_english";
 
+    /** Keys already logged by localization.debug_missing_keys — log each miss once. */
+    private final Set<String> loggedMissingKeys =
+            java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     // Hex Pattern
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
@@ -222,7 +226,7 @@ public class MessagesUtil {
             }
         } catch (Throwable ignored) {}
 
-        return "&c[Missing: " + key + "]";
+        return reportMissing(key);
     }
 
     private String getRawForDefault(String key) {
@@ -235,6 +239,15 @@ public class MessagesUtil {
             }
         } catch (Throwable ignored) {}
 
+        return reportMissing(key);
+    }
+
+    /** Missing-key report; localization.debug_missing_keys logs each key once for pack authors. */
+    private String reportMissing(String key) {
+        if (plugin.getConfig().getBoolean("localization.debug_missing_keys", false)
+                && key != null && loggedMissingKeys.add(key)) {
+            plugin.getLogger().warning("[AegisGuard] Missing language key: " + key);
+        }
         return "&c[Missing: " + key + "]";
     }
 

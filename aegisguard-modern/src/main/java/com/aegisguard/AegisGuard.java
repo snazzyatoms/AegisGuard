@@ -552,6 +552,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.gatherings.GatheringListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.PlotChatListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.HearthListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.hooks.DiscordEventListener(this), this);
         registerHearthVoicechatHook();
         if (arenaService != null) {
             Bukkit.getPluginManager().registerEvents(new com.aegisguard.arena.ArenaListener(arenaService), this);

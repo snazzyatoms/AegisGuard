@@ -276,12 +276,6 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
                 && from.getWorld().equals(to.getWorld());
     }
 
-    private static String shortWorld(String world) {
-        if (world == null || world.isBlank()) return "World";
-        String cleaned = world.replaceAll("[^A-Za-z0-9_-]", "");
-        return cleaned.isBlank() ? "World" : cleaned;
-    }
-
     private static String bounded(String value) {
         if (value == null) return GROUP_PREFIX;
         return value.length() <= 24 ? value : value.substring(0, 24);

@@ -911,24 +911,6 @@ public class VisitGUI {
         inv.setItem(50, hub);
     }
 
-    private void paintVisitChrome(Player player, Inventory inv) {
-        paintHubReturn(player, inv);
-        ItemStack back = GUIManager.createItem(
-                Material.NETHER_STAR,
-                t(player, "button_back_menu", "&fReturn to Menu"),
-                tl(player, "back_menu_lore", List.of("&7Go back to the main menu."))
-        );
-        tagAction(back, "back_menu");
-        inv.setItem(51, back);
-        ItemStack close = GUIManager.createItem(
-                Material.BARRIER,
-                t(player, "button_exit", "&cClose"),
-                tl(player, "exit_lore", List.of("&7Close this menu."))
-        );
-        tagAction(close, "close_menu");
-        inv.setItem(52, close);
-    }
-
     // --------------------------------------------------
     // PDC helpers
     // --------------------------------------------------

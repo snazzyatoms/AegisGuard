@@ -121,14 +121,22 @@ public class EffectUtil {
         if (!plugin.isSoundEnabled(p)) return;
 
         String base = "protection_effects." + category + "." + type;
-        
-        // Load from config or use defaults
-        String soundName = plugin.getConfig().getString(base + "_sound", "BLOCK_NOTE_BLOCK_BASS");
-        String particleName = plugin.getConfig().getString(base + "_particle", "SMOKE_NORMAL");
+        String def = "protection_effects.defaults." + type;
+
+        // Category override wins; the configured defaults block is the fallback
+        // (hardcoded values only apply if neither exists).
+        String soundName = plugin.getConfig().getString(base + "_sound",
+                plugin.getConfig().getString(def + "_sound", "BLOCK_NOTE_BLOCK_BASS"));
+        String particleName = plugin.getConfig().getString(base + "_particle",
+                plugin.getConfig().getString(def + "_particle", "SMOKE_NORMAL"));
+        float volume = (float) plugin.getConfig().getDouble(base + "_volume",
+                plugin.getConfig().getDouble(def + "_volume", 1.0));
+        float pitch = (float) plugin.getConfig().getDouble(base + "_pitch",
+                plugin.getConfig().getDouble(def + "_pitch", 1.0));
 
         try {
             if (soundName != null) {
-                playSound(p, loc, Sound.valueOf(soundName.toUpperCase()), 1.0f, 1.0f);
+                playSound(p, loc, Sound.valueOf(soundName.toUpperCase()), volume, pitch);
             }
             if (particleName != null) {
                 spawnParticle(p, particleName, loc.add(0.5, 1.2, 0.5), 5, 0.2, 0.2, 0.2, 0.05);

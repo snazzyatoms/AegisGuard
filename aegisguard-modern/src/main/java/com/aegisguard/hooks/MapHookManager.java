@@ -9,10 +9,12 @@ public class MapHookManager {
     private DynmapHook dynmap;
     private BlueMapHook blueMap;
     private Pl3xMapHook pl3xMap;
+    private Object syncTask;
 
     public MapHookManager(AegisGuard plugin) {
         this.plugin = plugin;
         initialize();
+        scheduleSyncTask();
     }
 
     private void initialize() {
@@ -46,6 +48,33 @@ public class MapHookManager {
                     plugin.console().warning("log_map_pl3xmap_failed", "Pl3xMap detected but API failed to initialize.");
                 }
             }
+        }
+    }
+
+    /**
+     * Periodic marker refresh — Pl3xMap schedules its own updates, so the
+     * interval only drives dynmap + bluemap. Cancelled with the scheduler on
+     * shutdown; 0 or a missing key disables periodic sync.
+     */
+    private void scheduleSyncTask() {
+        int minutes = plugin.cfg().raw().getInt("hooks.dynmap.sync_interval_minutes", 5);
+        if (minutes <= 0 || (dynmap == null && blueMap == null)) return;
+        long seconds = Math.max(30L, minutes * 60L);
+        try {
+            syncTask = plugin.scheduler().runAsyncRepeating(() -> {
+                if (dynmap != null) {
+                    try { dynmap.update(); } catch (Exception e) {
+                        plugin.console().severe("log_map_dynmap_update_failed", "Dynmap update failed!");
+                    }
+                }
+                if (blueMap != null) {
+                    try { blueMap.update(); } catch (Exception e) {
+                        plugin.console().severe("log_map_bluemap_update_failed", "BlueMap update failed!");
+                    }
+                }
+            }, seconds, seconds);
+        } catch (Throwable t) {
+            plugin.getLogger().fine("Map sync task not scheduled: " + t.getMessage());
         }
     }
 

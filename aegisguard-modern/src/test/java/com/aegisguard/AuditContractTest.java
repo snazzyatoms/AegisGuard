@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AuditContractTest {
 
     private static final Path JAVA_ROOT = Path.of("src/main/java/com/aegisguard");
+    private static final Path RESOURCE_ROOT = Path.of("src/main/resources");
 
     @Test
     void theAuditViewerAndCommandRequireTheAuditPermission() throws Exception {
@@ -70,9 +71,13 @@ class AuditContractTest {
     }
 
     @Test
-    void auditServiceStaysWithinMilestoneOneScope() throws Exception {
+    void auditServiceDiscordExportIsOptInAndConfigured() throws Exception {
         String service = Files.readString(JAVA_ROOT.resolve("audit/AuditService.java"));
-        assertFalse(service.toLowerCase().contains("discord"), "Discord export is explicitly out of scope for this version");
+        String config = Files.readString(RESOURCE_ROOT.resolve("config.yml"));
+
+        assertTrue(config.contains("admin_actions"), "config must ship the admin_actions discord event toggle");
+        assertTrue(service.contains("sendEventKey(\"admin_actions\""),
+                "AuditService must dispatch admin_actions discord events (gated inside DiscordWebhook)");
     }
 
     @Test

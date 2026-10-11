@@ -21,8 +21,9 @@ import java.util.logging.Level;
  * repairs, migrations, admin bypass toggles, ClaimBlock adjustments, and (from Milestone 2
  * onward) Guest Pass lifecycle events.
  *
- * Deliberately out of scope for this version: any external webhook/chat export of entries and
- * logging every ordinary player action. See {@link AuditCategory} for the exact recorded categories.
+ * Entries also fan out to the Discord webhook as the {@code admin_actions} event
+ * (opt-in per hooks.discord.events). Deliberately out of scope: logging every
+ * ordinary player action. See {@link AuditCategory} for the exact recorded categories.
  *
  * The in-memory retention/filtering logic lives in the plugin-independent {@link AuditLedger}
  * (directly unit tested); this class is a thin plugin-integration layer handling config-driven
@@ -82,6 +83,18 @@ public class AuditService {
             plugin.getLogger().info("[Audit] " + category + " by " + entry.getActorName()
                     + (entry.getTarget().isBlank() ? "" : " on " + entry.getTarget())
                     + ": " + entry.getSummary());
+        }
+
+        if (plugin.getDiscord() != null) {
+            plugin.getDiscord().sendEventKey("admin_actions",
+                    "discord_event_admin_actions_title", "Staff action logged",
+                    "discord_event_admin_actions_description",
+                    "{ACTOR} — {CATEGORY}: {SUMMARY}",
+                    java.util.Map.of(
+                            "ACTOR", entry.getActorName() == null ? "System" : entry.getActorName(),
+                            "CATEGORY", category.name(),
+                            "SUMMARY", entry.getSummary() == null ? "" : entry.getSummary()),
+                    0x95A5A6);
         }
     }
 

@@ -217,6 +217,11 @@ public class ProtectionManager implements Listener {
         if (plugin.isAdmin(player) || plugin.isBypassing(player)) return true;
         if (plot.isBanned(player.getUniqueId())) return false;
 
+        // Sealed run regions admit only their participants — beacons, network
+        // travel, and plugin teleports all route through here.
+        if (plugin.arena() != null && plugin.arena().isArenaEntryDenied(
+                player, null, plot.getCenter(plugin))) return false;
+
         Boolean entryOverride = plot.resolveRoleFlagOverride(player.getUniqueId(), "entry");
         if (entryOverride != null) return entryOverride;
 
@@ -529,6 +534,13 @@ public class ProtectionManager implements Listener {
         }
 
         Player p = e.getPlayer();
+        if (plugin.arena() != null
+                && plugin.arena().isArenaEntryDenied(p, e.getFrom(), e.getTo())) {
+            e.setCancelled(true);
+            sendPlotMessage(p, tr(p, "arena_run_sealed",
+                    "&cThat arena run is sealed — only its party may enter."));
+            return;
+        }
         Plot from = plugin.store().getPlotAt(e.getFrom());
         Plot to = plugin.store().getPlotAt(e.getTo());
 
@@ -866,6 +878,13 @@ public class ProtectionManager implements Listener {
         if (e.getTo() == null) return;
         Player p = e.getPlayer();
         if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+        if (plugin.arena() != null
+                && plugin.arena().isArenaEntryDenied(p, e.getFrom(), e.getTo())) {
+            e.setCancelled(true);
+            sendPlotMessage(p, tr(p, "arena_run_sealed",
+                    "&cThat arena run is sealed — only its party may enter."));
+            return;
+        }
 
         Plot from = plugin.store().getPlotAt(e.getFrom());
         Plot to = plugin.store().getPlotAt(e.getTo());
@@ -905,6 +924,13 @@ public class ProtectionManager implements Listener {
         Player p = e.getPlayer();
         if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
         if (e.getRespawnLocation() == null) return;
+        if (plugin.arena() != null
+                && plugin.arena().isArenaEntryDenied(p, null, e.getRespawnLocation())) {
+            e.setRespawnLocation(e.getRespawnLocation().getWorld().getSpawnLocation());
+            sendPlotMessage(p, tr(p, "arena_run_sealed",
+                    "&cThat arena run is sealed — only its party may enter."));
+            return;
+        }
 
         Plot plot = plugin.store().getPlotAt(e.getRespawnLocation());
         if (plot == null) return;

@@ -2516,6 +2516,10 @@ arena:
     # PvP inside arena runs (off by default — arenas are cooperative PvE).
     # Required before an arena's mode can be set to any PVP_* mode.
     enabled: false
+  # Seal a live run's region: outsiders cannot walk, teleport, or respawn
+  # into it, and outside players/mobs/projectiles cannot hurt participants
+  # or run-spawned mobs. Arena joins/spectates and staff bypass are exempt.
+  seal_runs: true
   staging:
     # Shared "starting zone": players meet here, pick an arena, form groups,
     # and return after a run to continue, re-queue, or head back out.

@@ -1035,6 +1035,7 @@ arena_staging_unset: '&cLa zona di attesa arena non è impostata su questo serve
 arena_staging_set: '&aZona di attesa arena impostata sulla tua posizione.'
 arena_staging_cleared: '&aZona di attesa arena rimossa.'
 arena_zone_from_selection: '&aZona server di &f{AREA}&a blocchi rivendicata dalla tua selezione con la bacchetta.'
+arena_run_sealed: '&cQuell’arena è in corso — solo il suo gruppo può entrare.'
 arena_staging_zone_kept: '&aZona di attesa rimossa; la zona rivendicata resta — un’arena la usa ancora.'
 arena_staging_return: '&eSei tornato nella zona di attesa arena dopo &f{ARENA}&e.'
 arena_staging_hint: '&7Usa &f/ag arena gui&7 per scegliere una partita, oppure &f/ag arena queue <id>&7 per il matchmaking.'

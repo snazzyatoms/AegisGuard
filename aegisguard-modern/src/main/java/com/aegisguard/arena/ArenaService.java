@@ -18,6 +18,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
@@ -2209,20 +2210,112 @@ public final class ArenaService {
     }
 
     public boolean isLocationInActiveArenaPlot(Location loc) {
-        if (loc == null || plugin.store() == null) return false;
-        Plot plot = plugin.store().getPlotAt(loc);
+        return runCovering(loc) != null;
+    }
+
+    /**
+     * The non-terminal run whose region contains {@code loc} — its floor plot
+     * or instanced paste cuboid, plus the lobby plot while the run lives.
+     * Sealed regions keep outsiders (players and mobs alike) from intervening
+     * in someone else's run.
+     */
+    public ArenaRun runCovering(Location loc) {
+        if (loc == null || activeRuns.isEmpty()) return null;
+        for (ArenaRun run : activeRuns.values()) {
+            if (!isSealed(run)) continue;
+            if (regionContains(run, loc)) return run;
+        }
+        return null;
+    }
+
+    private boolean isSealed(ArenaRun run) {
+        return run != null && !run.getState().isTerminal()
+                && run.getState() != ArenaRunState.CLEANUP;
+    }
+
+    private boolean regionContains(ArenaRun run, Location loc) {
+        if (loc == null || loc.getWorld() == null) return false;
+        ArenaDefinition def = getArena(run.getArenaId());
+        if (def == null) return false;
+
+        // Instanced run: the combat space is the pasted cuboid.
+        Location io = run.getInstanceOrigin();
+        ArenaFloor floor = run.getFloor();
+        if (io != null && io.getWorld() != null
+                && floor != null && floor.getCaptureSizeX() > 0) {
+            return loc.getWorld().equals(io.getWorld())
+                    && loc.getBlockX() >= io.getBlockX()
+                    && loc.getBlockX() < io.getBlockX() + floor.getCaptureSizeX()
+                    && loc.getBlockY() >= io.getBlockY()
+                    && loc.getBlockY() < io.getBlockY() + floor.getCaptureSizeY()
+                    && loc.getBlockZ() >= io.getBlockZ()
+                    && loc.getBlockZ() < io.getBlockZ() + floor.getCaptureSizeZ();
+        }
+
+        Plot plot = plugin.store() == null ? null : plugin.store().getPlotAt(loc);
         if (plot == null) return false;
         UUID plotId = plot.getPlotId();
+        if (floor != null && floor.getFloorPlotId() != null) {
+            if (plotId.equals(floor.getFloorPlotId())) return true;
+        } else if (def.isFloorPlot(plotId)) return true;
+        return plotId.equals(def.getLobbyPlotId());
+    }
+
+    /**
+     * True when {@code player} may not cross into {@code to} because a sealed
+     * run region lies there: only participants of the covering run may enter.
+     * Admin/bypass and the arena's own allow-token teleports (join, spectate,
+     * staging) are never blocked, and movement already inside the same run's
+     * region is free.
+     */
+    public boolean isArenaEntryDenied(Player player, Location from, Location to) {
+        if (!isEnabled() || player == null || to == null || activeRuns.isEmpty()) return false;
+        if (!sealRuns()) return false;
+        boolean covered = false;
         for (ArenaRun run : activeRuns.values()) {
-            if (!run.getState().isActiveCombat()) continue;
-            ArenaDefinition def = getArena(run.getArenaId());
-            if (def == null) continue;
-            ArenaFloor floor = run.getFloor();
-            if (floor != null && floor.getFloorPlotId() != null) {
-                if (plotId.equals(floor.getFloorPlotId())) return true;
-            } else if (def.isFloorPlot(plotId)) return true;
+            if (!isSealed(run) || !regionContains(run, to)) continue;
+            if (run.getParticipant(player.getUniqueId()) != null) return false;
+            if (from != null && regionContains(run, from)) return false;
+            covered = true;
         }
-        return false;
+        if (!covered) return false;
+        if (hasTeleportAllow(player.getUniqueId())) return false;
+        return !(plugin.isAdmin(player) || player.hasPermission("aegis.arena.admin"));
+    }
+
+    /**
+     * True when {@code damager} must not hurt {@code victim}: the victim
+     * belongs to a sealed run (participant or run-tagged entity) and the
+     * attacker — projectiles resolved to their shooter — is not part of the
+     * same run. Outsiders, spectators, untagged mobs, and entities of other
+     * runs all count as outside influence.
+     */
+    public boolean blocksArenaInterference(Entity victim, Entity damager) {
+        if (!isEnabled() || victim == null || damager == null || activeRuns.isEmpty()) return false;
+        if (!sealRuns()) return false;
+        ArenaRun victimRun = runInvolving(victim);
+        if (!isSealed(victimRun)) return false;
+        Entity attacker = damager;
+        if (attacker instanceof Projectile proj
+                && proj.getShooter() instanceof Entity shooter) {
+            attacker = shooter;
+        }
+        ArenaRun attackRun = runInvolving(attacker);
+        return attackRun == null || !attackRun.getRunId().equals(victimRun.getRunId());
+    }
+
+    private ArenaRun runInvolving(Entity entity) {
+        if (entity == null) return null;
+        if (entity instanceof Player p) {
+            UUID runId = playerToRun.get(p.getUniqueId());
+            return runId == null ? null : getRun(runId);
+        }
+        UUID runId = keys.readRunId(entity.getPersistentDataContainer());
+        return runId == null ? null : getRun(runId);
+    }
+
+    private boolean sealRuns() {
+        return plugin.getConfig().getBoolean("arena.seal_runs", true);
     }
 
     // ------------------------------------------------------------------

@@ -4270,6 +4270,7 @@ arena_staging_unset: '&cLa zone de départ des arènes n''''est pas définie sur
 arena_staging_set: '&aZone de départ des arènes définie à votre position.'
 arena_staging_cleared: '&aZone de départ des arènes effacée.'
 arena_zone_from_selection: '&aZone serveur de &f{AREA}&a blocs revendiquée depuis votre sélection à la baguette.'
+arena_run_sealed: '&cCette arène est en cours — seul son groupe peut entrer.'
 arena_staging_zone_kept: '&aZone de départ effacée ; la zone revendiquée demeure — une arène l’utilise encore.'
 arena_staging_return: '&eVous revoilà dans la zone de départ après &f{ARENA}&e.'
 arena_staging_hint: '&7Lancez &f/ag arena gui&7 pour choisir une arène, ou &f/ag arena queue <id>&7 pour le matchmaking.'

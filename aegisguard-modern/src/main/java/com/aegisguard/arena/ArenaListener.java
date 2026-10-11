@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -183,6 +184,19 @@ public final class ArenaListener implements Listener {
                 run.addPartyScore(ArenaScoreService.waveClearScore(run.getWaveIndex()));
                 service.advanceWave(run);
             }
+        }
+    }
+
+    /**
+     * Outside influence gate: entities not part of a sealed run — players,
+     * spectators, untagged mobs, projectiles from outside, entities of other
+     * runs — cannot damage that run's participants or run-tagged mobs.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onArenaInterference(EntityDamageByEntityEvent event) {
+        if (!service.isEnabled()) return;
+        if (service.blocksArenaInterference(event.getEntity(), event.getDamager())) {
+            event.setCancelled(true);
         }
     }
 

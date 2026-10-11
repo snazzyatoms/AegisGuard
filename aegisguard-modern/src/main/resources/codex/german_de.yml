@@ -4277,6 +4277,7 @@ arena_staging_unset: '&cDie Arena-Sammelzone ist auf diesem Server nicht gesetzt
 arena_staging_set: '&aArena-Sammelzone auf deine Position gesetzt.'
 arena_staging_cleared: '&aArena-Sammelzone gelöscht.'
 arena_zone_from_selection: '&aServer-Zone von &f{AREA}&a Blöcken aus deiner Zauberstab-Auswahl beansprucht.'
+arena_run_sealed: '&cDiese Arena läuft gerade — nur ihre Gruppe darf eintreten.'
 arena_staging_zone_kept: '&aSammelzone gelöscht; die beanspruchte Zone bleibt — eine Arena nutzt sie noch.'
 arena_staging_return: '&eDu bist zurück in der Arena-Sammelzone nach &f{ARENA}&e.'
 arena_staging_hint: '&7Nutze &f/ag arena gui&7 für einen Lauf oder &f/ag arena queue <id>&7 fürs Matchmaking.'

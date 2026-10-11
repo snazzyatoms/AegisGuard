@@ -235,6 +235,39 @@ class ArenaExpansionContractTest {
     }
 
     @Test
+    void sealedRunsGateEntryAndInterference() throws Exception {
+        String service = src("arena/ArenaService.java");
+        assertTrue(service.contains("runCovering"),
+                "sealed regions need a location->run lookup");
+        assertTrue(service.contains("isArenaEntryDenied"),
+                "entry gate must exist");
+        assertTrue(service.contains("blocksArenaInterference"),
+                "outside-influence damage gate must exist");
+        assertTrue(service.contains("getInstanceOrigin"),
+                "instanced run cuboids must be covered, not just plots");
+        assertTrue(service.contains("getLobbyPlotId"),
+                "the lobby region must seal while the run lives");
+        assertTrue(service.contains("hasTeleportAllow"),
+                "arena-managed teleports must pass the seal");
+        assertTrue(service.contains("arena.seal_runs"),
+                "sealing must honor the config toggle");
+        // Projectile damage must resolve to the shooter before judging.
+        assertTrue(service.contains("proj.getShooter()"),
+                "projectiles must resolve to their shooter");
+
+        String protection = src("protection/ProtectionManager.java");
+        int seals = 0;
+        for (int idx = -1; (idx = protection.indexOf("isArenaEntryDenied", idx + 1)) >= 0; ) seals++;
+        assertTrue(seals >= 4,
+                "walk, teleport, respawn, and canEnterPlot must all honor the seal");
+
+        String listener = src("arena/ArenaListener.java");
+        assertTrue(listener.contains("EntityDamageByEntityEvent")
+                        && listener.contains("blocksArenaInterference"),
+                "the interference gate must cancel outside damage");
+    }
+
+    @Test
     void expansionLangKeysExist() throws Exception {
         String lang = Files.readString(RES.resolve("lang/modern_english/system.yml"));
         for (String key : new String[]{
@@ -243,7 +276,8 @@ class ArenaExpansionContractTest {
                 "arena_queue_disabled", "arena_floor_added", "arena_map_saved",
                 "arena_mode_set", "arena_pvp_disabled", "beacon_linked_arena",
                 "arena_instance_preparing", "arena_instance_unavailable",
-                "arena_zone_from_selection", "arena_staging_zone_kept"}) {
+                "arena_zone_from_selection", "arena_staging_zone_kept",
+                "arena_run_sealed"}) {
             assertTrue(lang.contains(key + ":"),
                     "modern_english must define " + key);
         }

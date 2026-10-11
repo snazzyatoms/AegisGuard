@@ -1,14 +1,19 @@
 package com.aegisguard.arena;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
  * In-memory leaderboard store with solo/party separation.
+ *
+ * <p>Board lists are copy-on-write: {@link #submit} mutates under the class
+ * monitor while {@link #top}/{@link #asMap} iterate the same lists from
+ * unsynchronized caller threads (GUI opens, persistence saves) — on Folia
+ * those are different region threads.
  */
 public final class ArenaLeaderboard {
 
@@ -22,7 +27,7 @@ public final class ArenaLeaderboard {
         if (record == null) return;
         // Fastest boards only for successful clears (caller must pass CLEAR with time)
         String k = key(record.getBoard(), record.getArenaId(), record.getMode());
-        List<ArenaLeaderboardRecord> list = boards.computeIfAbsent(k, x -> new ArrayList<>());
+        List<ArenaLeaderboardRecord> list = boards.computeIfAbsent(k, x -> new CopyOnWriteArrayList<>());
         list.add(record);
         list.sort(comparatorFor(record.getBoard()));
         while (list.size() > Math.max(1, topN)) {
@@ -41,7 +46,7 @@ public final class ArenaLeaderboard {
 
     public void putAll(String key, List<ArenaLeaderboardRecord> records) {
         if (key == null) return;
-        boards.put(key, records == null ? new ArrayList<>() : new ArrayList<>(records));
+        boards.put(key, records == null ? new CopyOnWriteArrayList<>() : new CopyOnWriteArrayList<>(records));
     }
 
     private static Comparator<ArenaLeaderboardRecord> comparatorFor(ArenaLeaderboardRecord.Board board) {

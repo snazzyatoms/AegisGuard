@@ -1,8 +1,8 @@
 package com.aegisguard.arena;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * One playable map variant of an arena: a combat plot, the entry spawn
@@ -14,22 +14,22 @@ import java.util.UUID;
 public final class ArenaFloor {
 
     private final String name;
-    private UUID floorPlotId;
-    private ArenaSpawnPoint entrySpawn;
-    private final List<ArenaSpawnPoint> mobSpawns = new ArrayList<>();
-    private int weight = 1;
+    private volatile UUID floorPlotId;
+    private volatile ArenaSpawnPoint entrySpawn;
+    private final List<ArenaSpawnPoint> mobSpawns = new CopyOnWriteArrayList<>();
+    private volatile int weight = 1;
     /** Optional .schem file for instanced floors (plugins/AegisGuard/arena-schematics). */
-    private String schematic;
+    private volatile String schematic;
     /**
      * World-space minimum corner the schematic was captured at. Entry/mob
      * spawns stay absolute (the original map's coords); at run start the
      * instance's paste origin replaces this corner and every spawn is
      * re-based as {@code instanceOrigin + (absolute - captureMin)}.
      */
-    private String captureWorld;
-    private int captureMinX, captureMinY, captureMinZ;
+    private volatile String captureWorld;
+    private volatile int captureMinX, captureMinY, captureMinZ;
     /** Region size captured (x/y/z extents) — needed to wipe the instance. */
-    private int captureSizeX, captureSizeY, captureSizeZ;
+    private volatile int captureSizeX, captureSizeY, captureSizeZ;
 
     public ArenaFloor(String name) {
         this.name = name == null || name.isBlank() ? "floor" : name;
@@ -61,16 +61,21 @@ public final class ArenaFloor {
     public int getCaptureSizeY() { return captureSizeY; }
     public int getCaptureSizeZ() { return captureSizeZ; }
 
-    /** Stamp the capture geometry — called by ArenaSchematicService after a save. */
+    /**
+     * Stamp the capture geometry — called by ArenaSchematicService after a
+     * save. {@code captureSizeX} is {@link #isInstanced()}'s gate: it is
+     * written last so a tick thread that sees a positive size also sees every
+     * other staged field (volatile ordering).
+     */
     public void setCaptureBounds(String world, int minX, int minY, int minZ,
                                int sizeX, int sizeY, int sizeZ) {
         this.captureWorld = world == null || world.isBlank() ? null : world;
         this.captureMinX = minX;
         this.captureMinY = minY;
         this.captureMinZ = minZ;
-        this.captureSizeX = Math.max(0, sizeX);
         this.captureSizeY = Math.max(0, sizeY);
         this.captureSizeZ = Math.max(0, sizeZ);
+        this.captureSizeX = Math.max(0, sizeX);
     }
 
     /**

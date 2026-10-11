@@ -93,8 +93,13 @@ public final class ArenaQueueService {
             if (plugin.arena().getRunForPlayer(mid) != null) return fail("arena_member_in_run");
         }
 
-        queues.computeIfAbsent(def.getId(), k -> new ArrayList<>())
-                .add(new QueuedGroup(members.get(0), List.copyOf(members), System.currentTimeMillis()));
+        // List mutations everywhere else hold the queue's monitor (tick prune,
+        // leave, drop, drain) — the join add must too, or a Folia command
+        // thread racing the matchmaking tick corrupts the ArrayList.
+        List<QueuedGroup> queue = queues.computeIfAbsent(def.getId(), k -> new ArrayList<>());
+        synchronized (queue) {
+            queue.add(new QueuedGroup(members.get(0), List.copyOf(members), System.currentTimeMillis()));
+        }
         for (UUID mid : members) queuedPlayers.put(mid, def.getId());
         return null;
     }

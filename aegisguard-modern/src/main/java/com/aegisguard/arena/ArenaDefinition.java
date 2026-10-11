@@ -4,39 +4,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Staff-authored arena bound to server plots. Not a rental Zone.
+ *
+ * <p>All mutable fields are volatile and the three spawn/floor/wave lists are
+ * copy-on-write: admin commands mutate a definition on the admin's region
+ * thread while run ticks, lobby joiners, and the matchmaking queue read it
+ * from other region threads (Folia) — without safe publication a tick could
+ * iterate a list mid-edit or never see a flag/mode change.
  */
 public final class ArenaDefinition {
 
     private final String id;
-    private String displayName;
-    private boolean enabled;
-    private String presetId;
-    private ArenaMode mode = ArenaMode.PVE_WAVES;
-    private int maxActiveRuns = 1;
-    private int minPlayers = 1;
-    private int maxPlayers = 4;
-    private boolean allowLateJoin;
-    private ArenaInventoryPolicy inventoryPolicy = ArenaInventoryPolicy.SAVE_AND_RESTORE;
-    private ArenaTotemPolicy totemPolicy = ArenaTotemPolicy.CONSUME_AND_ELIMINATE;
-    private int maxActiveMobs = 48;
-    private UUID lobbyPlotId;
-    private UUID arenaPlotId;
-    private UUID spectatorPlotId;
-    private ArenaSpawnPoint entrySpawn;
-    private ArenaSpawnPoint exitSpawn;
-    private ArenaSpawnPoint spectatorSpawn;
-    private final List<ArenaSpawnPoint> mobSpawns = new ArrayList<>();
-    private final List<ArenaFloor> floors = new ArrayList<>();
-    private final List<ArenaWaveSpec> waves = new ArrayList<>();
-    private ArenaScalingTable scaling = ArenaScalingTable.lavaDungeonDefaults();
-    private long rewardCooldownSeconds = 1800L;
-    private int minWaveForPayout = 1;
-    private double presenceMinRatio = 0.5D;
-    private String configError;
-    private boolean configValid;
+    private volatile String displayName;
+    private volatile boolean enabled;
+    private volatile String presetId;
+    private volatile ArenaMode mode = ArenaMode.PVE_WAVES;
+    private volatile int maxActiveRuns = 1;
+    private volatile int minPlayers = 1;
+    private volatile int maxPlayers = 4;
+    private volatile boolean allowLateJoin;
+    private volatile ArenaInventoryPolicy inventoryPolicy = ArenaInventoryPolicy.SAVE_AND_RESTORE;
+    private volatile ArenaTotemPolicy totemPolicy = ArenaTotemPolicy.CONSUME_AND_ELIMINATE;
+    private volatile int maxActiveMobs = 48;
+    private volatile UUID lobbyPlotId;
+    private volatile UUID arenaPlotId;
+    private volatile UUID spectatorPlotId;
+    private volatile ArenaSpawnPoint entrySpawn;
+    private volatile ArenaSpawnPoint exitSpawn;
+    private volatile ArenaSpawnPoint spectatorSpawn;
+    private final List<ArenaSpawnPoint> mobSpawns = new CopyOnWriteArrayList<>();
+    private final List<ArenaFloor> floors = new CopyOnWriteArrayList<>();
+    private final List<ArenaWaveSpec> waves = new CopyOnWriteArrayList<>();
+    private volatile ArenaScalingTable scaling = ArenaScalingTable.lavaDungeonDefaults();
+    private volatile long rewardCooldownSeconds = 1800L;
+    private volatile int minWaveForPayout = 1;
+    private volatile double presenceMinRatio = 0.5D;
+    private volatile String configError;
+    private volatile boolean configValid;
 
     public ArenaDefinition(String id) {
         this.id = Objects.requireNonNull(id, "id").toLowerCase().replace(' ', '_');

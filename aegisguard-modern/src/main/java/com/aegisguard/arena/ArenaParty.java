@@ -1,19 +1,24 @@
 package com.aegisguard.arena;
 
-import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Lightweight pre-run party. Leadership has no combat advantage.
+ *
+ * <p>Member/invite sets are concurrent: on Folia a member's command thread
+ * mutates them while the arena tick thread iterates (matchmaking, invite
+ * purge), and callers treat member order as unspecified (leader is tracked
+ * separately via {@link #leaderId}).
  */
 public final class ArenaParty {
 
     private final UUID partyId;
     private volatile UUID leaderId;
-    private final Set<UUID> members = new LinkedHashSet<>();
-    private final Set<UUID> pendingInvites = new LinkedHashSet<>();
+    private final Set<UUID> members = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> pendingInvites = ConcurrentHashMap.newKeySet();
     private volatile long inviteExpireAt;
     private volatile String selectedArenaId;
 

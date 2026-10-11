@@ -267,6 +267,48 @@ class ArenaExpansionContractTest {
                 "the interference gate must cancel outside damage");
     }
 
+    /**
+     * Folia cross-thread safety: admin commands, run ticks, and matchmaking
+     * run on different region threads, so every shared collection must be
+     * concurrent or copy-on-write, and every mutation of a shared queue list
+     * must hold that list's monitor.
+     */
+    @Test
+    void foliaSharedStateIsThreadSafe() throws Exception {
+        String party = src("arena/ArenaParty.java");
+        assertTrue(party.contains("ConcurrentHashMap.newKeySet()"),
+                "party member/invite sets must be concurrent");
+
+        String def = src("arena/ArenaDefinition.java");
+        int cow = 0;
+        for (int i = -1; (i = def.indexOf("CopyOnWriteArrayList", i + 1)) >= 0; ) cow++;
+        assertTrue(cow >= 3, "mobSpawns/floors/waves must be copy-on-write");
+        assertTrue(def.contains("volatile ArenaMode mode"),
+                "admin-mutated fields must publish to tick threads");
+
+        String floor = src("arena/ArenaFloor.java");
+        assertTrue(floor.contains("CopyOnWriteArrayList")
+                        && floor.contains("volatile"),
+                "floor spawn list + admin-set fields must be safely published");
+
+        String queue = src("arena/ArenaQueueService.java");
+        int joinIdx = queue.indexOf("new QueuedGroup(");
+        int syncIdx = queue.lastIndexOf("synchronized (queue)", joinIdx);
+        assertTrue(joinIdx > 0 && syncIdx > joinIdx - 400,
+                "the queue join add must hold the list monitor like every other mutation");
+
+        String boards = src("arena/ArenaLeaderboard.java");
+        assertTrue(boards.contains("CopyOnWriteArrayList"),
+                "leaderboard lists are read unsynchronized from GUI threads");
+
+        for (String f : new String[]{"arena/ArenaService.java", "arena/ArenaQueueService.java",
+                "arena/ArenaStagingService.java", "arena/ArenaListener.java",
+                "arena/ArenaWorldService.java", "arena/ArenaSchematicService.java"}) {
+            assertFalse(src(f).contains("Bukkit.getScheduler()"),
+                    f + " must schedule through AegisScheduler, not Bukkit.getScheduler()");
+        }
+    }
+
     @Test
     void expansionLangKeysExist() throws Exception {
         String lang = Files.readString(RES.resolve("lang/modern_english/system.yml"));

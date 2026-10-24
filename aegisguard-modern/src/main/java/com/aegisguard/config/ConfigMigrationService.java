@@ -45,7 +45,9 @@ public final class ConfigMigrationService {
             return;
         }
 
+        for (String change : changes) plugin.getLogger().info("[Config] " + change);
         for (String warning : warnings) plugin.getLogger().warning("[Config] " + warning);
+        if (!changes.isEmpty()) plugin.reloadConfig();
     }
 
     /**
@@ -90,6 +92,18 @@ public final class ConfigMigrationService {
         }
 
         validateOnly(config);
+
+        // The module switchboard is canonical even when the schema is current:
+        // keep each matching <section>.enabled aligned on every boot/reload, so
+        // toggling modules.<id> actually takes effect everywhere the flag is read.
+        syncModuleSwitchboard(config, previous);
+        if (!changes.isEmpty()) {
+            try {
+                config.save(configFile);
+            } catch (IOException error) {
+                throw new IllegalStateException("Could not save config.yml while syncing module flags", error);
+            }
+        }
         return false;
     }
 

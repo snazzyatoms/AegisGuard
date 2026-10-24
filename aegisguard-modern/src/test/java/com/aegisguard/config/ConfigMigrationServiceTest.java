@@ -329,4 +329,23 @@ class ConfigMigrationServiceTest {
         assertFalse(migratedConfig.getBoolean("modules.arena"));
         assertFalse(migratedConfig.getBoolean("arena.enabled"));
     }
+
+    @Test
+    void currentSchemaSyncsModuleSwitchboardOntoSectionFlags(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration currentConfig = new YamlConfiguration();
+        currentConfig.set("config_schema", ConfigMigrationService.CURRENT_SCHEMA);
+        currentConfig.set("modules.arena", false);
+        currentConfig.set("arena.enabled", true);
+        currentConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertFalse(service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults));
+
+        YamlConfiguration after = YamlConfiguration.loadConfiguration(configFile);
+        assertFalse(after.getBoolean("modules.arena"));
+        assertFalse(after.getBoolean("arena.enabled"));
+    }
 }

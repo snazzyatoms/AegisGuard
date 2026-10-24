@@ -114,8 +114,8 @@ class PolishPackContractTest {
 
     @Test
     void javaDocsSayJava21() throws Exception {
-        Path rootDoc = Path.of("../DIRECT_RELEASES.md");
-        assertTrue(Files.exists(rootDoc), "repo-root DIRECT_RELEASES.md must exist");
+        Path rootDoc = Path.of("../README.md");
+        assertTrue(Files.exists(rootDoc), "repo-root README.md must exist");
         String direct = Files.readString(rootDoc);
         assertTrue(direct.contains("Java 21"));
         assertFalse(direct.contains("Java 17"));

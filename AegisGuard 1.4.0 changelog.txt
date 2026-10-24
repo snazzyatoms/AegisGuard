@@ -1,0 +1,90 @@
+# AegisGuard 1.4.0 — The Living Realm Update
+
+The biggest AegisGuard release yet. Runs on Paper, Spigot, Purpur, and Folia. Requires Java 21+ and Minecraft 1.20+. Upgrading from 1.2.7 or 1.3.x is a JAR swap followed by `/agadmin transition` — all existing data and config migrate automatically.
+
+## Added
+
+### Arena Dungeons
+- `/ag arena` — PvE/PvP dungeon runs on your own maps: browse, join, and party
+- PvE waves, boss finales, and opt-in PvP (free-for-all and duels)
+- Custom floors and WorldEdit/FAWE schematic support with instanced pastes
+- Staging hubs, matchmaking queues, joinable lobbies, and sealed runs
+- Ready-made `lava_dungeon` preset — fully configurable via `arena.presets`
+- Spectating, steward configuration, and admin run controls
+- Remote arenas on BungeeCord/Velocity networks — join a run on another backend
+
+### Trade Caravans
+- `/ag caravan` — dispatch charge-then-deliver caravans between linked Teleport Beacon pads
+- Insurance, weighted route events, ambush risk, and hireable player escorts
+- Folia-safe ticks and automatic resume after restarts
+
+### Gatherings & Open Houses
+- `/ag gathering` / `/ag openhouse` — host timed events on plots you manage or browse live listings
+- Optional visitor Guest Passes that expire when the event ends
+
+### Realm Succession
+- `/ag heir` — name an heir to your plot
+- `/ag succession` — inactivity assume, transfer cooldowns, and a rollback window
+- `/ag transfer` — pass ownership to another player
+- Co-owner and steward grants auto-lock against restore wipes
+
+### Plot Chat Frequencies
+- `/ag chat` — per-plot text channel, plus alliance and group radios with leader naming
+- `/ag staff` — dedicated staff radio channel
+- One channel per player; works on Java and Bedrock with no client mods
+
+### Cross-Server Travel (BungeeCord/Velocity)
+- `/ag hub`, `/ag lobby`, `/ag servers` — network hub travel and a server selector
+- Cross-server event bus, remote arena joins, and staff broadcasts
+- Discord account-link syncing across backends
+
+### ClaimBlocks Exchange
+- `/ag blocks buy|sell` — trade ClaimBlocks with configurable rates, cooldowns, and sell locks
+- `/ag ledger` — full transaction history
+- `/ag giftblocks` — gift blocks to other players
+
+### Also New
+- `/ag quickclaim` — claim a square area around you, no wand needed
+- `/ag travel` — unified Travel Hub; `/ag arrival` picks classic or beacon arrivals
+- `/ag profile` and realm noticeboards for plot identity
+- `/ag biome` — per-plot biome picker with optional Vault fee
+- `/ag subplot` / `/ag subzone` — 3D sub-zones for rooms and rentals
+- `/ag settlements` — inbox for rental and market payouts
+- Server sanctuary flags — Keep Health, Hunger, XP, and Inventory on server zones
+- Plot flight via Ascension progression; staff grants via `/agadmin skill fly`
+- Claim presets (Home/Shop/Arena/Farm; Spawn/Hub/Shop/Arena on server zones)
+- `/agadmin season` — staff-curated featured plots and routes
+- `/agadmin inspect` and `/agadmin plots` — claim detail cards and per-owner registry
+- Hearth rooms — subplot-scoped text chat, plus an optional Simple Voice Chat hook
+- Discord integration — account linking and event webhooks
+- New protection wards: Mob Griefing and Interactables
+- Nine language packs — including Old English — covering every player-facing message
+
+## Changed
+
+- Feature-gated permissions now actually enforce (`aegis.wand`, `aegis.menu`, `aegis.claim`, `aegis.beacon`, `aegis.gathering`)
+- `config.yml` and `plugin.yml` documentation rewritten — every option and node explains what it does
+- Module switchboard (`modules:`) now synchronizes onto section flags on every boot and `/agadmin reload`
+- Console logging standardized to plain English with a startup summary (platform, storage, plots, modules, hooks)
+- Public API (`com.aegisguard.api`) fully Javadoc'd; `AegisGuard-1.4.0-api.jar` ships with every release
+- `/ag help` now documents every command — arenas, caravans, succession, chat, and all previously hidden entries
+- Internal command handling split into maintainable feature modules — zero behavior change
+
+## Fixed
+
+- Vault claim charge is refunded if validation rejects the claim (previously charged and reported success)
+- `purgePlotHostiles` dispatches per-chunk on the owning Folia region — no more cross-region crashes on entry
+- Trade-stall purchases fail closed before money moves when the chest's region isn't owned by the current thread
+- `protection_effects` defaults, `deny_volume`, and `deny_pitch` are honored; four missing effect categories added
+- `dynmap sync_interval_minutes` is actually scheduled
+- Discord event webhooks for claim create/delete and admin actions now send
+- Protection-hook initialization and protection-check failures are logged instead of vanishing silently
+- Removed dead config keys, dead permissions, and dead code paths
+- Verified on a live multi-region Folia rig — zero scheduler violations across all tested paths
+
+## Notes
+
+- Storage: YAML default; SQL/SQLite/MySQL/MariaDB supported
+- Optional integrations: Vault, Dynmap/BlueMap/Pl3xMap, PlaceholderAPI, WorldEdit/FAWE, Floodgate/Geyser, Simple Voice Chat
+- Wilderness revert ships **off** by default and is SQL-only
+- `/agadmin doctor` is optional after upgrading — run it only if something looks wrong

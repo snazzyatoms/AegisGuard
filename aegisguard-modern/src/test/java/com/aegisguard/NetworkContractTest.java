@@ -169,8 +169,8 @@ class NetworkContractTest {
 
     @Test
     void setupDocExistsAndCoversTheOneWayFlow() throws Exception {
-        Path doc = Path.of("../NETWORK_SETUP.md");
-        assertTrue(Files.exists(doc), "NETWORK_SETUP.md must ship beside the module");
+        Path doc = Path.of("../wiki/Integrations-and-Compatibility.md");
+        assertTrue(Files.exists(doc), "network setup must be documented on the integrations wiki page");
         String text = read(doc);
         assertTrue(text.contains("server_name"));
         assertTrue(text.contains("mysql") || text.contains("MySQL"));

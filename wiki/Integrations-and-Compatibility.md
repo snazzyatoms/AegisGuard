@@ -43,6 +43,18 @@ The following plugins are supported integrations or commonly recommended compani
 
 AegisGuard includes selected integrations directly in the core plugin. These features do not require a separate bridge plugin when they are enabled and configured.
 
+### BungeeCord / Velocity Network Setup
+
+Cross-server travel is **opt-in** and requires shared SQL storage — plot, beacon, and registry state must be visible to every backend server.
+
+1. Configure **all** AegisGuard backends to use the same **MySQL/MariaDB** database (`storage.backend` and `storage.type` set to your SQL backend on every server).
+2. Set `network.enabled: true` in `config.yml` on every backend.
+3. Set `network.server_name` to the exact name this backend has in the proxy's server list — it must match, or remote hops will not route correctly.
+4. Optionally set `network.display_name` (friendly label in listings) and tune `network.heartbeat_seconds` (registry presence interval).
+5. Fully restart every backend after changing storage or network settings.
+
+What this unlocks: `/ag hub`, `/ag lobby`, and `/ag servers` for player travel; remote arena joins in the arena browser; `/agadmin network` find/broadcast for staff; and Discord link sync across backends. If `network.hub.server` is left unset, `/ag hub` safely falls back to the local spawn.
+
 ### Discord Integration
 
 Connect important server events to Discord through webhooks. Discord logging is **opt-in** and off by default. Staff can also manage player Discord account links with `/agadmin discord <link|unlink|whois>` (`aegis.admin.discord`).

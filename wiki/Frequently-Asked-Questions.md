@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-This FAQ covers common questions about **AegisGuard** `v1.4.0`. The last published GitHub Release remains `1.3.5`.
+This FAQ covers common questions about **AegisGuard** `v1.4.0`, the current public release.
 
 > **Server configuration:** AegisGuard is highly configurable. Commands, costs, economy routes, integrations, and optional systems may differ between servers. Disabled modules do not appear on `/ag menu`.
 
@@ -34,13 +34,13 @@ Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Se
 
 **Yes.** Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid.
 
-Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1310`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
+Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1316`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
 
 Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
 
 A copy of `plugins/AegisGuard/` is recommended. It is not required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access remain. 1.3.5 adds Teleport Beacons. 1.4.0 adds the Travel Atlas tabs, Quick-Claim, restore-safe roles, Guardian Succession, Caravans, and optional server-plot Keep Health / Keep Hunger. None of these wipe ownership, money, rentals, or permanent roles.
+1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access remain. 1.3.5 adds Teleport Beacons. 1.4.0 adds the Travel Atlas tabs, Quick-Claim, restore-safe roles, Guardian Succession, Caravans, Gatherings, Arena Dungeons, plot chat frequencies, cross-server travel, the ClaimBlocks exchange, and optional server-plot Keep Health / Keep Hunger. None of these wipe ownership, money, rentals, or permanent roles.
 
 ---
 
@@ -361,6 +361,14 @@ Inventory changes may occur only when a configured system intentionally gives, c
 Back up the server before major updates, migrations, or significant configuration changes.
 
 ---
+
+## How do Arena Dungeons work?
+
+`/ag arena` opens the arena browser when the module is on. Browse open runs, join one solo or with a party, wait in the staging area, and launch together. Runs play out as PvE waves, boss finales, or opt-in PvP — and when the run ends (win, wipe, or leave), you return safely to where you came from. Staff and stewards bind arenas to managed server plots; the bundled `lava_dungeon` preset works out of the box.
+
+## Can I play across a BungeeCord network?
+
+**Yes**, when the server enables networking. `/ag hub` and `/ag lobby` take you to the network hub, `/ag servers` opens the cross-server selector, and remote arenas appear in the arena browser — join one and you're sent home when the run ends.
 
 ## Where can players replay the first-claim walkthrough?
 

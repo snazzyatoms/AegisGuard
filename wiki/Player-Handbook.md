@@ -254,7 +254,10 @@ AegisGuard includes built-in navigation tools so you can move between your claim
 | :--- | :--- |
 | `/ag setspawn` | Set your claim's default teleport point. |
 | `/ag home` | Teleport directly to your claim home. |
-| `/ag visit <player or claim>` | Visit public plots or trusted player claims. |
+| `/ag visit` | Open the Travel Atlas. |
+| `/ag travel` | Open the Travel Hub. |
+| `/ag hub` / `/ag lobby` | Travel to the network hub on cross-server networks. |
+| `/ag servers` | Open the cross-server selector. |
 | `/ag beacon` | Manage teleport pads on the claim you are standing in. |
 | `/ag arrival <classic\|beacon>` | Choose how visitors arrive at the plot you manage. |
 
@@ -347,7 +350,39 @@ Some servers may also allow ClaimBlocks to be earned through playtime or other c
 
 ### Arenas
 
-If the Arena module is on, `/ag arena` (or **Arenas** on the Explore row) lets you join cooperative dungeon runs and parties. If it is off, that icon is not on the menu.
+If the Arena module is on, `/ag arena` (or **Arenas** on the Explore row) opens the arena browser. From there you can:
+
+- Browse and join PvE wave runs, boss finales, and opt-in PvP matches.
+- Party up, wait in the staging hub, and launch together — you return safely when the run ends.
+- Spectate live runs where the server allows it.
+
+Arenas run on bound server plots with their own spawns, floors, and mob waves. If the module is off, the icon is not on the menu.
+
+### Gatherings and Open Houses
+
+`/ag gathering` (alias `/ag openhouse`) lets you host a timed open-house event on a plot you manage, or browse what the community is running. Guests can arrive through the Atlas, and hosts can hand out visitor Guest Passes that expire when the event ends.
+
+### Trade Caravans
+
+`/ag caravan` dispatches charge-then-deliver shipments between linked Teleport Beacon pads — pay up front, your goods travel the route, and you can hire an online player as an **escort** to halve ambush risk for a cut of the payout.
+
+### Chat Channels
+
+AegisGuard ships opt-in text channels — no client mod needed, Java and Bedrock use the same commands:
+
+| Command | Channel |
+| :--- | :--- |
+| `/ag chat` | Toggle the plot channel (members of the plot you're on) |
+| `/ag chat alliance` | Alliance radio — the leader can name it |
+| `/ag chat group` | Group radio for your group members |
+| `/ag staff` | Staff radio (staff only) |
+| `/ag chat off` | Return to public chat |
+
+You can be tuned to one channel at a time; messages sent while tuned go to that channel instead of public chat.
+
+### Succession and Transfer
+
+Your realm can outlive you. `/ag heir <player>` names an heir, `/ag succession` opens the Stewardship page (inactivity assume, transfer cooldown, rollback), and `/ag transfer <player>` passes ownership to another player outright.
 
 ---
 

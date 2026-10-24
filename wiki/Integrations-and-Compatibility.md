@@ -4,7 +4,7 @@ AegisGuard `v1.4.0` is designed to work alongside the modern Minecraft plugin ec
 
 > **Important:** Do not run AegisGuard alongside another player land-protection plugin in the same world. Two protection systems can compete for the same interaction events, resulting in inconsistent protection behavior, blocked actions, or bypasses.
 
-> **Upgrade note:** Existing 1.2.7 and 1.3.0 integrations remain valid in 1.3.5. Teleport Beacons, Guest Passes, Emergency Lockdown, Realm Profiles, Routes, Alliance Access, and the Staff Audit Ledger do not require additional bridge plugins. Floodgate/Geyser are optional for Bedrock GUI mapping.
+> **Upgrade note:** Existing 1.2.7 and 1.3.x integrations remain valid in 1.4.0. Teleport Beacons, Guest Passes, Emergency Lockdown, Realm Profiles, Routes, Alliance Access, and the Staff Audit Ledger do not require additional bridge plugins. Floodgate/Geyser are optional for Bedrock GUI mapping.
 
 > **Hooks default off.** Map, Discord, and protection-compat integrations stay **off** in `config.yml` until you enable them. Optional AegisGuard modules are separate from those hooks and live under `modules:`.
 
@@ -29,6 +29,7 @@ The following plugins are supported integrations or commonly recommended compani
 | PlaceholderAPI | Placeholders | Use AegisGuard placeholders such as `%aegis_owner%`, `%aegis_plot%`, and `%aegis_role%` where configured. |
 | LuckPerms | Permissions | Recommended permission manager for player, staff, and integration permission nodes, including `aegis.admin.routes`, `aegis.admin.audit`, and `aegis.beacon`. |
 | Floodgate / Geyser-Spigot | Bedrock proxy | Optional. AegisGuard detects Bedrock clients at runtime so chest GUIs use left-click and sneak-left. No compile-time Geyser dependency. |
+| BungeeCord / Velocity | Networks | Optional. Enables `/ag hub`, `/ag lobby`, `/ag servers`, remote arena joins, cross-server broadcasts, and Discord link sync over a shared backend. |
 | Simple Voice Chat | Voice groups | Optional softdepend (`voicechat`). When present, Hearth rooms become isolated SVC groups. AegisGuard does not ship a microphone client and still starts without this plugin. |
 | WorldGuard | Global Regions | Can be used for global regions, such as spawn, alongside AegisGuard player claims. Avoid overlapping protection rules unless intentionally configured. |
 | Multiverse | World Management | Compatible with multi-world server setups. |
@@ -44,7 +45,7 @@ AegisGuard includes selected integrations directly in the core plugin. These fea
 
 ### Discord Integration
 
-Connect important server events to Discord through webhooks. Discord logging is **opt-in** and off by default.
+Connect important server events to Discord through webhooks. Discord logging is **opt-in** and off by default. Staff can also manage player Discord account links with `/agadmin discord <link|unlink|whois>` (`aegis.admin.discord`).
 
 Supported event logging may include:
 
@@ -84,7 +85,7 @@ Keep `storage.backend` and `storage.type` equal. Plot data only; satellite files
 
 **Wilderness revert** ships **off**. It is SQL-only and a no-op on YAML. Turning SQL on does not enable it; set `modules.wilderness_revert` only if you want that feature.
 
-1.3.5 may also create additional plugin data files for systems such as alliances, routes, teleport beacons, and restore operations. Back up the full `plugins/AegisGuard/` folder and any configured SQL database before major updates, configuration changes, or migrations. A folder backup is recommended, not required, to keep claims on a 1.2.7 or 1.3.0 to 1.3.5 JAR swap.
+1.4.0 may also create additional plugin data files for systems such as alliances, routes, teleport beacons, and restore operations. Back up the full `plugins/AegisGuard/` folder and any configured SQL database before major updates, configuration changes, or migrations. A folder backup is recommended, not required, to keep claims on a 1.2.7 or 1.3.x to 1.4.0 JAR swap.
 
 Use `/agadmin migrate` (storage migrate in Doctor/Admin) to move plot data between YAML and SQL with backups.
 
@@ -92,7 +93,7 @@ Use `/agadmin migrate` (storage migrate in Doctor/Admin) to move plot data betwe
 
 ## Features That Work Without Extra Plugins
 
-These 1.3.5 systems are built into AegisGuard and do not require companion plugins:
+These systems are built into AegisGuard and do not require companion plugins:
 
 | Feature | Notes |
 | :--- | :--- |
@@ -105,7 +106,7 @@ These 1.3.5 systems are built into AegisGuard and do not require companion plugi
 | Alliance Access | Opt-in ally permissions. Separate from group ownership and economy plugins. |
 | Staff Audit Ledger | In-plugin audit history for restore, repair, migration, bypass, and safety actions. |
 | First-claim walkthrough | Optional guidance and settings preferences, including the language picker. |
-| `/agadmin transition` | Confirms 1.2.7 or 1.3.0 to 1.3.5 upgrade status after a JAR swap. |
+| `/agadmin transition` | Confirms 1.2.7 or 1.3.x to 1.4.0 upgrade status after a JAR swap. |
 
 ---
 
@@ -145,7 +146,7 @@ AegisGuard can restrict WorldEdit operations inside claims to protect player bui
 
 Review both AegisGuard and WorldEdit or FAWE permissions before allowing large-scale editing tools on a live server. Emergency Lockdown can help restrict sensitive plot activity during an incident, but it is not a substitute for correct WorldEdit permissions.
 
-WorldEdit or FastAsyncWorldEdit can also power **optional plot-build backups** (`snapshots.build_backup`, default **off**). Staff snapshots then copy the claim AABB as a schematic under `plugins/AegisGuard/plot-backups/`. Restore pastes those blocks after claim-data rollback. If WorldEdit is missing, the staff menu keeps a teaser to install it. Player self-backup and bulk dumps of every player plot are not included in 1.3.5.
+WorldEdit or FastAsyncWorldEdit can also power **optional plot-build backups** (`snapshots.build_backup`, default **off**). Staff snapshots then copy the claim AABB as a schematic under `plugins/AegisGuard/plot-backups/`. Restore pastes those blocks after claim-data rollback. If WorldEdit is missing, the staff menu keeps a teaser to install it. Player self-backup and bulk dumps of every player plot are not included in 1.4.0.
 
 ### Custom Chat Plugins
 
@@ -182,7 +183,7 @@ Before launching AegisGuard `v1.4.0` on a live server:
 7. If using Local Market bridges, confirm the target shop plugin is installed and the bridge command works for a trusted test plot.
 8. Configure database storage appropriate for the server size. Do not enable wilderness revert unless you are on SQL and want that feature.
 9. Back up data before migrations, major updates, or integration changes.
-10. After upgrading from 1.2.7 or 1.3.0, run `/agadmin transition`, then verify claims, markets, Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, and `/ag beacon`. Run `/agadmin doctor` only if something looks wrong.
+10. After upgrading from 1.2.7 or 1.3.x, run `/agadmin transition`, then verify claims, markets, Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, and `/ag beacon`. Run `/agadmin doctor` only if something looks wrong.
 11. If Bedrock players join through Geyser, confirm Floodgate/Geyser is loaded and `gui.bedrock.detect` is on.
 12. If you already run Simple Voice Chat, confirm Hearth rooms become isolated voice groups. AegisGuard starts without that plugin.
 

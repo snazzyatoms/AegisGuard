@@ -18,7 +18,7 @@ The AegisGuard land economy can include:
 
 > **Server configuration:** Economy features, costs, limits, permissions, and currencies are controlled by the server owner. Not every system is enabled on every server. If an economy icon is missing from `/ag menu`, that module is turned off.
 
-> **Upgrade note:** Existing 1.2.7 and 1.3.0 economy data and configuration remain valid in 1.3.5. Teleport Beacons, Guest Passes, Lockdown, Realm Profiles, Routes, and Alliance Access do not take ownership of plots, treasuries, rentals, or market listings.
+> **Upgrade note:** Existing 1.2.7 and 1.3.x economy data and configuration remain valid in 1.4.0. Teleport Beacons, Guest Passes, Lockdown, Realm Profiles, Routes, and Alliance Access do not take ownership of plots, treasuries, rentals, or market listings.
 
 ---
 
@@ -306,6 +306,12 @@ Frontier Expansion gives land growth a distinct progression identity while retai
 After Plot Ascension Level 30, **Expansion Horizons** continues territory progression with Renown, named ranks, bound Sigils, controlled radius growth, and advanced plot abilities. Overlap checks, world limits, snapshots, and ownership validation still apply. If leveling or expansions are turned off, those menu entries are hidden.
 
 ---
+
+## Trade Caravans and Settlements
+
+`/ag caravan` dispatches shipments along linked Teleport Beacon pads — charge up front, deliver on arrival. Dispatch fees, insurance, ambush events, and escort cuts are server-configured. An online player hired as escort halves ambush risk for a configurable cut.
+
+`/ag settlements` opens your settlements inbox — rental payouts, market proceeds, and pending collections land there instead of getting lost in chat.
 
 ## Routes and Optional Rewards
 

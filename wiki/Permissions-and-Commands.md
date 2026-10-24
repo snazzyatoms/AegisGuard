@@ -5,7 +5,7 @@ This reference lists the main commands and recommended permissions for **AegisGu
 > **Important notes**
 >
 > - **Claim Status** stays on the Territory row of `/ag menu`. It is a plot snapshot (owner, protections, growth, access), not a separate primary flow.
-> - **Biome Studio** is not part of the active plugin flow.
+> - `/ag biome` opens the per-plot biome picker over the server's allowed list (optional Vault fee).
 > - **Frontier Expansion** is AegisGuard's current presentation for land expansion. It remains the plot-expansion system, presented through a more distinct identity and GUI flow.
 > - Many 1.4.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, Travel Atlas, Aegis Frequency, alliance radio, staff chat, Visual Presence, Quick-Claim, Stewardship, Caravans, and the first-claim walkthrough.
 > - If a menu icon is missing, that module is turned off on this server.
@@ -26,10 +26,17 @@ Basic commands for claiming, travel, and personal plot management.
 | `/ag menu` | `aegis.user` | Open the main AegisGuard menu / Guardian Codex. |
 | `/ag help` | `aegis.user` | View the command and help summary. |
 | `/ag cost` | `aegis.user` | Preview a claim cost before confirming. |
-| `/ag resize <direction> <amount>` | `aegis.user` | Expand or shrink a plot. Directions are `north`, `south`, `east`, or `west`. |
 | `/ag setspawn` | `aegis.user` | Set a plot home point. |
 | `/ag home` | `aegis.user` | Teleport to a plot home point. |
 | `/ag visit` | `aegis.user` | Open the Travel Atlas. |
+| `/ag travel` | `aegis.user` | Open the Travel Hub. |
+| `/ag hub` / `/ag lobby` | `aegis.user` | Travel to the network hub on BungeeCord/Velocity servers. |
+| `/ag servers` | `aegis.user` | Open the cross-server selector on networks. |
+| `/ag transfer <player>` | `aegis.user` | Transfer plot ownership to another player. |
+| `/ag settlements` | `aegis.user` | Open your settlements inbox for rental and market payouts. |
+| `/ag gathering` / `/ag openhouse` | `aegis.gathering` | Host or browse open-house gatherings. Included in `aegis.user`. |
+| `/ag biome` | `aegis.user` | Pick a custom biome for the plot you manage. |
+| `/ag consume` | `aegis.user` | Consume your wand item. |
 | `/ag beacon` | `aegis.beacon` | Open the Atlas **My Beacons** tab on a claim you manage. Included in `aegis.user`. |
 | `/ag arrival <classic\|beacon>` | `aegis.user` | Choose how visitors arrive at the plot you manage. Run with no argument to see the current mode. |
 | `/ag heir [player\|clear]` | `aegis.user` | Name or clear the succession heir for the plot you manage. |
@@ -83,7 +90,7 @@ AegisGuard separates claim greetings from administrative updates. Players can al
 - Servers using per-player notification mode allow players to manage their own preferences.
 - Servers that force notifications globally may limit player toggles.
 - Settings may also include language, sound preferences, and repeat-notification behavior.
-- Staff may also use `aegis.notify.bypass` and `aegis.notify.others`.
+- Staff may also use `aegis.notify.bypass`.
 
 ---
 
@@ -142,7 +149,7 @@ Each plot manager chooses how their **public listings** (Visit, market jump, and
 - **classic** — Safe Travel to the plot spawn, even when pads exist (1.3.0 style).
 - **beacon** — visitors must land on a public arrival pad; if none exists the trip fails closed (`beacon_no_public_arrival`) instead of falling back to spawn.
 
-Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. `/ag beacon` opens the Atlas **My Beacons** tab. The `config_schema` bumps from `1294` to `1310` on upgrade, with a backup.
+Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. `/ag beacon` opens the Atlas **My Beacons** tab. The `config_schema` bumps from `1294` to `1316` on upgrade, with a backup.
 
 ---
 
@@ -264,7 +271,7 @@ High-level commands for administrators, owners, and trusted staff.
 | :--- | :--- | :--- |
 | `/agadmin menu` | `aegis.admin` | Open the administrator control panel. |
 | `/agadmin reload` | `aegis.admin` or `aegis.reload` | Reload configuration and language files. |
-| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7, 1.3.0, or 1.3.5 to 1.4.0 upgrade status (aliases `upgrade`, `v130`). |
+| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7, 1.3.0, or 1.3.5 to 1.4.0 upgrade status (aliases `upgrade`, `v130`, `v140`). |
 | `/agadmin health` | `aegis.admin` | Quick staff health check. |
 | `/agadmin staffchat` | `aegis.admin.staffchat` | Toggle staff radio. Alias `/agadmin sc`. Same as `/ag staff`. |
 | `/agadmin bypass` | `aegis.admin.bypass` | Toggle protection-bypass mode. |
@@ -279,10 +286,17 @@ High-level commands for administrators, owners, and trusted staff.
 | `/agadmin restore here confirm [scope]` | `aegis.admin` | Confirm a restore after preview. |
 | `/agadmin restore operation <id> retry\|release` | `aegis.admin` | Retry or release a paused restore transaction. |
 | `/agadmin audit` | `aegis.admin.audit` | Open the Staff Audit Ledger. |
+| `/agadmin season` | `aegis.admin.season` | Set staff season featured Atlas plots and routes. |
+| `/agadmin skill fly <player> [seconds]` | `aegis.admin.skill` | Grant or revoke temporary flight. |
+| `/agadmin discord <link\|unlink\|whois>` | `aegis.admin.discord` | Manage Discord account links. |
+| `/agadmin plots <player>` | `aegis.admin` | Browse a player's plots. |
+| `/agadmin inspect [player]` | `aegis.admin` | Inspect the claim here or a player's claims. |
+| `/agadmin network [find <p>\|broadcast <msg>]` | `aegis.admin.broadcast` | Cross-server find and broadcast tools. |
+| `/agadmin migrate storage\|backend` | `aegis.admin.migrate` | Inspect or change storage backends. |
 
-Snapshots always store **claim data** (owner, bounds, flags, members, guest passes, lockdown, alliance access, noticeboard, and 1.3.5 plot maps). Optional WorldEdit/FAWE **build** copies require `snapshots.build_backup.enabled`.
+Snapshots always store **claim data** (owner, bounds, flags, members, guest passes, lockdown, alliance access, noticeboard, and plot maps). Optional WorldEdit/FAWE **build** copies require `snapshots.build_backup.enabled`.
 
-### Admin GUI Tools in 1.3.5
+### Admin GUI Tools
 
 From `/agadmin menu`, trusted staff may also access:
 
@@ -393,7 +407,6 @@ Useful optional nodes for trusted staff and elevated server roles.
 | `aegis.chat.group` | Use `/ag chat group` group radio. Included in `aegis.user`. |
 | `aegis.admin.staffchat` | Use `/ag staff` and `/agadmin staffchat`. Included in `aegis.admin`. |
 | `aegis.notify.bypass` | Receive plot notifications when normal toggles are restricted. |
-| `aegis.notify.others` | Manage notification preferences for other players. |
 | `aegis.claimblocks.gift` | Gift ClaimBlocks (`/ag giftblocks`). Included in `aegis.user`. |
 | `aegis.claimblocks.exchange.bypass` | Bypass ClaimBlocks exchange cooldowns and limits. |
 | `aegis.claimblocks.selllock.bypass` | Bypass ClaimBlocks sell-lock restrictions. |
@@ -408,6 +421,15 @@ Useful optional nodes for trusted staff and elevated server roles.
 | `aegis.arena.spectate` | Spectate Arena runs. Included in `aegis.user`. |
 | `aegis.arena.steward` | Configure arenas on managed server plots. |
 | `aegis.arena.admin` | Bind arenas, abort runs, and resolve rewards. |
+| `aegis.gathering` | Host an Open House on a plot you manage. Included in `aegis.user`. |
+| `aegis.rent.bypass-limit` | Bypass rental listing limits. |
+| `aegis.admin.season` | Set staff season titles and featured pins. |
+| `aegis.admin.skill` | Grant or revoke temporary flight skills. |
+| `aegis.admin.fly` | Survival flight when `flight_skill.staff_always` is on. |
+| `aegis.admin.hearth` | Hear all Hearth rooms and speak unmuffled. |
+| `aegis.admin.discord` | Link, unlink, and inspect Discord account links. |
+| `aegis.admin.broadcast` | Send network-wide broadcasts. |
+| `aegis.admin.alerts` | Receive rate-limited protection-denial alerts. |
 | `aegis.market.manage` | Manage public market or utility plots. |
 | `aegis.staff.co_owner` | Grant co-owner-style staff access for elevated server roles. |
 | `aegis.staff.market_steward` | Grant market-steward-style staff access for managed market areas. |

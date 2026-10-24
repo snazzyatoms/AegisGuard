@@ -2,7 +2,7 @@
 
 AegisGuard is designed for a straightforward installation on single servers and larger Paper or Folia networks.
 
-**AegisGuard 1.4.0** is the current client on this branch. Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid and are migrated automatically on first startup. There is **no GitHub Release for 1.4.0** yet; the last published GitHub Release remains [1.3.5](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5).
+**AegisGuard 1.4.0** is the current public release. Existing 1.2.7 and 1.3.x claims, configs, and plot data remain valid and are migrated automatically on first startup. Download from the [1.4.0 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0).
 
 ## Requirements
 
@@ -22,9 +22,7 @@ Confirm that the server meets these requirements before installing.
 
 ### 1. Download
 
-Build or copy the **1.4.0** plugin jar from this branch (`aegisguard-modern` produces `AegisGuard-1.4.0.jar`). This source line is **not** published as a GitHub Release.
-
-The last published GitHub Release remains [AegisGuard 1.3.5](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5).
+Download `AegisGuard-1.4.0.jar` from the [1.4.0 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0), or build it from the `V1.4.0` branch (`aegisguard-modern` produces `AegisGuard-1.4.0.jar`).
 
 Use the main plugin jar: `AegisGuard-1.4.0.jar`. Do **not** install `AegisGuard-1.4.0-api.jar` or `AegisGuard-1.4.0-dev-api.jar` as the server plugin. Those are compile-time files for developers.
 
@@ -71,16 +69,16 @@ Use this process when updating AegisGuard:
 3. Remove the previous AegisGuard jar from the `plugins` folder.
 4. Add `AegisGuard-1.4.0.jar`.
 5. Start the server. Config and language merge run on enable. Existing plots load as-is and stay on classic arrival.
-6. Confirm the upgrade with `/agadmin transition` (aliases `/agadmin upgrade`, `/agadmin v130`).
+6. Confirm the upgrade with `/agadmin transition` (aliases `/agadmin upgrade`, `/agadmin v130`, `/agadmin v140`).
 7. Run `/agadmin doctor` only if something looks wrong.
 
 A copy of `plugins/AegisGuard/` (and world data) is recommended. It is **not** required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1310`, auto-merging new keys with a backup when migration runs.
+> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1316`, auto-merging new keys with a backup when migration runs.
 
 After updating, verify:
 
-- `/agadmin transition` reports that you are on the current schema (`1310`)
+- `/agadmin transition` reports that you are on the current schema (`1316`)
 - `/ag menu` opens normally
 - Existing claims still protect correctly (and remain on classic arrival)
 - Optional new features appear with safe defaults (Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons)
@@ -110,7 +108,7 @@ After updating, verify:
 
 ## Support
 
-- [GitHub Releases](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5)
+- [GitHub Releases](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0)
 - [GitHub Issues](https://github.com/snazzyatoms/AegisGuard/issues)
 - [Support Discord](https://discord.gg/nHwdhKzeKR)
 

@@ -3,7 +3,7 @@
 
 AegisGuard is a modern land-protection plugin for Minecraft, built for **Paper, Purpur, Spigot, and Folia**. It combines reliable claim security with economy features, RPG-style progression, and accessible in-game management tools.
 
-**AegisGuard 1.4.0** is the current source line, built on the public **1.3.5** release. Existing `1.2.7`, `1.3.0`, and `1.3.5` data remain valid through automatic schema migration.
+**AegisGuard 1.4.0** is the current public release. Existing `1.2.7` and `1.3.x` data remain valid through automatic schema migration.
 
 | Requirement | Support |
 | :--- | :--- |
@@ -11,7 +11,7 @@ AegisGuard is a modern land-protection plugin for Minecraft, built for **Paper, 
 | Java | 21+ |
 | Platforms | Spigot, Paper, Purpur, Folia |
 | Current line | AegisGuard 1.4.0 |
-| Latest published release | [AegisGuard 1.3.5](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5) |
+| Latest release | [AegisGuard 1.4.0](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) |
 
 ## Why AegisGuard?
 
@@ -63,8 +63,8 @@ Optional first steps after your first claim:
 1. Stop the server.
 2. Confirm **Java 21** or newer.
 3. Replace the old JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1310`, with a backup). Existing plots load as-is and stay on classic arrival.
-5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`).
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1316`, with a backup). Existing plots load as-is and stay on classic arrival.
+5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`).
 6. Run `/agadmin doctor` only if something looks wrong.
 
 Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
@@ -79,13 +79,19 @@ A folder backup of `plugins/AegisGuard/` is recommended. It is not required to k
 - **Quick-Claim** — `/ag quickclaim [radius]` claims a square around you; Settings only on the main hub and staff menu; claiming honors `max_claims_per_player`.
 - **Restore-safe roles** — snapshot restore merges members/roles by default; `/ag roles lock|unlock|undo`.
 - **Guardian Succession** — `/ag heir`, `/ag succession`, Stewardship GUI, transfer cooldown and rollback.
-- **Caravans** — `/ag caravan` charge-then-deliver shipments on public beacon hops.
+- **Arena Dungeons** — `/ag arena` browses, joins, and parties for PvE/PvP runs on bound plots: waves, boss finales, custom floors and schematics, staging hubs, matchmaking queues, and sealed runs, with a ready `lava_dungeon` preset. Steward and admin roles manage arenas.
+- **Caravans** — `/ag caravan` charge-then-deliver shipments on public beacon hops, with insurance, route events, hireable escorts, and resume after restart.
+- **Gatherings & Open House** — `/ag gathering` (alias `/ag openhouse`) hosts timed events on managed plots with optional visitor Guest Passes.
+- **Plot chat frequencies** — `/ag chat` toggles the plot channel; alliance and group radios with leader naming; `/ag staff` for staff.
+- **Cross-server travel** — `/ag hub`, `/ag lobby`, `/ag servers`, remote arena joins, and staff broadcasts on BungeeCord/Velocity networks.
+- **ClaimBlocks exchange** — `/ag blocks buy|sell` with rates, cooldowns, and sell locks; `/ag ledger` history; `/ag settlements` inbox.
+- **Nine language packs** — every player-facing message translated; full `/ag help` coverage; console logs stay plain English.
 - **Server sanctuary** — staff can toggle **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** on a server/spawn plot in Claim Settings → Safety. Off by default. Player plots never get this. No hub-flight Safety flag.
 - **Hearth rooms** — owners and server-plot stewards can seal public chat to a 3D subplot or the rest of the plot. Off by default. Staff with `aegis.admin.hearth` still hear every room. If Simple Voice Chat (`voicechat`) is installed, the same rooms become isolated voice groups.
 - **Claim presets** — after claim, choose Home / Shop / Arena / Farm (or Spawn / Hub / Shop / Arena on server plots).
 - **Staff seasons** — `/agadmin season` pins featured Atlas plots and Routes.
 - **Flight** — Ascension/Horizon level 30, staff fly, or `/agadmin skill fly <player> [seconds]`.
-- **Schema migration** — `config_schema` moves `1294` → `1310`; new keys auto-merge on upgrade with a backup.
+- **Schema migration** — `config_schema` moves `1294` → `1316`; new keys auto-merge on upgrade with a backup.
 
 ## What's New in 1.3.5
 
@@ -122,6 +128,14 @@ The 1.2.7 territory platform remains: Ascension Hall, Expansion Horizons, rental
 /ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
 /ag heir [player|clear]      Name a succession heir
 /ag caravan                  Dispatch and track trade caravans
+/ag gathering                Host or browse open-house gatherings
+/ag travel                   Open the Travel Hub
+/ag hub /ag servers          Cross-server travel on networks
+/ag arena                    Browse, join, and party for arena runs
+/ag chat                     Toggle plot chat (alliance/group radios too)
+/ag staff                    Toggle staff chat
+/ag transfer <player>        Transfer plot ownership
+/ag blocks buy|sell          Trade ClaimBlocks through the exchange
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center

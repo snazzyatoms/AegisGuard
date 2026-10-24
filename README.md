@@ -32,7 +32,7 @@
 
 It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is the current public release. Existing `1.2.7` and `1.3.x` data and configuration remain valid through automatic schema migration.
 
-> Full notes live in [`RELEASE_NOTES_1.4.0.md`](RELEASE_NOTES_1.4.0.md). Download from the [1.4.0 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0).
+> Full notes and downloads live on the [1.4.0 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) page.
 
 ## Highlights In 1.4.0
 
@@ -159,9 +159,10 @@ See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed comm
 | [`V1.3.5`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.5) | Previous public line — GitHub Release **1.3.5** |
 | [`V1.3.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.0) | Earlier public 1.3.0 line |
 | [`aegisguard-modern/`](aegisguard-modern/) | Plugin source (Maven, Java 21) |
+| [`examples/api-addon/`](examples/api-addon/) | Example plugin that compiles against the public API |
 | [`wiki/`](wiki/) | Pages to paste into the GitHub Wiki |
-| [`listing/`](listing/) | Spigot listing art |
-| [`RELEASE_NOTES_1.4.0.md`](RELEASE_NOTES_1.4.0.md) | 1.4.0 release notes |
+| [`listing/`](listing/) | Spigot/CurseForge listing art |
+| [`media/`](media/) | Showcase GIFs hotlinked by the listing pages |
 | [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md) | Roadmap beyond the current line |
 
 ## For Developers

@@ -63,7 +63,7 @@ class Phase2RoleHardeningContractTest {
 
     @Test
     void rolesCommandWiresLockUnlockUndoAndAudit() throws Exception {
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("handleRoles"));
         assertTrue(command.contains("case \"roles\""));
         assertTrue(command.contains("AuditCategory.ROLE_CHANGE"));

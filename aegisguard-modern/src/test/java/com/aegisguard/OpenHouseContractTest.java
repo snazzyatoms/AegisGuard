@@ -56,7 +56,7 @@ class OpenHouseContractTest {
         String player = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
         assertTrue(player.contains("button_gathering"));
         assertTrue(player.contains("showGatherings"));
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("handleGathering"));
         assertTrue(command.contains("\"gathering\""));
         String gui = Files.readString(JAVA.resolve("gatherings/GatheringGUI.java"));

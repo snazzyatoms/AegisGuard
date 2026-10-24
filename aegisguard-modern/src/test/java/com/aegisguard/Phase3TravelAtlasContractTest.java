@@ -62,7 +62,7 @@ class Phase3TravelAtlasContractTest {
                 || hub.contains("visit().open(player, 0, false)"),
                 "the hub must reach the atlas");
         assertTrue(hub.contains("caravans().open(player)"), "hub exposes the caravan menu");
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("case \"beacon\""));
         assertTrue(command.contains("openManager"));
     }

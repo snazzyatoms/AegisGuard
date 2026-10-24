@@ -57,7 +57,7 @@ class Phase4SuccessionContractTest {
         String transfer = Files.readString(JAVA.resolve("gui/TransferConfirmGUI.java"));
         assertTrue(transfer.contains("canTransferNow"));
         assertTrue(transfer.contains("recordTransfer"));
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("handleHeir"));
         assertTrue(command.contains("handleSuccession"));
         String gui = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));

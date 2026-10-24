@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+import com.aegisguard.TestSources;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -122,7 +123,7 @@ class ModulesContractTest {
         String status = Files.readString(Path.of("src/main/java/com/aegisguard/gui/PlotStatusGUI.java"));
         assertTrue(status.contains("Modules.Id.CLAIM_MERGE"));
         assertTrue(status.contains("Modules.Id.CLAIM_BLOCKS"));
-        String command = Files.readString(Path.of("src/main/java/com/aegisguard/commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("Modules.commandModule"));
     }
 }

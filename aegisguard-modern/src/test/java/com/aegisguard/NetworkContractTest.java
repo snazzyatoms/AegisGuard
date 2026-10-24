@@ -289,7 +289,7 @@ class NetworkContractTest {
                 "aliases must be removed on disable so /reload leaves no stale commands");
         assertTrue(main.contains("network.hub.register_commands"));
         // /ag hub + /ag servers exist for players either way
-        String cmd = read(JAVA.resolve("commands/AegisCommand.java"));
+        String cmd = TestSources.commandsPackage();
         assertTrue(cmd.contains("handleNetworkHub"));
         assertTrue(cmd.contains("handleNetworkServers"));
         assertTrue(cmd.contains("\"hub\", \"lobby\", \"servers\""));

@@ -48,7 +48,7 @@ class FurtherPolishContractTest {
 
     @Test
     void giftBlocksAndMergeCommandsExist() throws Exception {
-        String cmd = Files.readString(JAVA_ROOT.resolve("commands/AegisCommand.java"));
+        String cmd = TestSources.commandsPackage();
         assertTrue(cmd.contains("giftblocks"));
         assertTrue(cmd.contains("handleGiftBlocks"));
         assertTrue(cmd.contains("\"merge\""));
@@ -95,7 +95,7 @@ class FurtherPolishContractTest {
 
     @Test
     void rentalRenewCommandUsesConfirmGui() throws Exception {
-        String cmd = Files.readString(JAVA_ROOT.resolve("commands/AegisCommand.java"));
+        String cmd = TestSources.commandsPackage();
         assertTrue(cmd.contains("openPlotRenew"));
         assertTrue(cmd.contains("openPlotCancel"));
     }

@@ -79,7 +79,7 @@ class HardeningSweepContractTest {
     @Test
     void vaultClaimRefundsWhenValidationRejectsTheClaim() throws Exception {
         String selection = Files.readString(JAVA.resolve("selection/SelectionService.java"));
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
 
         assertTrue(selection.contains("public boolean confirmClaim(Player p, boolean isServerClaim)"),
                 "confirmClaim must report whether the plot was actually created");

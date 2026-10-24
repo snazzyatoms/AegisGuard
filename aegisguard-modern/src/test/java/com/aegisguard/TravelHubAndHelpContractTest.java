@@ -43,7 +43,7 @@ class TravelHubAndHelpContractTest {
         assertTrue(mgr.contains("travelHub()"), "GUIManager must expose the hub");
         assertTrue(mgr.contains("new TravelHubGUI(plugin)"), "hub must be constructed");
 
-        String cmd = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String cmd = TestSources.commandsPackage();
         assertTrue(cmd.contains("case \"travel\""), "/ag travel must dispatch to the hub");
         assertTrue(cmd.contains("\"travel\""), "travel must be in SUB_COMMANDS for tab-complete");
 
@@ -95,7 +95,7 @@ class TravelHubAndHelpContractTest {
 
     @Test
     void helpIsCategorized() throws Exception {
-        String src = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String src = TestSources.commandsPackage();
         assertTrue(src.contains("HELP_CATEGORIES"), "help must define categories");
         assertTrue(src.contains("sendHelp(p, args.length > 1 ? args[1] : null)"),
                 "player /ag help <category> must pass the category through");

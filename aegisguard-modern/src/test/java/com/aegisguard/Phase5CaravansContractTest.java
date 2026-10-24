@@ -78,7 +78,7 @@ class Phase5CaravansContractTest {
         String hub = Files.readString(JAVA.resolve("gui/TravelHubGUI.java"));
         assertTrue(hub.contains("caravans().open(player)"),
                 "hub must expose the caravan menu");
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("handleCaravan"));
         assertTrue(command.contains("case \"caravan\""));
         String plugin = Files.readString(JAVA.resolve("AegisGuard.java"));

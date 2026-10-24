@@ -95,7 +95,7 @@ class BeaconContractTest {
         String visitGui = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
         assertFalse(visitGui.contains("AtlasTab"),
                 "atlas no longer hosts beacon tabs — BeaconGUI owns the pad list");
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("case \"beacon\""));
         assertTrue(command.contains("giveStarterPads"));
         String modules = Files.readString(JAVA.resolve("config/Modules.java"));

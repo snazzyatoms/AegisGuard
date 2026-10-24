@@ -59,9 +59,9 @@ class RealmProfileContractTest {
 
     @Test
     void notesCommandEnforcesManagePermissionForAddAndRemoveButNotForList() throws Exception {
-        String command = Files.readString(JAVA_ROOT.resolve("commands/AegisCommand.java"));
-        int methodStart = command.indexOf("private void handleNotice(");
-        assertTrue(methodStart >= 0, "AegisCommand must implement /ag notice");
+        String command = TestSources.commandsPackage();
+        int methodStart = command.indexOf("void handleNotice(");
+        assertTrue(methodStart >= 0, "the command layer must implement /ag notice");
 
         int listIndex = command.indexOf("action.equals(\"list\")", methodStart);
         int permissionIndex = command.indexOf("plot.canManage(p, plugin)", methodStart);
@@ -72,7 +72,7 @@ class RealmProfileContractTest {
 
     @Test
     void notesCommandEnforcesAConfiguredMaxLength() throws Exception {
-        String command = Files.readString(JAVA_ROOT.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("realm_profiles.noticeboard.max_length"));
         assertTrue(command.contains("notice_too_long"));
     }

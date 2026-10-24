@@ -36,7 +36,7 @@ class SafeTravelContractTest {
                 JAVA_ROOT.resolve("gui/StallBrowseGUI.java"),
                 JAVA_ROOT.resolve("gui/ZoneTenantGUI.java"),
                 JAVA_ROOT.resolve("gui/AdminPlotListGUI.java"),
-                JAVA_ROOT.resolve("commands/AegisCommand.java")
+                JAVA_ROOT.resolve("commands/TravelCommands.java")
         );
         for (Path file : files) {
             String source = Files.readString(file);

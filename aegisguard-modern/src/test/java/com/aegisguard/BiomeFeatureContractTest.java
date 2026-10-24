@@ -49,7 +49,7 @@ class BiomeFeatureContractTest {
 
     @Test
     void commandAndGuiAreWired() throws Exception {
-        String cmd = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String cmd = TestSources.commandsPackage();
         assertTrue(cmd.contains("\"biome\""), "/aegis must list the biome subcommand");
         assertTrue(cmd.contains("handleBiome"), "biome case must dispatch to handleBiome");
         assertTrue(cmd.contains("plugin.gui().biome().open"), "handleBiome must open BiomeGUI");

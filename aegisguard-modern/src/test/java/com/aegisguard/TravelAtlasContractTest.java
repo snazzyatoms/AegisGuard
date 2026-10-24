@@ -118,7 +118,7 @@ class TravelAtlasContractTest {
 
     @Test
     void arrivalCommandIsWiredForOwners() throws Exception {
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("case \"arrival\""));
         assertTrue(command.contains("handleArrival"));
         assertTrue(command.contains("setArrivalMode"));

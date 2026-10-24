@@ -65,7 +65,7 @@ class PlotChatContractTest {
         String plugin = Files.readString(JAVA.resolve("AegisGuard.java"));
         assertTrue(plugin.contains("new com.aegisguard.chat.PlotChatService(this)"));
         assertTrue(plugin.contains("PlotChatListener"));
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("handlePlotChat"));
         assertTrue(command.contains("case \"chat\", \"frequency\""));
         assertTrue(command.contains("handleAllianceChat"));

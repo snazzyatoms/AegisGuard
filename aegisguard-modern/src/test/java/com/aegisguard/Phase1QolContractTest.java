@@ -77,7 +77,7 @@ class Phase1QolContractTest {
         assertTrue(selection.contains("max_claims_reached"));
         assertTrue(selection.contains("getWorldMaxClaims"));
 
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("\"quickclaim\""));
         assertTrue(command.contains("handleQuickClaim"));
         assertTrue(command.contains("case \"quickclaim\", \"qc\""));

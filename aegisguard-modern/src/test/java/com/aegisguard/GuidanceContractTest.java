@@ -59,7 +59,7 @@ class GuidanceContractTest {
         assertTrue(settings.contains("walkthrough().open(player, 0)"),
                 "Settings must offer a Replay Walkthrough entry point");
 
-        String command = Files.readString(JAVA_ROOT.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("case \"guide\""),
                 "/ag guide must reopen the walkthrough on demand");
     }

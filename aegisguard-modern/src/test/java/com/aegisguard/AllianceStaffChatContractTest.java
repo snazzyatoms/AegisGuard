@@ -41,7 +41,7 @@ class AllianceStaffChatContractTest {
 
     @Test
     void chatCommandIsWiredAndNotGatedOnPlotFrequencyAlone() throws Exception {
-        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("case \"chat\", \"frequency\""));
         assertTrue(command.contains("handlePlotChat"));
         assertTrue(command.contains("handleAllianceChat"));

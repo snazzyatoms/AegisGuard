@@ -99,7 +99,7 @@ class AllianceContractTest {
 
     @Test
     void allianceCommandIsRegistered() throws Exception {
-        String command = Files.readString(JAVA_ROOT.resolve("commands/AegisCommand.java"));
+        String command = TestSources.commandsPackage();
         assertTrue(command.contains("\"alliance\""));
         assertTrue(command.contains("handleAlliance"));
     }

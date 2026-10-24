@@ -589,6 +589,34 @@ public class AegisGuard extends JavaPlugin {
         }
 
         console().info("log_enabled", "AegisGuard enabled.");
+        logStartupSummary();
+    }
+
+    /**
+     * One-line platform/storage/module/hook summary for admins reading server logs.
+     * Deliberately plain English — console output is not localized.
+     */
+    private void logStartupSummary() {
+        int enabled = 0;
+        for (com.aegisguard.config.Modules.Id id : com.aegisguard.config.Modules.Id.values()) {
+            if (modules() != null && modules().on(id)) enabled++;
+        }
+        StringBuilder hooks = new StringBuilder();
+        if (vault != null && vault.isEnabled()) hooks.append("Vault");
+        if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null
+                || Bukkit.getPluginManager().getPlugin("FastAsyncWorldEdit") != null) {
+            if (hooks.length() > 0) hooks.append(", ");
+            hooks.append("WorldEdit");
+        }
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            if (hooks.length() > 0) hooks.append(", ");
+            hooks.append("PlaceholderAPI");
+        }
+        if (hooks.length() == 0) hooks.append("none");
+        getLogger().info("Ready: platform=" + (isFolia ? "Folia" : "Bukkit")
+                + " storage=" + (plotStore instanceof SQLDataStore ? "SQL" : "YML")
+                + " modules=" + enabled + "/" + com.aegisguard.config.Modules.Id.values().length
+                + " hooks=" + hooks);
     }
 
     private final java.util.Set<String> dynamicCommands = new java.util.HashSet<>();

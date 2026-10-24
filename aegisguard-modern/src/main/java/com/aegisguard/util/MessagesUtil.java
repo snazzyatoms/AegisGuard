@@ -49,7 +49,7 @@ public class MessagesUtil {
         this.defaultStyle = (cfgDefault == null || cfgDefault.isBlank()) ? "old_english" : cfgDefault.trim();
 
         migrateLegacyPlayerPreferences();
-        plugin.console().info("log_messages_util_loaded", "[AegisGuard] MessagesUtil compat loaded (NO messages.yml). Default style: {STYLE}", "STYLE", defaultStyle);
+        plugin.console().info("log_messages_util_loaded", "MessagesUtil compat loaded (NO messages.yml). Default style: {STYLE}", "STYLE", defaultStyle);
     }
 
     // ----------------------------
@@ -207,7 +207,7 @@ public class MessagesUtil {
             }
             final int count = migrated;
             plugin.console().info("log_player_prefs_loaded",
-                    "[AegisGuard] Migrated {COUNT} legacy player language preferences into localization.player_styles.",
+                    "Migrated {COUNT} legacy player language preferences into localization.player_styles.",
                     "COUNT", String.valueOf(count));
         }
     }
@@ -246,7 +246,7 @@ public class MessagesUtil {
     private String reportMissing(String key) {
         if (plugin.getConfig().getBoolean("localization.debug_missing_keys", false)
                 && key != null && loggedMissingKeys.add(key)) {
-            plugin.getLogger().warning("[AegisGuard] Missing language key: " + key);
+            plugin.getLogger().warning("Missing language key: " + key);
         }
         return "&c[Missing: " + key + "]";
     }

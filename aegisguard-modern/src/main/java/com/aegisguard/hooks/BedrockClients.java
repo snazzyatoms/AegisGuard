@@ -41,7 +41,7 @@ public final class BedrockClients {
         geyserIsBedrock = null;
 
         if (host != null && !host.getConfig().getBoolean("gui.bedrock.detect", true)) {
-            host.getLogger().info("[AegisGuard] Bedrock client detection is disabled in config (gui.bedrock.detect).");
+            host.getLogger().info("Bedrock client detection is disabled in config (gui.bedrock.detect).");
             return;
         }
 
@@ -80,13 +80,13 @@ public final class BedrockClients {
 
         if (host != null) {
             if (floodgatePresent || geyserPresent) {
-                host.getLogger().info("[AegisGuard] Bedrock players detected via "
+                host.getLogger().info("Bedrock players detected via "
                         + (floodgatePresent ? "Floodgate" : "")
                         + (floodgatePresent && geyserPresent ? " + " : "")
                         + (geyserPresent ? "Geyser" : "")
                         + ". Chest GUIs will use left-click and sneak-left for those clients.");
             } else {
-                host.getLogger().info("[AegisGuard] No Floodgate/Geyser found. GUI clicks stay Java-style until a Bedrock proxy is installed.");
+                host.getLogger().info("No Floodgate/Geyser found. GUI clicks stay Java-style until a Bedrock proxy is installed.");
             }
         }
     }

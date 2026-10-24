@@ -67,7 +67,7 @@ public final class TeleportUtil {
                 entity.teleportAsync(loc).whenComplete((success, throwable) -> {
                     if (throwable != null) {
                         plugin.getLogger().log(Level.WARNING,
-                                "[AegisGuard] teleportAsync failed for " + entity.getName() +
+                                "teleportAsync failed for " + entity.getName() +
                                         " to " + formatLoc(loc) + ": " + throwable.getMessage(), throwable);
                         result.completeExceptionally(throwable);
                     } else {
@@ -78,7 +78,7 @@ public final class TeleportUtil {
             } catch (UnsupportedOperationException | NoSuchMethodError ex) {
                 // Some edge cases may still throw; fall back below.
                 plugin.getLogger().log(Level.FINE,
-                        "[AegisGuard] teleportAsync unsupported at runtime, falling back to sync teleport.", ex);
+                        "teleportAsync unsupported at runtime, falling back to sync teleport.", ex);
             }
         }
 
@@ -89,7 +89,7 @@ public final class TeleportUtil {
                 result.complete(success);
             } catch (Exception ex) {
                 plugin.getLogger().log(Level.WARNING,
-                        "[AegisGuard] Fallback teleport failed for " + entity.getName() +
+                        "Fallback teleport failed for " + entity.getName() +
                                 " to " + formatLoc(loc) + ": " + ex.getMessage(), ex);
                 result.completeExceptionally(ex);
             }
@@ -104,7 +104,7 @@ public final class TeleportUtil {
                 Bukkit.getScheduler().runTask(plugin, fallback);
             } catch (Exception ex) {
                 plugin.getLogger().log(Level.WARNING,
-                        "[AegisGuard] Could not schedule teleport fallback: " + ex.getMessage(), ex);
+                        "Could not schedule teleport fallback: " + ex.getMessage(), ex);
                 result.completeExceptionally(ex);
             }
         }

@@ -65,10 +65,10 @@ public class BannedPlayerListener implements Listener {
                 }
 
                 plugin.console().warning("log_banned_player_detected",
-                        "[AegisGuard] Banned Player Detected: {PLAYER}",
+                        "Banned Player Detected: {PLAYER}",
                         "PLAYER", name == null ? "" : name);
                 plugin.console().info("log_banned_plots_removed",
-                        "[AegisGuard] Auto-removed {COUNT} plots belonging to {PLAYER}",
+                        "Auto-removed {COUNT} plots belonging to {PLAYER}",
                         "COUNT", String.valueOf(count),
                         "PLAYER", name == null ? "" : name);
 

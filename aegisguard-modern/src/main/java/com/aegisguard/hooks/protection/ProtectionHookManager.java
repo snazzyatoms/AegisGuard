@@ -74,7 +74,7 @@ public class ProtectionHookManager {
         hooks.clear();
 
         if (!isEnabled()) {
-            plugin.getLogger().info("[AegisGuard] Protection compatibility is disabled in config.");
+            plugin.getLogger().info("Protection compatibility is disabled in config.");
             return;
         }
 
@@ -99,7 +99,7 @@ public class ProtectionHookManager {
 
         hooks.sort(Comparator.comparingInt(ProtectionHook::priority).reversed());
 
-        plugin.getLogger().info("[AegisGuard] Protection compatibility hooks loaded: " + getActiveHookIds());
+        plugin.getLogger().info("Protection compatibility hooks loaded: " + getActiveHookIds());
     }
 
     private ProtectionHook newHook(Class<? extends ProtectionHook> clazz, int priority) {
@@ -131,9 +131,9 @@ public class ProtectionHookManager {
         try {
             if (hook.isActive()) {
                 hooks.add(hook);
-                plugin.getLogger().info("[AegisGuard] Hooked into " + hook.id() + " (protection compatibility).");
+                plugin.getLogger().info("Hooked into " + hook.id() + " (protection compatibility).");
             } else {
-                plugin.getLogger().warning("[AegisGuard] " + hook.id() + " detected, but hook failed to initialize.");
+                plugin.getLogger().warning(hook.id() + " detected, but hook failed to initialize.");
             }
         } catch (Throwable ignored) {
         }
@@ -165,7 +165,7 @@ public class ProtectionHookManager {
             try {
                 if (hook != null && hook.isActive() && hook.isProtectedElsewhere(loc)) {
                     if (isDebug()) {
-                        plugin.getLogger().info("[AegisGuard] External protection hit by " + hook.id()
+                        plugin.getLogger().info("External protection hit by " + hook.id()
                                 + " at " + loc.getWorld().getName() + " "
                                 + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ());
                     }
@@ -195,7 +195,7 @@ public class ProtectionHookManager {
         if (policy == OverlapPolicy.AEGIS_WINS) return false;
 
         if (isDebug()) {
-            plugin.getLogger().info("[AegisGuard] Yielding to external protection (" + blocker + ") for action=" + action);
+            plugin.getLogger().info("Yielding to external protection (" + blocker + ") for action=" + action);
         }
 
         // EXTERNAL_WINS and DENY_IF_CONFLICT both mean "AegisGuard does not interfere here".

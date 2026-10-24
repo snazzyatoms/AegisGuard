@@ -8,6 +8,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Read access to the plot registry: lookup by owner, id, world, or location,
+ * plus overlap queries. All lookups answer against the plugin's authoritative
+ * store; on Folia they are safe to call from any thread because the store is a
+ * thread-safe index rather than live world state.
+ */
 public interface PlotAccess {
 
     List<Plot> getPlots(UUID ownerId);

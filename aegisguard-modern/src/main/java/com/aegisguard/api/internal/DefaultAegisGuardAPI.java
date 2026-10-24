@@ -19,6 +19,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link com.aegisguard.api.AegisGuardAPI} backed by
+ * the live plugin singleton.
+ * <p>
+ * <b>Internal.</b> Third-party plugins must obtain the API via
+ * {@link com.aegisguard.api.AegisGuardProvider} rather than constructing this
+ * class; it is public only so the provider can wire it.
+ */
 public final class DefaultAegisGuardAPI implements AegisGuardAPI {
 
     private final AegisGuard plugin;

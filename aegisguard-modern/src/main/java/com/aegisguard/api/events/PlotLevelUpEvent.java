@@ -4,6 +4,10 @@ import com.aegisguard.data.Plot;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
+/**
+ * Fired when a plot advances to a new level through the leveling system.
+ * {@link #getNewLevel()} returns the level just reached.
+ */
 public class PlotLevelUpEvent extends AbstractPlayerPlotEvent {
 
     private static final HandlerList handlers = new HandlerList();

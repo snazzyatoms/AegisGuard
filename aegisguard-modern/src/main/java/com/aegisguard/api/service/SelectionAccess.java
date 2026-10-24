@@ -7,6 +7,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
+/**
+ * Access to each player's two-corner wand selection and the claim-confirmation
+ * entry points. {@link #confirmClaim(Player)} routes through the same
+ * validation, pricing, and event pipeline as {@code /ag claim}.
+ */
 public interface SelectionAccess {
 
     @Nullable Selection get(UUID playerId);

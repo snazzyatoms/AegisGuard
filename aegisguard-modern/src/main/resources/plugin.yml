@@ -80,6 +80,18 @@ commands:
     aliases: [agadmin, aga]
     permission: aegis.admin
 
+# ==============================================================================
+# Permissions
+# ==============================================================================
+# "default" controls who has a node when no permission plugin overrides it:
+#   true  = every player has it
+#   op    = server operators only
+#   false = nobody (must be granted explicitly by a permission plugin)
+#
+# Recommended setup: give regular players the "aegis.user" bundle, give staff
+# the "aegis.admin" bundle. Avoid handing out "aegis.*" casually — it grants
+# every node, including bypasses.
+# ==============================================================================
 permissions:
   # ---------------------------------------------------------------------------
   # Permission bundles
@@ -125,6 +137,8 @@ permissions:
       aegis.arena.admin: true
       aegis.arena.steward: true
 
+      aegis.rent.bypass-limit: true
+
   aegis.user:
     description: Recommended base permissions for regular players.
     default: true
@@ -157,9 +171,7 @@ permissions:
       aegis.market.manage: true
       aegis.reload: true
       aegis.bypass: true
-      aegis.consume: true
       aegis.convert: true
-      aegis.setwarp: true
       aegis.admin.wand: true
       aegis.admin.migrate: true
       aegis.admin.blocks.view: true
@@ -181,29 +193,28 @@ permissions:
       aegis.admin.broadcast: true
       aegis.admin.alerts: true
       aegis.notify.bypass: true
-      aegis.notify.others: true
 
   # ---------------------------------------------------------------------------
   # Core player permissions (default: true — everyone gets these)
   # ---------------------------------------------------------------------------
   aegis.use:
-    description: Allows use of the main /aegis command.
+    description: Allows use of the main /aegis (/ag) command.
     default: true
 
   aegis.menu:
-    description: Allows opening the main AegisGuard player menu.
+    description: Allows /ag menu - open the main AegisGuard player menu.
     default: true
 
   aegis.wand:
-    description: Allows receiving and using the standard claim wand.
+    description: Allows /ag wand - receive the claim selection wand.
     default: true
 
   aegis.claim:
-    description: Allows creating and managing personal claims.
+    description: Allows /ag claim and /ag quickclaim - create personal claims.
     default: true
 
   aegis.notify:
-    description: Allows changing personal AegisGuard notification preferences.
+    description: Allows /ag notify - change personal notification preferences.
     default: true
 
   aegis.earn.blocks:
@@ -211,7 +222,7 @@ permissions:
     default: true
 
   aegis.rent:
-    description: List owned plots for full-plot rental.
+    description: Allows /ag rent - list owned plots for full-plot rental.
     default: true
 
   aegis.rent.bypass-limit:
@@ -219,11 +230,11 @@ permissions:
     default: op
 
   aegis.discovery:
-    description: Browse public territories and manage plot discovery settings.
+    description: Allows /ag discover - browse public territories and manage plot discovery settings.
     default: true
 
   aegis.activity:
-    description: View activity history for territories the player can manage.
+    description: Allows /ag activity - view activity history for territories the player can manage.
     default: true
 
   # ---------------------------------------------------------------------------
@@ -231,10 +242,6 @@ permissions:
   # ---------------------------------------------------------------------------
   aegis.notify.bypass:
     description: Receive claim notifications even when the server forces them off.
-    default: op
-
-  aegis.notify.others:
-    description: Manage notification preferences for other players.
     default: op
 
   # ---------------------------------------------------------------------------
@@ -280,23 +287,15 @@ permissions:
   # Economy, migration, and admin utility permissions
   # ---------------------------------------------------------------------------
   aegis.reload:
-    description: Reload configuration and language packs.
+    description: Allows /ag reload - reload configuration and language packs.
     default: op
 
   aegis.convert:
     description: Convert or seize a plot into a server-controlled zone.
     default: op
 
-  aegis.setwarp:
-    description: Set server-managed warp points through AegisGuard features.
-    default: op
-
-  aegis.consume:
-    description: Use administrative ClaimBlock consume tools.
-    default: op
-
   aegis.admin.wand:
-    description: Access the administrative wand tools.
+    description: Access the administrative wand tools (/aegisadmin wand).
     default: op
 
   aegis.admin.migrate:
@@ -375,11 +374,11 @@ permissions:
   # Gameplay feature permissions (default: true unless noted)
   # ---------------------------------------------------------------------------
   aegis.arena.use:
-    description: Browse, join, and party for Arena dungeon runs.
+    description: Allows /ag arena - browse, join, and party for Arena dungeon runs.
     default: true
 
   aegis.arena.spectate:
-    description: Spectate active Arena runs.
+    description: Allows /ag arena spectate - watch active Arena runs.
     default: true
 
   aegis.arena.steward:
@@ -391,7 +390,7 @@ permissions:
     default: op
 
   aegis.beacon:
-    description: Open the Teleport Beacon manager and create pads on claims you manage.
+    description: Allows /ag beacon - open the Teleport Beacon manager and create pads on claims you manage.
     default: true
 
   aegis.chat:
@@ -419,15 +418,15 @@ permissions:
     default: true
 
   aegis.claimblocks.exchange:
-    description: Access the ClaimBlocks exchange system.
+    description: Access the ClaimBlocks exchange. Default false - must be granted; renamable via claim_blocks.exchange.permissions.* in config.yml.
     default: false
 
   aegis.claimblocks.buy:
-    description: Buy ClaimBlocks with the configured economy provider.
+    description: Buy ClaimBlocks with the configured economy provider. Default false - must be granted; renamable via claim_blocks.exchange.permissions.* in config.yml.
     default: false
 
   aegis.claimblocks.sell:
-    description: Sell ClaimBlocks through the configured exchange system.
+    description: Sell ClaimBlocks through the configured exchange. Default false - must be granted; renamable via claim_blocks.exchange.permissions.* in config.yml.
     default: false
 
   aegis.claimblocks.exchange.bypass:

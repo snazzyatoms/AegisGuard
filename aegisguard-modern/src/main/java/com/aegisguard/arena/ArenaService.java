@@ -572,14 +572,18 @@ public final class ArenaService {
         saveDefinitions();
     }
 
+    /** Returns {@code null} when {@code arena.presets.lava_dungeon.enabled} is false. */
     public ArenaDefinition applyLavaPreset(String arenaId) {
+        org.bukkit.configuration.ConfigurationSection presetCfg =
+                plugin.getConfig().getConfigurationSection(LavaDungeonPreset.CONFIG_PATH);
+        if (!LavaDungeonPreset.isEnabled(presetCfg)) return null;
         ArenaDefinition existing = getArena(arenaId);
         if (existing != null) {
-            LavaDungeonPreset.applyPresetWaves(existing);
+            LavaDungeonPreset.applyPresetWaves(existing, presetCfg);
             saveDefinition(existing);
             return existing;
         }
-        ArenaDefinition created = LavaDungeonPreset.createDefinition(arenaId);
+        ArenaDefinition created = LavaDungeonPreset.createDefinition(arenaId, presetCfg);
         definitions.put(created.getId(), created);
         dirty = true;
         saveDefinitions();

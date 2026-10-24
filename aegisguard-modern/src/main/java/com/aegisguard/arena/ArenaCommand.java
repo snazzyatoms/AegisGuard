@@ -798,6 +798,10 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         ArenaDefinition def = service.applyLavaPreset(args[2]);
+        if (def == null) {
+            msg(sender, "arena_preset_disabled", Map.of("PRESET", LavaDungeonPreset.PRESET_ID));
+            return true;
+        }
         msg(sender, "arena_preset_applied", Map.of(
                 "PRESET", LavaDungeonPreset.PRESET_ID,
                 "ID", def.getId()));

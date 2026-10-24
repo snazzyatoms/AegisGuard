@@ -58,6 +58,19 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "notify"
     };
 
+    // Feature-gated subcommands: subcommand -> required permission node.
+    private static final Map<String, String> SUB_PERMISSIONS = Map.ofEntries(
+            Map.entry("wand", "aegis.wand"),
+            Map.entry("menu", "aegis.menu"),
+            Map.entry("claim", "aegis.claim"),
+            Map.entry("quickclaim", "aegis.claim"),
+            Map.entry("qc", "aegis.claim"),
+            Map.entry("beacon", "aegis.beacon"),
+            Map.entry("gathering", "aegis.gathering"),
+            Map.entry("gatherings", "aegis.gathering"),
+            Map.entry("openhouse", "aegis.gathering")
+    );
+
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
         this.exchange = plugin.exchange();
@@ -229,6 +242,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         if (gated != null && !plugin.modules().on(gated)) {
             sendKey(p, "module_disabled", "&c{MODULE} is disabled on this server.",
                     Map.of("MODULE", gated.displayName()));
+            plugin.effects().playError(p);
+            return true;
+        }
+
+        String requiredNode = SUB_PERMISSIONS.get(head);
+        if (requiredNode != null && !p.hasPermission(requiredNode)) {
+            sendKey(p, "no_permission", "&cYou do not have permission to use this command.");
             plugin.effects().playError(p);
             return true;
         }
@@ -3169,6 +3189,8 @@ private void handleUnsell(Player p) {
                 }
                 com.aegisguard.config.Modules.Id gated = com.aegisguard.config.Modules.commandModule(sub);
                 if (gated != null && !plugin.modules().on(gated)) continue;
+                String requiredNode = SUB_PERMISSIONS.get(sub);
+                if (requiredNode != null && !sender.hasPermission(requiredNode)) continue;
                 visible.add(sub);
             }
             StringUtil.copyPartialMatches(args[0], visible, completions);

@@ -223,6 +223,11 @@ public final class ArenaAdminGUI {
             if (slot == 39) {
                 String id = "lava_dungeon_" + (service.allArenas().size() + 1);
                 ArenaDefinition def = service.applyLavaPreset(id);
+                if (def == null) {
+                    plugin.msg().send(player, "arena_preset_disabled",
+                            Map.of("PRESET", LavaDungeonPreset.PRESET_ID));
+                    return;
+                }
                 plugin.msg().send(player, "arena_created_from_preset", Map.of(
                         "ID", def.getId(),
                         "PRESET", LavaDungeonPreset.PRESET_ID));

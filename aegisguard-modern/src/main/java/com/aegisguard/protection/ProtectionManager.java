@@ -7,6 +7,7 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.guidance.DenialGuidance;
 import com.aegisguard.hooks.protection.HookAction;
 import com.aegisguard.util.CompatParticle;
+import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -1203,27 +1204,41 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        int minChunkX = plot.getX1() >> 4;
-        int minChunkZ = plot.getZ1() >> 4;
-        int maxChunkX = plot.getX2() >> 4;
-        int maxChunkZ = plot.getZ2() >> 4;
+        int minChunkX = Math.min(plot.getX1(), plot.getX2()) >> 4;
+        int minChunkZ = Math.min(plot.getZ1(), plot.getZ2()) >> 4;
+        int maxChunkX = Math.max(plot.getX1(), plot.getX2()) >> 4;
+        int maxChunkZ = Math.max(plot.getZ1(), plot.getZ2()) >> 4;
 
         for (int cx = minChunkX; cx <= maxChunkX; cx++) {
             for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
                 if (!world.isChunkLoaded(cx, cz)) {
                     continue;
                 }
-
-                for (Entity entity : world.getChunkAt(cx, cz).getEntities()) {
-                    if (!isHostileMob(entity)) {
-                        continue;
-                    }
-                    if (!plot.isInside(entity.getLocation())) {
-                        continue;
-                    }
-                    queueProtectedHostileRemoval(entity);
+                final int fcx = cx;
+                final int fcz = cz;
+                Location chunkAnchor = new Location(world, (cx << 4) + 8, 64, (cz << 4) + 8);
+                // A plot may straddle Folia regions: scan each chunk on the thread that owns it.
+                if (TeleportUtil.regionOwns(chunkAnchor)) {
+                    purgeChunkHostiles(world, plot, fcx, fcz);
+                } else {
+                    plugin.runAt(chunkAnchor, () -> purgeChunkHostiles(world, plot, fcx, fcz));
                 }
             }
+        }
+    }
+
+    private void purgeChunkHostiles(org.bukkit.World world, Plot plot, int cx, int cz) {
+        if (!world.isChunkLoaded(cx, cz)) {
+            return;
+        }
+        for (Entity entity : world.getChunkAt(cx, cz).getEntities()) {
+            if (!isHostileMob(entity)) {
+                continue;
+            }
+            if (!plot.isInside(entity.getLocation())) {
+                continue;
+            }
+            queueProtectedHostileRemoval(entity);
         }
     }
 

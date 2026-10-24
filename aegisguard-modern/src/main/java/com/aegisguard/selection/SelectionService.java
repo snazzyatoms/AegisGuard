@@ -327,20 +327,20 @@ public class SelectionService implements Listener {
     /**
      * Compatibility overload (older code calls confirmClaim(player) without the server flag).
      */
-    public void confirmClaim(Player p) {
-        confirmClaim(p, false);
+    public boolean confirmClaim(Player p) {
+        return confirmClaim(p, false);
     }
 
-    public void confirmClaim(Player p, boolean isServerClaim) {
+    public boolean confirmClaim(Player p, boolean isServerClaim) {
         SelectionContext ctx = getSelectionContext(p);
-        if (ctx == null) return;
+        if (ctx == null) return false;
 
         World selectedWorld = Bukkit.getWorld(ctx.worldName);
         if (!isServerClaim && !p.hasPermission("aegis.admin.bypass")
                 && !plugin.worldRules().allowClaims(selectedWorld)) {
             denyClaim(p, "claims_disabled_in_world", null,
                     "claim_hint_world_disabled", "&7Claiming is turned off in this world. Try a claimable world.");
-            return;
+            return false;
         }
 
         // Limits (supports 1.2.5 + 1.2.6 config styles)
@@ -351,7 +351,7 @@ public class SelectionService implements Listener {
         int maxArea = getWorldInt(ctx.worldName, "max_area",
                 plugin.cfg().raw().getInt("claims.max_area", 50000));
 
-        if (rejectIfOutsideClaimLimits(p, ctx, maxRadius, maxArea)) return;
+        if (rejectIfOutsideClaimLimits(p, ctx, maxRadius, maxArea)) return false;
 
         // Guardrail: enforce max_claims_per_player for personal claims (quick-claim + normal claim).
         // Skipped for server claims and admins/bypass, matching the PlotMarketGUI purchase cap.
@@ -363,7 +363,7 @@ public class SelectionService implements Listener {
                     denyClaim(p, "max_claims_reached", Map.of("AMOUNT", String.valueOf(maxClaims)),
                             "claim_hint_max_claims",
                             "&7Unclaim a plot you no longer need, or ask staff to raise your limit.");
-                    return;
+                    return false;
                 }
             }
         }
@@ -383,7 +383,7 @@ public class SelectionService implements Listener {
                 denyClaim(p, "claim_overlap", null,
                         "claim_hint_overlap",
                         "&7Move to open land or pick a spot that doesn't touch another claim.");
-                return;
+                return false;
             }
         }
 
@@ -392,7 +392,7 @@ public class SelectionService implements Listener {
         if (hooks != null && hooks.isAreaProtectedElsewhere(ctx.worldName, ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ)) {
             denyClaim(p, "claim_external_protection_conflict", null,
                     "claim_hint_external", "&7That land is protected by another plugin. Pick a different spot.");
-            return;
+            return false;
         }
 
         // ClaimBlock economy checks (existing behavior preserved)
@@ -408,7 +408,7 @@ public class SelectionService implements Listener {
             if (starterEnabled && !blocks.hasClaimedStarter() && ctx.area > firstClaimLimit) {
                 denyClaim(p, "first_claim_too_large", null,
                         "claim_hint_first_claim", "&7Try a smaller first claim, then expand it later.");
-                return;
+                return false;
             }
 
             boolean perBlock = plugin.cfg().raw().getBoolean("claim_blocks.require_per_block", true);
@@ -417,7 +417,7 @@ public class SelectionService implements Listener {
             if (!plugin.claimBlocks().canAfford(p.getUniqueId(), required)) {
                 denyClaim(p, "claim_blocks_not_enough", null,
                         "claim_hint_need_blocks", "&7Earn or buy more Claim Blocks, then try again.");
-                return;
+                return false;
             }
             // Land is counted in used plot area after the plot is created.
             // Do not also spend() that area or expansion will drive the ledger negative.
@@ -458,7 +458,7 @@ public class SelectionService implements Listener {
 
         PlotClaimEvent event = new PlotClaimEvent(plot, p);
         Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) return;
+        if (event.isCancelled()) return false;
 
         plugin.store().addPlot(plot);
         if (!isServerClaim && plugin.claimBlocks() != null) {
@@ -525,6 +525,7 @@ public class SelectionService implements Listener {
                 // Keep silent: discord must never break claims.
             }
         }
+        return true;
     }
 
     public Plot confirmGroupClaim(Player p, PlotGroup group) {

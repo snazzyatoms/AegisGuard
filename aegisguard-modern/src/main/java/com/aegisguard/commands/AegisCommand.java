@@ -578,11 +578,20 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 return;
             }
 
-            // Withdraw money and confirm claim
-            plugin.eco().withdraw(p, cost, CurrencyType.VAULT);
-            plugin.selection().confirmClaim(p);
-
+            // Withdraw money and confirm claim; refund if validation rejects the claim
             String formatted = plugin.eco().format(cost, CurrencyType.VAULT);
+            if (!plugin.eco().withdraw(p, cost, CurrencyType.VAULT)) {
+                sendKey(p, "claim_cannot_afford",
+                        "&c❌ You need {COST} to claim this area.",
+                        Map.of("COST", formatted));
+                plugin.effects().playError(p);
+                return;
+            }
+            if (!plugin.selection().confirmClaim(p)) {
+                plugin.eco().deposit(p, cost, CurrencyType.VAULT);
+                return;
+            }
+
             sendKey(p, "claim_success_vault",
                     "&a✔ Claimed &e{AREA}&a blocks for &6{COST}&a!",
                     Map.of("AREA", String.valueOf(area), "COST", formatted));
@@ -636,8 +645,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 }
             }
 
-            // Confirm the claim
-            plugin.selection().confirmClaim(p);
+            // Confirm the claim (denial messages are sent by the selection service)
+            if (!plugin.selection().confirmClaim(p)) return;
 
             Plot at = plugin.store().getPlotAt(p.getLocation());
             if (at != null && uuid.equals(at.getOwner())) {

@@ -75,4 +75,36 @@ class HardeningSweepContractTest {
         assertTrue(eco.contains("plugin.vault().give(p, amount)"),
                 "offline Vault deposits must route through the Vault hook");
     }
+
+    @Test
+    void vaultClaimRefundsWhenValidationRejectsTheClaim() throws Exception {
+        String selection = Files.readString(JAVA.resolve("selection/SelectionService.java"));
+        String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
+
+        assertTrue(selection.contains("public boolean confirmClaim(Player p, boolean isServerClaim)"),
+                "confirmClaim must report whether the plot was actually created");
+        assertTrue(command.contains("if (!plugin.eco().withdraw(p, cost, CurrencyType.VAULT))"),
+                "the Vault claim path must honor the withdraw result");
+        assertTrue(command.contains("if (!plugin.selection().confirmClaim(p)) {\n"
+                        + "                plugin.eco().deposit(p, cost, CurrencyType.VAULT);"),
+                "a rejected claim must refund the Vault charge");
+    }
+
+    @Test
+    void plotHostilePurgeIsRegionAware() throws Exception {
+        String src = Files.readString(JAVA.resolve("protection/ProtectionManager.java"));
+        assertTrue(src.contains("private void purgeChunkHostiles("),
+                "hostile purge must be split per chunk");
+        assertTrue(src.contains("plugin.runAt(chunkAnchor, () -> purgeChunkHostiles("),
+                "chunks owned by another Folia region must be scanned on their own thread");
+    }
+
+    @Test
+    void stallPurchaseRefusesForeignRegionBeforeCharging() throws Exception {
+        String src = Files.readString(JAVA.resolve("market/TradeStallService.java"));
+        int guard = src.indexOf("TeleportUtil.regionOwns(stall.getChestLocation())");
+        int charge = src.indexOf("if (!chargeBuyer(buyer, listing))");
+        assertTrue(guard > 0 && charge > guard,
+                "the region-ownership guard must run before the buyer is charged");
+    }
 }

@@ -163,6 +163,10 @@ public class TradeStallService {
         if (!isCurrencyAllowed(listing.getCurrency())) {
             return new Result(ResultType.CURRENCY_UNAVAILABLE, "&cThat listing currency is unavailable right now.");
         }
+        // Folia: the chest must be owned by the buyer's region thread before any money moves.
+        if (!com.aegisguard.util.TeleportUtil.regionOwns(stall.getChestLocation())) {
+            return new Result(ResultType.ERROR, "&cMove closer to the TradeStall and try again.");
+        }
 
         Inventory inventory = resolveInventory(stall);
         if (inventory == null || chestSlot < 0 || chestSlot >= inventory.getSize()) {

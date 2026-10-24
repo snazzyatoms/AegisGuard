@@ -135,7 +135,9 @@ public class ProtectionHookManager {
             } else {
                 plugin.getLogger().warning(hook.id() + " detected, but hook failed to initialize.");
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable error) {
+            plugin.getLogger().warning(hook.id() + " detected, but hook threw during initialization: "
+                    + error.getMessage());
         }
     }
 
@@ -171,7 +173,11 @@ public class ProtectionHookManager {
                     }
                     return hook.id();
                 }
-            } catch (Throwable ignored) {
+            } catch (Throwable error) {
+                // Fine-level: an active hook throwing on every check would spam the
+                // console at warning level, but it should still be diagnosable.
+                plugin.getLogger().fine("Protection hook " + hook.id()
+                        + " threw during isProtectedElsewhere: " + error.getMessage());
             }
         }
         return null;

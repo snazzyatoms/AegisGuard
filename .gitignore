@@ -36,3 +36,8 @@ outputs/
 
 # Local Paper test server (env validation)
 .dev-server/
+
+# Local storefront working files (copy/paste sources, not repo content)
+AegisGuard CurseForge description*.txt
+AegisGuard CurseForge description.md
+AegisGuard * changelog.txt

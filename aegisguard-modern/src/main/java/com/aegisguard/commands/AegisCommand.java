@@ -603,7 +603,7 @@ public class AegisCommand extends CommandBase implements CommandExecutor, TabCom
 
             if (args[0].equalsIgnoreCase("chat") || args[0].equalsIgnoreCase("frequency")) {
                 List<String> completions = new ArrayList<>();
-                StringUtil.copyPartialMatches(args[1], List.of("off", "alliance", "group"), completions);
+                StringUtil.copyPartialMatches(args[1], List.of("off", "alliance", "group", "party"), completions);
                 Collections.sort(completions);
                 return completions;
             }

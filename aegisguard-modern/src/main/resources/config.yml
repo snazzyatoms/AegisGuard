@@ -322,6 +322,8 @@ party:
   max_size: 8
   # Seconds a /ag party invite stays valid.
   invite_expire_seconds: 60
+  # Party chat channel (/ag chat party) — relays across the network like
+  # alliance/group radios when network.chat.relay_channels is on.
   # Leader-planted rally points members can teleport to on their own call.
   rally_enabled: true
   # Seconds a rally point stays live after the leader plants it.
@@ -335,6 +337,13 @@ party:
     # Member rows before the list collapses into "+N more…" (max 13; the
     # sidebar has a hard client limit).
     max_lines: 12
+    # Detail switches — players can also go names-only with /ag party hud compact.
+    show_health: true
+    # Distance ("35m") for same-world members. Disable on strict Folia setups
+    # if cross-region reads concern you — health names still work.
+    show_distance: true
+    # List members who are offline (greyed). Hide them for a cleaner board.
+    show_offline: true
 
 
 # ==============================================================================
@@ -1731,6 +1740,9 @@ plot_chat:
   enabled: true
   # Maximum characters per Frequency message.
   max_message_length: 256
+  # Party channel (/ag chat party) for /ag party groups; relays across the
+  # network like the other radios when network.chat.relay_channels is on.
+  party_enabled: true
 
 # ==============================================================================
 # Alliance chat

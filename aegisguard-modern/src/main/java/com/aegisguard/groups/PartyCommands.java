@@ -164,6 +164,17 @@ public final class PartyCommands extends CommandBase {
                     sendKey(p, "party_disabled", "&cParties are disabled on this server.");
                     return;
                 }
+                if (args.length >= 3) {
+                    String mode = args[2].toLowerCase(java.util.Locale.ROOT);
+                    if (mode.equals("compact") || mode.equals("full")) {
+                        boolean on = plugin.partySidebar().setCompact(p, mode.equals("compact"));
+                        sendKey(p, on ? "party_hud_compact" : "party_hud_full",
+                                on ? "&aSidebar: compact (names only)." : "&aSidebar: full detail (health + distance).");
+                        return;
+                    }
+                    sendKey(p, "party_hud_usage", "&eUsage: /ag party hud [compact|full]");
+                    return;
+                }
                 boolean visible = plugin.partySidebar().toggle(p);
                 sendKey(p, visible ? "party_hud_on" : "party_hud_off",
                         visible ? "&aParty sidebar shown." : "&7Party sidebar hidden.");

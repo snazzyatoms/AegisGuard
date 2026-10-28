@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.alliance.Alliance;
 import com.aegisguard.config.Modules;
 import com.aegisguard.data.Plot;
+import com.aegisguard.groups.PartyService;
 import com.aegisguard.groups.PlotGroup;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -182,6 +183,34 @@ public final class PlotChatService {
         return ToggleResult.ON;
     }
 
+    public boolean isPartyEnabled() {
+        return plugin.parties() != null && plugin.parties().enabled()
+                && plugin.getConfig().getBoolean("plot_chat.party_enabled", true);
+    }
+
+    public ToggleResult toggleParty(Player player) {
+        if (!isPartyEnabled()) return ToggleResult.DISABLED;
+        if (player == null) return ToggleResult.NEED_MEMBER;
+        PartyService.PartyView view = resolvePartyView(player);
+        if (view == null || !view.memberIds().contains(player.getUniqueId())) {
+            if (activeChannel(player.getUniqueId()) == Channel.PARTY) {
+                setChannel(player.getUniqueId(), Channel.NONE);
+                return ToggleResult.OFF;
+            }
+            return ToggleResult.NEED_MEMBER;
+        }
+        if (activeChannel(player.getUniqueId()) == Channel.PARTY) {
+            setChannel(player.getUniqueId(), Channel.NONE);
+            return ToggleResult.OFF;
+        }
+        setChannel(player.getUniqueId(), Channel.PARTY);
+        return ToggleResult.ON;
+    }
+
+    public void turnOffParty(Player player) {
+        turnOff(player, Channel.PARTY);
+    }
+
     public ToggleResult toggleStaff(Player player) {
         if (!isStaffChatEnabled()) return ToggleResult.DISABLED;
         if (player == null || !canStaffChat(player)) return ToggleResult.DENIED;
@@ -202,6 +231,7 @@ public final class PlotChatService {
         return switch (activeChannel(speaker.getUniqueId())) {
             case ALLIANCE -> sendAlliance(speaker, rawMessage);
             case GROUP -> sendGroup(speaker, rawMessage);
+            case PARTY -> sendParty(speaker, rawMessage);
             case STAFF -> sendStaff(speaker, rawMessage);
             case PLOT, NONE -> sendPlot(speaker, rawMessage);
         };
@@ -275,6 +305,40 @@ public final class PlotChatService {
         return result;
     }
 
+    /** Party channel: every member of the sender's party (or arena party view). */
+    public SendResult sendParty(Player speaker, String rawMessage) {
+        if (!isPartyEnabled()) return SendResult.DISABLED;
+        if (speaker == null) return SendResult.NEED_MEMBER;
+        String message = clip(rawMessage);
+        if (message.isEmpty()) return SendResult.EMPTY;
+        PartyService.PartyView view = resolvePartyView(speaker);
+        if (view == null || !view.memberIds().contains(speaker.getUniqueId())) {
+            if (activeChannel(speaker.getUniqueId()) == Channel.PARTY) {
+                setChannel(speaker.getUniqueId(), Channel.NONE);
+            }
+            return SendResult.NEED_MEMBER;
+        }
+        String line = formatParty(speaker, view.title(), message);
+        SendResult result = broadcast(speaker, line, view.memberIds(),
+                "party_chat_no_listeners", "&eNobody else in your party is online.");
+        relay("PARTY", view.title(), speaker, view.memberIds(), message);
+        return result;
+    }
+
+    private String formatParty(Player speaker, String label, String message) {
+        String template = translate(speaker, "party_chat_format",
+                "&8[&d{PARTY}&8] &f{PLAYER}&7: &f{MESSAGE}");
+        return ChatColor.translateAlternateColorCodes('&', template
+                .replace("{PARTY}", label == null ? "Party" : label)
+                .replace("{PLAYER}", speaker.getName())
+                .replace("{MESSAGE}", message));
+    }
+
+    private PartyService.PartyView resolvePartyView(Player speaker) {
+        if (speaker == null || plugin.parties() == null) return null;
+        return plugin.parties().viewFor(speaker.getUniqueId());
+    }
+
     public SendResult sendStaff(Player speaker, String rawMessage) {
         if (!isStaffChatEnabled()) return SendResult.DISABLED;
         if (speaker == null) return SendResult.DENIED;
@@ -331,6 +395,13 @@ public final class PlotChatService {
             }
             case GROUP -> {
                 if (!isGroupChatEnabled() || resolveGroup(speaker) == null) {
+                    setChannel(speaker.getUniqueId(), Channel.NONE);
+                    yield false;
+                }
+                yield true;
+            }
+            case PARTY -> {
+                if (!isPartyEnabled() || resolvePartyView(speaker) == null) {
                     setChannel(speaker.getUniqueId(), Channel.NONE);
                     yield false;
                 }
@@ -459,6 +530,8 @@ public final class PlotChatService {
                     "&8[&a{GROUP}&8] &f{PLAYER}&7: &f{MESSAGE}");
             case "PLOT" -> translate(viewer, "plot_chat_format",
                     "&8[&b{PLOT}&8] &f{PLAYER}&7: &f{MESSAGE}");
+            case "PARTY" -> translate(viewer, "party_chat_format",
+                    "&8[&d{PARTY}&8] &f{PLAYER}&7: &f{MESSAGE}");
             default -> translate(viewer, "staff_chat_format",
                     "&8[&cStaff&8] &f{PLAYER}&7: &f{MESSAGE}");
         };
@@ -466,6 +539,7 @@ public final class PlotChatService {
             case "ALLIANCE" -> "{ALLIANCE}";
             case "GROUP" -> "{GROUP}";
             case "PLOT" -> "{PLOT}";
+            case "PARTY" -> "{PARTY}";
             default -> "{STAFF}";
         };
         String filled = template
@@ -473,7 +547,8 @@ public final class PlotChatService {
                 .replace("{PLAYER}", senderName == null ? "?" : senderName)
                 .replace("{MESSAGE}", message == null ? "" : message);
         if (!filled.contains("{ALLIANCE}") && !filled.contains("{GROUP}") && !filled.contains("{STAFF}")
-                && !filled.contains("{PLOT}") && !channel.equalsIgnoreCase("STAFF")) {
+                && !filled.contains("{PLOT}") && !filled.contains("{PARTY}")
+                && !channel.equalsIgnoreCase("STAFF")) {
             // Template didn't carry a label token — prepend the channel label plainly.
             filled = "&8[&b" + (label == null ? channel : label) + "&8] " + filled;
         }
@@ -587,7 +662,7 @@ public final class PlotChatService {
         return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', text == null ? "" : text));
     }
 
-    public enum Channel { NONE, PLOT, ALLIANCE, GROUP, STAFF }
+    public enum Channel { NONE, PLOT, ALLIANCE, GROUP, STAFF, PARTY }
 
     public enum ToggleResult { ON, OFF, SWITCHED, NEED_MEMBER, DENIED, DISABLED }
 

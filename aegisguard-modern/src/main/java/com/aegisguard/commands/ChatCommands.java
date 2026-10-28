@@ -23,6 +23,8 @@ final class ChatCommands extends CommandBase {
                 sendKey(p, "alliance_chat_off", "&eAlliance radio off. Chat is public again.");
             } else if (was == com.aegisguard.chat.PlotChatService.Channel.GROUP) {
                 sendKey(p, "group_chat_off", "&eGroup chat off. Chat is public again.");
+            } else if (was == com.aegisguard.chat.PlotChatService.Channel.PARTY) {
+                sendKey(p, "party_chat_off", "&eParty chat off. Chat is public again.");
             } else if (was == com.aegisguard.chat.PlotChatService.Channel.STAFF) {
                 sendKey(p, "staff_chat_off", "&eStaff chat off. Chat is public again.");
             } else {
@@ -36,6 +38,10 @@ final class ChatCommands extends CommandBase {
         }
         if (args.length >= 2 && args[1].equalsIgnoreCase("group")) {
             handleGroupChat(p, args);
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("party")) {
+            handlePartyChat(p, args);
             return;
         }
         if (!p.hasPermission("aegis.chat")) {
@@ -227,6 +233,51 @@ final class ChatCommands extends CommandBase {
                     "&cJoin a group before opening group chat.");
             case DISABLED -> sendKey(p, "group_chat_disabled",
                     "&cGroup chat is disabled on this server.");
+            default -> {
+            }
+        }
+    }
+
+    private void handlePartyChat(Player p, String[] args) {
+        com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
+        if (chat == null || !chat.isPartyEnabled()) {
+            sendKey(p, "party_chat_disabled", "&cParty chat is disabled on this server.");
+            return;
+        }
+        if (!p.hasPermission("aegis.party")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+        if (args.length >= 3 && args[2].equalsIgnoreCase("off")) {
+            chat.turnOffParty(p);
+            sendKey(p, "party_chat_off", "&eParty chat off. Chat is public again.");
+            return;
+        }
+        if (args.length >= 3) {
+            String message = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+            switch (chat.sendParty(p, message)) {
+                case NEED_MEMBER, NOT_MEMBER -> sendKey(p, "party_chat_not_member",
+                        "&cYou're not in a party. /ag party create to start one.");
+                case EMPTY -> sendKey(p, "party_chat_empty",
+                        "&cSay something after /ag chat party, or toggle with /ag chat party.");
+                case DISABLED -> sendKey(p, "party_chat_disabled",
+                        "&cParty chat is disabled on this server.");
+                default -> {
+                }
+            }
+            return;
+        }
+        String label = plugin.parties() == null || plugin.parties().viewFor(p.getUniqueId()) == null
+                ? "Party" : plugin.parties().viewFor(p.getUniqueId()).title();
+        switch (chat.toggleParty(p)) {
+            case ON -> sendKey(p, "party_chat_on",
+                    "&aParty chat on for &f{PARTY}&a. Your chat stays with your crew.",
+                    Map.of("PARTY", label));
+            case OFF -> sendKey(p, "party_chat_off", "&eParty chat off. Chat is public again.");
+            case NEED_MEMBER -> sendKey(p, "party_chat_need",
+                    "&cJoin a party before opening party chat. /ag party create to start one.");
+            case DISABLED -> sendKey(p, "party_chat_disabled",
+                    "&cParty chat is disabled on this server.");
             default -> {
             }
         }

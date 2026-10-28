@@ -35,6 +35,8 @@ public final class PartySidebarService {
     private final Map<UUID, Scoreboard> ourBoards = new ConcurrentHashMap<>();
     private final Map<UUID, Scoreboard> previousBoards = new ConcurrentHashMap<>();
     private final Set<UUID> hidden = ConcurrentHashMap.newKeySet();
+    /** Compact mode: names only — no health/distance suffix. */
+    private final Set<UUID> compact = ConcurrentHashMap.newKeySet();
     private volatile Object ticker;
 
     public PartySidebarService(AegisGuard plugin, PartyService parties) {
@@ -58,6 +60,27 @@ public final class PartySidebarService {
 
     public boolean isHidden(UUID playerId) { return hidden.contains(playerId); }
 
+    /** true = names-only lines; false = full detail (health, distance). */
+    public boolean setCompact(Player player, boolean on) {
+        if (player == null) return false;
+        if (on) compact.add(player.getUniqueId()); else compact.remove(player.getUniqueId());
+        return on;
+    }
+
+    public boolean isCompact(UUID playerId) { return compact.contains(playerId); }
+
+    private boolean showHealth() {
+        return plugin.getConfig().getBoolean("party.sidebar.show_health", true);
+    }
+
+    private boolean showDistance() {
+        return plugin.getConfig().getBoolean("party.sidebar.show_distance", true);
+    }
+
+    private boolean showOffline() {
+        return plugin.getConfig().getBoolean("party.sidebar.show_offline", true);
+    }
+
     /** Kick a refresh pass (call after membership changes). */
     public void requestRefresh() { refresh(); }
 
@@ -78,6 +101,7 @@ public final class PartySidebarService {
         ourBoards.clear();
         previousBoards.clear();
         hidden.clear();
+        compact.clear();
     }
 
     // ------------------------------------------------------------------
@@ -93,14 +117,14 @@ public final class PartySidebarService {
                 if (ourBoards.containsKey(viewer.getUniqueId())) clearBoard(viewer);
                 continue;
             }
-            List<String> lines = renderLines(view);
+            List<String> lines = renderLines(viewer, view);
             Player target = viewer;
             plugin.scheduler().runEntity(target, () -> applyBoard(target, view.title(), lines), () -> { });
         }
     }
 
-    /** Build the sidebar rows: "★ Name ❤20" style, leader first then others. */
-    private List<String> renderLines(PartyService.PartyView view) {
+    /** Build the sidebar rows: "★ Name ❤20 35m" style, leader first. */
+    private List<String> renderLines(Player viewer, PartyService.PartyView view) {
         int max = Math.max(4, plugin.getConfig().getInt("party.sidebar.max_lines", 12));
         List<UUID> ordered = new ArrayList<>(view.memberIds());
         ordered.sort((a, b) -> {
@@ -111,27 +135,49 @@ public final class PartySidebarService {
         List<String> lines = new ArrayList<>();
         lines.add("§8────────────");
         int shown = 0;
+        int hiddenOffline = 0;
         for (UUID id : ordered) {
             if (shown >= max - 1) break;
-            lines.add(memberLine(id, view.leaderId()));
+            Player member = Bukkit.getPlayer(id);
+            if (!showOffline() && !id.equals(viewer.getUniqueId())
+                    && (member == null || !member.isOnline())) {
+                hiddenOffline++;
+                continue;
+            }
+            lines.add(memberLine(viewer, member, id, view.leaderId()));
             shown++;
         }
-        int overflow = ordered.size() - shown;
+        int overflow = ordered.size() - shown - hiddenOffline;
         if (overflow > 0) lines.add("§7+" + overflow + " more…");
+        if (hiddenOffline > 0) lines.add("§8+" + hiddenOffline + " offline");
         return lines;
     }
 
-    private String memberLine(UUID id, UUID leaderId) {
-        Player p = Bukkit.getPlayer(id);
+    private String memberLine(Player viewer, Player p, UUID id, UUID leaderId) {
         boolean leader = id.equals(leaderId);
+        boolean minimal = compact.contains(viewer.getUniqueId());
         if (p == null || !p.isOnline()) {
             String name = p != null ? p.getName() : Bukkit.getOfflinePlayer(id).getName();
             return "§7" + (leader ? "★ " : "○ ") + (name == null ? "?" : name) + " §8offline";
         }
-        int hp = (int) Math.ceil(Math.max(0.0D, Math.min(p.getHealth(), 20.0D)));
-        String hpColor = hp >= 15 ? "§a" : hp >= 8 ? "§e" : "§c";
         String nameColor = leader ? "§6" : "§f";
-        return nameColor + (leader ? "★ " : "● ") + p.getName() + " " + hpColor + "❤" + hp;
+        String suffix = "";
+        if (!minimal) {
+            if (showHealth()) {
+                int hp = (int) Math.ceil(Math.max(0.0D, Math.min(p.getHealth(), 20.0D)));
+                String hpColor = hp >= 15 ? "§a" : hp >= 8 ? "§e" : "§c";
+                suffix += " " + hpColor + "❤" + hp;
+            }
+            if (showDistance() && !id.equals(viewer.getUniqueId())) {
+                try {
+                    if (viewer.getWorld().equals(p.getWorld())) {
+                        int dist = (int) Math.round(viewer.getLocation().distance(p.getLocation()));
+                        suffix += " §8" + dist + "m";
+                    }
+                } catch (Throwable ignored) { }
+            }
+        }
+        return nameColor + (leader ? "★ " : "● ") + p.getName() + suffix;
     }
 
     /** Applies (or updates) the sidebar on the viewer's entity thread. */

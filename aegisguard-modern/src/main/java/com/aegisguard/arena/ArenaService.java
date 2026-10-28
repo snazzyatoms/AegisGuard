@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.arena.preset.LavaDungeonPreset;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -79,6 +80,8 @@ public final class ArenaService {
     /** Lazily-started global task that counts down LOBBY-state runs (arena.lobby_seconds). */
     private volatile Object lobbyTicker;
     private final Object lobbyTickerLock = new Object();
+    private volatile Object hudTicker;
+    private final Object hudTickerLock = new Object();
 
     public ArenaService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -1055,6 +1058,61 @@ public final class ArenaService {
         }
     }
 
+    private void ensureHudTicker() {
+        if (!plugin.getConfig().getBoolean("arena.hud.enabled", true)) return;
+        if (hudTicker != null) return;
+        synchronized (hudTickerLock) {
+            if (hudTicker == null) {
+                long period = Math.max(5L, plugin.getConfig().getLong("arena.hud.interval_ticks", 20L));
+                hudTicker = scheduler.runGlobalRepeating(this::tickHud, period, period);
+            }
+        }
+    }
+
+    /** Action-bar match HUD during combat states: wave, clock, survivors. */
+    private void tickHud() {
+        boolean any = false;
+        for (ArenaRun run : activeRuns.values()) {
+            if (run == null || !isHudState(run.getState())) continue;
+            any = true;
+            String line = hudLine(run);
+            for (ArenaParticipant part : run.getParticipants().values()) {
+                if (part == null) continue;
+                Player p = Bukkit.getPlayer(part.getPlayerId());
+                if (p == null || !p.isOnline()) continue;
+                Player target = p;
+                scheduler.runForEntity(target, () -> Text.actionBar(target, line));
+            }
+        }
+        if (!any && hudTicker != null) {
+            synchronized (hudTickerLock) {
+                if (hudTicker != null) {
+                    try { plugin.scheduler().cancel(hudTicker); } catch (Throwable ignored) { }
+                    hudTicker = null;
+                }
+            }
+        }
+    }
+
+    private boolean isHudState(ArenaRunState state) {
+        return state == ArenaRunState.COUNTDOWN || state == ArenaRunState.WAVE
+                || state == ArenaRunState.WAVE_CLEAR || state == ArenaRunState.MILESTONE_BOSS
+                || state == ArenaRunState.CHECKPOINT;
+    }
+
+    private String hudLine(ArenaRun run) {
+        long secs = Math.max(0L, run.durationMillis() / 1000L);
+        String clock = (secs / 60L) + ":" + String.format(Locale.ROOT, "%02d", secs % 60L);
+        int alive = 0;
+        for (ArenaParticipant part : run.getParticipants().values()) {
+            if (part != null && part.isFighting()) alive++;
+        }
+        return "&6\u2694 &f" + run.getArenaId()
+                + " &8| &eWave &f" + (run.getWaveIndex() + 1)
+                + " &8| &7" + clock
+                + " &8| &a" + alive + " alive";
+    }
+
     private void tickLobbies() {
         boolean any = false;
         for (ArenaRun run : activeRuns.values()) {
@@ -1248,6 +1306,7 @@ public final class ArenaService {
         } else {
             run.setState(ArenaRunState.WAVE);
         }
+        ensureHudTicker();
         spawnCurrentWave(run);
         flushJournalAsync();
         notifyWave(run, def);
@@ -2005,11 +2064,17 @@ public final class ArenaService {
         }
         if (eligible.isEmpty()) return;
 
-        // Hybrid: equal milestone pot + score bonus
-        double milestonePot = end == ArenaEndReason.CLEAR ? 200.0D : 50.0D;
+        // Hybrid: equal milestone pot + score bonus (pots owner-tuned in config)
+        double milestonePot = end == ArenaEndReason.CLEAR
+                ? plugin.getConfig().getDouble("arena.rewards.clear_pot", 200.0D)
+                : plugin.getConfig().getDouble("arena.rewards.wipe_pot", 50.0D);
         milestonePot *= run.getLockedScale().rewardMultiplier;
         double equalShare = milestonePot / eligible.size();
         int totalScore = Math.max(1, run.getPartyScore());
+        double bonusShare = Math.max(0.0D,
+                plugin.getConfig().getDouble("arena.rewards.score_bonus_share", 0.25D));
+        int xp = (int) Math.max(0, plugin.getConfig().getDouble(
+                end == ArenaEndReason.CLEAR ? "arena.rewards.xp_clear" : "arena.rewards.xp_wipe", 0.0D));
 
         for (ArenaParticipant part : eligible) {
             String rewardKey = end == ArenaEndReason.CLEAR ? "clear" : "wipe_wave_" + run.getDeepestWave();
@@ -2017,7 +2082,7 @@ public final class ArenaService {
             ArenaRewardEntry entry = rewardLedger.getOrCreate(run.getRunId(), part.getPlayerId(), rewardKey);
             if (!rewardLedger.beginProcessing(entry)) continue;
 
-            double scoreBonus = milestonePot * 0.25D * (part.getPersonalScore() / (double) totalScore);
+            double scoreBonus = milestonePot * bonusShare * (part.getPersonalScore() / (double) totalScore);
             double amount = equalShare + scoreBonus;
             long blocks = (long) Math.max(0, amount / 10.0D);
             Player online = Bukkit.getPlayer(part.getPlayerId());
@@ -2028,7 +2093,7 @@ public final class ArenaService {
             }
             scheduler.runForEntity(online, () -> {
                 try {
-                    payoutEntry(online, entry, amount, blocks);
+                    payoutEntry(online, entry, amount, blocks, xp);
                     rewardLedger.markCommitted(entry);
                 } catch (Exception e) {
                     rewardLedger.markFailed(entry, e.getMessage());
@@ -2039,7 +2104,7 @@ public final class ArenaService {
         dirtyRewards = true;
     }
 
-    private void payoutEntry(Player player, ArenaRewardEntry entry, double money, long claimBlocks) {
+    private void payoutEntry(Player player, ArenaRewardEntry entry, double money, long claimBlocks, int xp) {
         if (player == null) {
             // Offline: leave for review if money was expected
             if (money > 0) {
@@ -2061,7 +2126,12 @@ public final class ArenaService {
         } catch (Throwable t) {
             plugin.getLogger().log(Level.FINE, "[Arena] Claim-block grant skipped", t);
         }
-        entry.setDetail(String.format(Locale.ROOT, "money=%.2f blocks=%d", money, claimBlocks));
+        try {
+            if (xp > 0) player.giveExp(xp);
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.FINE, "[Arena] XP grant skipped", t);
+        }
+        entry.setDetail(String.format(Locale.ROOT, "money=%.2f blocks=%d xp=%d", money, claimBlocks, xp));
     }
 
     private void updateLeaderboards(ArenaRun run, ArenaDefinition def) {

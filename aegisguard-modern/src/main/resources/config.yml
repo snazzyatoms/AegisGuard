@@ -2627,6 +2627,20 @@ arena:
     presence_min_ratio: 0.5
     # Master switch for run rewards; false runs are loot-free.
     enabled: true
+    # Vault pot split across eligible players: clears pay clear_pot, wipes
+    # pay wipe_pot (both scaled by the run's locked reward multiplier).
+    clear_pot: 200
+    wipe_pot: 50
+    # Extra share of the pot weighted by personal score (0 disables MVP bonus).
+    score_bonus_share: 0.25
+    # Raw XP granted to each eligible player on clear / wipe (0 disables).
+    xp_clear: 0
+    xp_wipe: 0
+  hud:
+    # Live match HUD above the hotbar during combat waves: wave number, run
+    # clock, and survivors. 20 ticks keeps it smooth without spamming.
+    enabled: true
+    interval_ticks: 20
   defaults:
     # Runs allowed simultaneously per arena.
     max_active_runs_per_arena: 1

@@ -2035,7 +2035,7 @@ public final class ArenaService {
             ArenaRewardEntry target = entry;
             scheduler.runForEntity(online, () -> {
                 try {
-                    payoutEntry(online, target, 50.0D, 0);
+                    payoutEntry(online, target, 50.0D, 0, 0);
                     rewardLedger.markCommitted(target);
                 } catch (Exception e) {
                     rewardLedger.markFailed(target, e.getMessage());

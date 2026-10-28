@@ -253,10 +253,13 @@ public final class PartyService implements Listener {
                 UUID leader = UUID.fromString(String.valueOf(row.get("leader")));
                 String name = row.get("name") == null ? null : String.valueOf(row.get("name"));
                 Party party = new Party(leader, name, id);
-                for (Object m : (java.util.List<?>) row.getOrDefault("members", java.util.List.of())) {
-                    try {
-                        party.addMember(UUID.fromString(String.valueOf(m)));
-                    } catch (Throwable ignored) { }
+                Object rawMembers = row.get("members");
+                if (rawMembers instanceof java.util.List<?> memberList) {
+                    for (Object m : memberList) {
+                        try {
+                            party.addMember(UUID.fromString(String.valueOf(m)));
+                        } catch (Throwable ignored) { }
+                    }
                 }
                 if (party.isEmpty()) continue;
                 parties.put(party.getPartyId(), party);

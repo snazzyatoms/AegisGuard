@@ -4,13 +4,13 @@
 
 1.4.5 is the **in-development** point release on the 1.4.0 line (current public release: 1.4.0). Theme: **recovery, polish, and completing the network's last room** — "1.4.0 connected the servers; 1.4.5 protects what makes them home."
 
-Planned scope:
+Implementation status on branch `1.4.5`:
 
-- **Player self-backups** (`/ag backup`) — owner-initiated restore points for plot data (settings, roles, members, noticeboards, bounds). Optional WorldEdit/FAWE block copies behind an owner-controlled opt-in. History browsing, self-service or staff-approved restore mode, cooldowns, per-plot caps, and optional Vault cost so it can't be abused.
-- **Plasmo Voice hook** — Hearth rooms become isolated voice groups on Plasmo Voice as well as Simple Voice Chat; whichever provider is present is auto-detected. AegisGuard still ships no microphone client.
-- **Network plot frequencies** — `/ag chat` plot channels relay to members logged in on other backends, completing the alliance/group/staff radio set from 1.4.0. Fails closed on single servers and non-network storage.
-- **Arena polish** — live match HUD (wave counter, run timer, party status), configurable per-preset rewards (Vault, XP, items), party persistence between runs, and a per-arena record board.
-- **Caravan polish** — return deliveries, a shipment history/ledger tab in the caravan GUI, and per-route pricing controls.
+- ✅ **Player self-backups** (`/ag backup`) — implemented. Owner restore points via the durable snapshot pipeline; `self_backup:` config (cooldown, cap, Vault cost, `restore_mode: self|staff`, `block_copies` opt-in for WE/FAWE block restores), `aegis.backup` permission, `modules.self_backup` toggle, `/ag backup list` history, confirm-gated self restore.
+- ⚠️ **Plasmo Voice hook** — *pending.* Blocked on verifying the `pv-addon-groups` server API (Plasmo groups are managed by a separate addon via `/groups` commands, not a documented plugin API like SVC's `connection.setGroup()`). Do not ship until the API surface is confirmed or the feature is cut.
+- ✅ **Network plot frequencies** — implemented. `/ag chat` plot channels relay via `NetworkChatService` to members on other backends; fails closed off-network.
+- ✅ **Arena polish** — implemented. Live action-bar HUD during combat waves (wave, run clock, survivors; `arena.hud:`) and configurable rewards (`arena.rewards:` — clear/wipe pots, MVP score share, XP). Record boards and party persistence already shipped in 1.4.0.
+- ✅ **Caravan polish** — implemented. Return dispatches, ledger summary in the caravan GUI history tab, and per-route pricing/cargo caps (`caravans.routes:`).
 
 Draft release notes: `AegisGuard 1.4.5 changelog.txt` (repo root). Draft Spigot update post: `AegisGuard Spigot update post 1.4.5.txt`. Everything new rides the `modules:` switchboard and defaults to the safest posture, same as every 1.4.x system.
 

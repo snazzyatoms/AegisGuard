@@ -2,14 +2,14 @@
   <img width="100%" alt="AegisGuard" src="listing/aegisguard-spigot-header-v2.png" />
 </p>
 
-<h1 align="center">AegisGuard 1.4.0</h1>
+<h1 align="center">AegisGuard 1.4.5</h1>
 
 <p align="center">
   <strong>Protect your world. Empower your players. Ascend.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.4.0-d9a441?style=for-the-badge" alt="Version 1.4.0" />
+  <img src="https://img.shields.io/badge/In_development-1.4.5-e67e22?style=for-the-badge" alt="1.4.5 in development" />
   <img src="https://img.shields.io/badge/Minecraft-1.20%2B-56a64b?style=for-the-badge" alt="Minecraft 1.20 or newer" />
   <img src="https://img.shields.io/badge/Java-21%2B-e76f00?style=for-the-badge" alt="Java 21 or newer" />
   <img src="https://img.shields.io/badge/Folia-Supported-2d7ff9?style=for-the-badge" alt="Folia supported" />
@@ -30,43 +30,27 @@
 
 **AegisGuard** is a Minecraft land-protection plugin that turns claims into a full territory experience. Players secure land, develop plots, manage roles and rentals, run local markets, host events, and pursue long-term progression. Staff get recovery snapshots, migration tools, diagnostics, world controls, and an audit trail for high-impact actions.
 
-It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is the current public release. Existing `1.2.7` and `1.3.x` data and configuration remain valid through automatic schema migration.
+It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is the current public release; this branch builds **1.4.5**. Existing `1.2.7` and `1.3.x` data and configuration remain valid through automatic schema migration.
 
-> Full notes and downloads live on the [1.4.0 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) page.
+> Downloads live on the [1.4.0 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) page. This README describes the in-development 1.4.5 line — see [`UPCOMING.md`](aegisguard-modern/UPCOMING.md) for the full roadmap.
 
-> **Next up — 1.4.5 "The Hearthstone Update"** *(in development)*: player self-backups (`/ag backup`), Hearth voice on Plasmo Voice, arena and caravan polish, and plot channels that relay across the network — finishing the last radio room. See [`UPCOMING.md`](aegisguard-modern/UPCOMING.md) for the roadmap and `AegisGuard 1.4.5 changelog.txt` for draft release notes.
+## Coming In 1.4.5 — The Hearthstone Update
 
-## Highlights In 1.4.0
+1.4.0 connected the servers. 1.4.5 protects what makes them home. This point release is about recovery, polish, and finishing the last room of the network.
 
-**Travel Atlas.** One travel menu replaces the scattered ones: Destinations, My Beacons, Arrival, and Caravans in a single interface. Plot managers pick **classic** or **beacon** visitor arrival (`/ag arrival`), travelers can override where allowed, and a listing that requires a public pad fails closed rather than dropping visitors somewhere unexpected.
+**Self-backups — your realm can always come home.** `/ag backup` gives plot owners their own restore points: settings, roles, members, and bounds, plus the build itself when WorldEdit/FAWE is present and the server opts in. Owners browse their history and roll back a bad change themselves — or route restores through staff approval, server's choice. Cooldowns, per-plot caps, and an optional Vault cost keep it honest. Griefed at 2 AM? It's a fix, not a ticket.
 
-**Caravans & Trade Routes.** The beacon network becomes an economy. `/ag caravan` dispatches charge-then-deliver shipments along public pads — stake and fee up front, payout on arrival — with insurance, route events, and hireable player escorts who halve ambush risk for a cut. Shipments resume cleanly after restarts, even on Folia.
+**Hearth voice grows.** Hearth rooms become isolated voice groups on **Plasmo Voice** servers too, alongside the existing Simple Voice Chat hook — whichever voice plugin is installed is detected automatically.
 
-**Gatherings & Open House.** `/ag gathering` (or Explore → Open House) lists a timed house on the Atlas's **Live** tab; visitor Guest Passes expire when the event ends, so events run themselves.
+**Arenas feel like events.** A live match HUD (wave counter, run timer, party status), configurable per-preset rewards (Vault, XP, or items), parties that persist between runs, and a per-arena record board — fastest clears, most waves, top parties.
 
-**Aegis radios.** Opt-in text channels — plot Frequency (`/ag chat`), alliance, group, and staff (`/ag staff`) — that pull tuned players' messages out of public chat. One channel at a time, no client mod, identical commands on Java and Bedrock.
+**Caravans run both ways.** Return deliveries bring payment home, a shipment ledger tab lands in the caravan GUI, and owners set per-route pricing and cargo limits on their own beacon links.
 
-**Hearth rooms.** Seal public chat to the room you're standing in — a house, pit, or lobby subplot. With the optional Simple Voice Chat plugin present, the same rooms become isolated voice groups.
+**The radio is complete.** The 1.4.0 flagship gets its last room: `/ag chat` plot frequencies relay to members on other backends — your plot's channel follows your people wherever they're logged in on the network. Same rules, wider range: one channel per player, member-only, identical on Java and Bedrock. And like everything in the network stack, it fails closed — a single server behaves exactly as it does today.
 
-**Quick-Claim and clearer menus.** `/ag quickclaim [radius]` claims a square around you through the normal pipeline (limits still apply). Settings lives on the main hubs only; Back always returns you to where you came from.
+## What 1.4.0 Shipped
 
-**Continuity that outlives players.** Snapshot restores **merge** members and roles instead of wiping current access decisions, owners can lock members (`/ag roles lock|unlock|undo`), and **Guardian Succession** (`/ag heir`, `/ag succession`) hands a plot to an heir with inactivity assume, transfer cooldowns, and a rollback window — a community plot doesn't die with its founder.
-
-**Server sanctuary.** Spawn and other server plots can opt into Keep Health, Hunger, XP, and Inventory — all off by default, never available on personal claims.
-
-**Flight as progression.** Plot flight unlocks at Ascension/Horizon level 30 for the owner and trusted — a reward, not a toggle. Staff can grant temporary flight (`/agadmin skill fly`).
-
-**Presets, seasons, and polish.** Claim presets (Home/Shop/Arena/Farm) speed setup without overwriting safety choices; `/agadmin season` pins featured plots and routes; `/ag biome` restyles a plot with an optional Vault fee.
-
-**Hardened protection.** New **Mob Griefing** and **Interactables** wards close real grief vectors — endermen, falling blocks, bells, lecterns, beehives, and more — and cross-border sponge, dispenser, and potion tricks no longer leak into claims.
-
-**Staff inspection and grief alerts.** `/agadmin inspect` opens a detail card for the claim under you; repeated denied actions raise rate-limited alerts to online staff.
-
-**Complete localization.** Every player-facing message ships in all nine packs — Modern English, Old English, Spanish (Mexico), Spanish (Argentina), Brazilian Portuguese, French, Italian, German, and Polish — with `{KEY}` placeholders resolved on translations. Console logs stay plain English.
-
-**Documented API.** Public `com.aegisguard.api` events and services carry Javadocs; `AegisGuard-1.4.0-api.jar` ships with each release as a compile-time dependency.
-
-**The flagship — one network of servers.** Everything above scales across a proxy. With `network.enabled` and one shared MySQL/MariaDB database, backend servers behind BungeeCord/Velocity become a single AegisGuard ecosystem — no proxy jar required: the Atlas lists remote plots, radios relay network-wide, players carry ClaimBlocks and preferences between backends, alliances and groups merge, beacons link across servers, and `/ag arena join <server>:<arena>` drops a player into a run on another backend and routes them home when it ends. Proven on a live Velocity + two-Paper + MariaDB rig before release — real remote arena hops, sealed-run boundaries, and Vault caravan payouts that sum exactly to cargo. `/ag hub`, `/ag lobby`, `/ag servers`, `/agadmin network`.
+The current public release turned protected land into a full territory platform: the Travel Atlas, instanced Arena Dungeons on your own maps, trade caravans, Guardian Succession, plot and alliance radios, Hearth rooms, the ClaimBlocks exchange, sanctuary settings — and the flagship — one AegisGuard network spanning BungeeCord/Velocity proxies with shared discovery, rosters, beacons, and arenas. Full notes on the [1.4.0 release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) and [Release Highlights](wiki/Release-Highlights.md) pages.
 
 ## Core Systems
 
@@ -137,6 +121,7 @@ See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed comm
 
 | Place | What it is |
 |---|---|
+| [`1.4.5`](https://github.com/snazzyatoms/AegisGuard/tree/1.4.5) | Next point release — The Hearthstone Update, in development |
 | [`V1.4.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.4.0) | Current release line — GitHub Release **1.4.0** |
 | [`V1.3.5`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.5) | Previous public line — GitHub Release **1.3.5** |
 | [`V1.3.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.0) | Earlier public 1.3.0 line |

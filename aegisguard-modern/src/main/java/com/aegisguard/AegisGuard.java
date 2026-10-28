@@ -144,6 +144,8 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.lockdown.LockdownService lockdownService;
     private com.aegisguard.routes.RouteService routeService;
     private com.aegisguard.arena.ArenaService arenaService;
+    private com.aegisguard.groups.PartyService partyService;
+    private com.aegisguard.groups.PartySidebarService partySidebarService;
     private com.aegisguard.arena.ArenaWorldService arenaWorldService;
     private com.aegisguard.arena.ArenaStagingService arenaStagingService;
     private com.aegisguard.arena.ArenaQueueService arenaQueueService;
@@ -280,6 +282,8 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.lockdown.LockdownService lockdown() { return lockdownService; }
     public com.aegisguard.routes.RouteService routes() { return routeService; }
     public com.aegisguard.arena.ArenaService arena() { return arenaService; }
+    public com.aegisguard.groups.PartyService parties() { return partyService; }
+    public com.aegisguard.groups.PartySidebarService partySidebar() { return partySidebarService; }
     public com.aegisguard.arena.ArenaWorldService arenaWorld() { return arenaWorldService; }
     public com.aegisguard.arena.ArenaStagingService arenaStaging() { return arenaStagingService; }
     public com.aegisguard.arena.ArenaQueueService arenaQueue() { return arenaQueueService; }
@@ -411,6 +415,11 @@ public class AegisGuard extends JavaPlugin {
         beaconService = new com.aegisguard.beacon.BeaconService(this);
         successionService = new com.aegisguard.succession.SuccessionService(this);
         caravanService = new com.aegisguard.caravans.CaravanService(this);
+        partyService = new com.aegisguard.groups.PartyService(this);
+        partySidebarService = new com.aegisguard.groups.PartySidebarService(this, partyService);
+        partyService.setSidebar(partySidebarService);
+        Bukkit.getPluginManager().registerEvents(partyService, this);
+        partySidebarService.start();
         gatheringService = new com.aegisguard.gatherings.GatheringService(this);
         plotChatService = new com.aegisguard.chat.PlotChatService(this);
         hearthService = new com.aegisguard.chat.HearthService(this);
@@ -764,6 +773,8 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(caravanTickTask);
         cancelTaskReflectively(gatheringTickTask);
         if (snapshotManager != null) snapshotManager.shutdownOperations();
+        if (partySidebarService != null) partySidebarService.shutdown();
+        if (partyService != null) partyService.shutdown();
         if (plotChatService != null) plotChatService.clearAll();
         if (webAdminService != null) webAdminService.shutdown();
         // Flush shared player data + stop channels before the SQL pool closes.

@@ -117,6 +117,9 @@ modules:
   territory_activity: true
   # Owner-initiated plot restore points (/ag backup) with self-service rollback.
   self_backup: true
+  # Open-ended player parties (/ag party) with a member sidebar; arena-run
+  # parties appear on the sidebar automatically while grouped.
+  party: true
   # Cooperative PvE dungeon runs on protected server plots.
   arena: true
   # Off by default. Enable only if the owner wants it AND storage is SQL.
@@ -307,6 +310,27 @@ self_backup:
   # Include build copies in self-service restores (requires WorldEdit/FAWE
   # and snapshots.build_backup producing copies for the snapshot).
   block_copies: false
+
+# Open-ended parties (/ag party): a group for dungeon runs, build sessions,
+# or just exploring — with a Wynncraft-style sidebar roster showing members,
+# health, and the leader. Arena-run parties ride the same sidebar while
+# grouped for a run.
+party:
+  # Master switch (also gated by modules.party).
+  enabled: true
+  # Maximum members per party, leader included.
+  max_size: 8
+  # Seconds a /ag party invite stays valid.
+  invite_expire_seconds: 60
+  sidebar:
+    # The member roster on the right of the screen; players toggle their own
+    # with /ag party hud.
+    enabled: true
+    # Ticks between health/name refreshes (20 = once a second).
+    refresh_ticks: 20
+    # Member rows before the list collapses into "+N more…" (max 13; the
+    # sidebar has a hard client limit).
+    max_lines: 12
 
 
 # ==============================================================================

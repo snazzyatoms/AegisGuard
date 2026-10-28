@@ -7,7 +7,8 @@
 Implementation status on branch `1.4.5`:
 
 - ✅ **Player self-backups** (`/ag backup`) — implemented. Owner restore points via the durable snapshot pipeline; `self_backup:` config (cooldown, cap, Vault cost, `restore_mode: self|staff`, `block_copies` opt-in for WE/FAWE block restores), `aegis.backup` permission, `modules.self_backup` toggle, `/ag backup list` history, confirm-gated self restore.
-- ⚠️ **Plasmo Voice hook** — *pending.* Blocked on verifying the `pv-addon-groups` server API (Plasmo groups are managed by a separate addon via `/groups` commands, not a documented plugin API like SVC's `connection.setGroup()`). Do not ship until the API surface is confirmed or the feature is cut.
+- ✅ **Parties + sidebar roster** — implemented. `/ag party` open-ended groups (create/invite/accept/leave/kick/promote/disband) with a live sidebar showing members, health, and the leader; arena-run parties render on the same sidebar automatically. `party:` config, `aegis.party` permission, `modules.party` toggle, `/ag party hud` per-player toggle.
+- ~~Plasmo Voice hook~~ — **superseded.** The custom party system above delivers the group experience without depending on `pv-addon-groups`' unverified API. Simple Voice Chat's Hearth hook remains untouched; revisit a Plasmo addon only if a stable API surfaces.
 - ✅ **Network plot frequencies** — implemented. `/ag chat` plot channels relay via `NetworkChatService` to members on other backends; fails closed off-network.
 - ✅ **Arena polish** — implemented. Live action-bar HUD during combat waves (wave, run clock, survivors; `arena.hud:`) and configurable rewards (`arena.rewards:` — clear/wipe pots, MVP score share, XP). Record boards and party persistence already shipped in 1.4.0.
 - ✅ **Caravan polish** — implemented. Return dispatches, ledger summary in the caravan GUI history tab, and per-route pricing/cargo caps (`caravans.routes:`).

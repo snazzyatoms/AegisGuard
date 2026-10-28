@@ -157,6 +157,7 @@ permissions:
       aegis.beacon: true
       aegis.chat: true
       aegis.backup: true
+      aegis.party: true
       aegis.chat.alliance: true
       aegis.chat.group: true
       aegis.gathering: true
@@ -408,6 +409,10 @@ permissions:
 
   aegis.backup:
     description: Snapshot and restore your own plot (/ag backup, /ag backup list, /ag backup restore).
+    default: true
+
+  aegis.party:
+    description: Form a party and see your group on the sidebar (/ag party).
     default: true
 
   aegis.gathering:

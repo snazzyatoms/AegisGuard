@@ -50,6 +50,7 @@ public final class Modules {
         SUCCESSION("succession", "succession.enabled", true, "Guardian Succession"),
         CARAVANS("caravans", "caravans.enabled", true, "Caravans & Trade Routes"),
         GATHERINGS("gatherings", "gatherings.enabled", true, "Open House"),
+        PARTY("party", "party.enabled", true, "Parties"),
         SELF_BACKUP("self_backup", "self_backup.enabled", true, "Self-Backups");
 
         private final String key;

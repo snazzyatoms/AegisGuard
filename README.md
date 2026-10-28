@@ -40,7 +40,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Self-backups — your realm can always come home.** `/ag backup` gives plot owners their own restore points: settings, roles, members, and bounds, plus the build itself when WorldEdit/FAWE is present and the server opts in. Owners browse their history and roll back a bad change themselves — or route restores through staff approval, server's choice. Cooldowns, per-plot caps, and an optional Vault cost keep it honest. Griefed at 2 AM? It's a fix, not a ticket.
 
-**Hearth voice grows.** Hearth rooms become isolated voice groups on **Plasmo Voice** servers too, alongside the existing Simple Voice Chat hook — whichever voice plugin is installed is detected automatically.
+**Party up — your crew, on screen.** `/ag party` forms a group for a dungeon run, a build session, or just wandering — and every member shows on a live sidebar roster: health, a star on the leader, offline friends greyed. Wynncraft-style, zero setup, and arena-run groups ride the same sidebar automatically.
 
 **Arenas feel like events.** A live match HUD (wave counter, run timer, party status), configurable per-preset rewards (Vault, XP, or items), parties that persist between runs, and a per-arena record board — fastest clears, most waves, top parties.
 

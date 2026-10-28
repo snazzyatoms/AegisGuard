@@ -12,7 +12,7 @@ import java.util.*;
  * Shared plumbing for {@code /aegis} subcommand handlers: locale-aware message
  * helpers, placeholder substitution, and cross-handler utilities.
  */
-abstract class CommandBase {
+public abstract class CommandBase {
 
     protected final AegisGuard plugin;
 

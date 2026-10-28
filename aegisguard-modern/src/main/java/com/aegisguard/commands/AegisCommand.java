@@ -47,10 +47,11 @@ public class AegisCommand extends CommandBase implements CommandExecutor, TabCom
     private final TravelCommands travel;
     private final EconomyCommands econ;
     private final BackupCommands backups;
+    private final com.aegisguard.groups.PartyCommands parties;
 
     private static final String[] SUB_COMMANDS = {
             "wand", "menu", "claim", "quickclaim", "qc", "unclaim", "help",
-            "backup", "backups",
+            "backup", "backups", "party",
             "setspawn", "home", "welcome", "farewell",
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit", "travel",
@@ -80,6 +81,7 @@ public class AegisCommand extends CommandBase implements CommandExecutor, TabCom
             Map.entry("beacon", "aegis.beacon"),
             Map.entry("backup", "aegis.backup"),
             Map.entry("backups", "aegis.backup"),
+            Map.entry("party", "aegis.party"),
             Map.entry("gathering", "aegis.gathering"),
             Map.entry("gatherings", "aegis.gathering"),
             Map.entry("openhouse", "aegis.gathering")
@@ -96,6 +98,7 @@ public class AegisCommand extends CommandBase implements CommandExecutor, TabCom
         this.travel = new TravelCommands(plugin);
         this.econ = new EconomyCommands(plugin);
         this.backups = new BackupCommands(plugin);
+        this.parties = new com.aegisguard.groups.PartyCommands(plugin);
     }
 
     /** Dynamic /hub,/lobby aliases registered through the CommandMap. */
@@ -296,6 +299,7 @@ public class AegisCommand extends CommandBase implements CommandExecutor, TabCom
 
             case "caravan", "caravans" -> travel.handleCaravan(p, args);
             case "backup", "backups" -> backups.handleBackup(p, args);
+            case "party" -> parties.handleParty(p, args);
 
             case "gathering", "gatherings", "openhouse" -> travel.handleGathering(p, args);
 
@@ -421,7 +425,7 @@ public class AegisCommand extends CommandBase implements CommandExecutor, TabCom
     private static final Map<String, List<String>> HELP_CATEGORIES = Map.of(
             "claims", List.of("wand", "menu", "claim", "quickclaim", "qc", "unclaim", "expand",
                     "merge", "transfer", "rename", "setdesc", "welcome", "farewell", "guide",
-                    "setspawn", "border", "cost", "consume", "backup", "backups"),
+                    "setspawn", "border", "cost", "consume", "backup", "backups", "party"),
             "members", List.of("trust", "untrust", "roles", "member", "members", "ban", "unban",
                     "kick", "guest", "guestpass", "alliance", "group", "heir", "succession", "notify"),
             "flags", List.of("flags", "flag", "preset", "biome", "zone", "subplot", "subzone", "cosmetics"),

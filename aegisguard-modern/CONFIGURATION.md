@@ -1,6 +1,6 @@
 # AegisGuard 1.4.0 Configuration Guide
 
-This guide is meant to help server owners set up AegisGuard quickly without having to guess which settings matter first.
+This guide is meant to help server owners set up AegisGuard quickly without having to guess which settings matter first. Players looking for gameplay help should start with the wiki's [Player Handbook](../wiki/Player-Handbook.md); the full install flow is in [Installation](../wiki/Installation.md).
 
 ## Start Here
 

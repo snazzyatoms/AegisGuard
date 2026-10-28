@@ -4,6 +4,8 @@ AegisGuard is designed for a straightforward installation on single servers and 
 
 **AegisGuard 1.4.0** is the current public release. Existing 1.2.7 and 1.3.x claims, configs, and plot data remain valid and are migrated automatically on first startup. Download from the [1.4.0 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0).
 
+After installing, the `CONFIGURATION.md` file shipped with the plugin walks every config section in the order worth reviewing — and the [Permissions and Commands](Permissions-and-Commands) page covers recommended LuckPerms bundles.
+
 ## Requirements
 
 Confirm that the server meets these requirements before installing.

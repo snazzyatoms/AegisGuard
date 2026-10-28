@@ -8,6 +8,8 @@ The API is intended for plugin developers who need to read plot data, perform su
 
 > **1.4.0 note:** Guest Passes, Alliance Access, Emergency Lockdown, Realm Profiles, Routes, Teleport Beacons, and the Staff Audit Ledger are part of the plugin runtime. For access checks, continue to use `Plot.hasPermission(...)` and the public protection helpers rather than reimplementing those systems. Existing 1.2.7 and 1.3.0 integrations that already use the public facade remain the supported approach. Land ClaimBlocks are **used** plot area; `spend()` is for non-land costs. Always prefer `getAvailableBlocks(...)` and `canAfford(...)` over inventing your own ledger math.
 
+**Contents:** [Adding the API](#adding-the-api-to-your-plugin) · [Entry Point](#public-api-entry-point) · [Services](#api-services) · [Plot Access](#plot-access) · [Permissions and Protection](#plot-permissions-and-protection) · [ClaimBlocks](#claimblocks-api) · [Economy](#economy-api) · [Selections](#selection-api) · [Events](#event-api) · [Developer Guidelines](#developer-guidelines)
+
 ---
 
 ## Adding the API to Your Plugin

@@ -40,4 +40,5 @@ outputs/
 # Local storefront working files (copy/paste sources, not repo content)
 AegisGuard CurseForge description*.txt
 AegisGuard CurseForge description.md
+AegisGuard Spigot *.txt
 AegisGuard * changelog.txt

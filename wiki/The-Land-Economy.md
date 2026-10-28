@@ -20,6 +20,8 @@ The AegisGuard land economy can include:
 
 > **Upgrade note:** Existing 1.2.7 and 1.3.x economy data and configuration remain valid in 1.4.0. Teleport Beacons, Guest Passes, Lockdown, Realm Profiles, Routes, and Alliance Access do not take ownership of plots, treasuries, rentals, or market listings.
 
+**Contents:** [Economy Models](#economy-models) · [ClaimBlocks](#claimblocks) · [Upkeep and Taxes](#upkeep-and-taxes) · [Auction House](#auction-house) · [Marketplace](#marketplace) · [Local Market](#local-market) · [TradeStalls](#tradestalls) · [Subplots, Rentals, and Landlord Flow](#subplots-rentals-and-landlord-flow) · [Group Treasury](#group-treasury) · [Frontier Expansion](#frontier-expansion) · [Trade Caravans and Settlements](#trade-caravans-and-settlements) · [Routes and Optional Rewards](#routes-and-optional-rewards) · [Teleport Beacon fees](#teleport-beacon-fees)
+
 ---
 
 ## Economy Models

@@ -8,6 +8,8 @@ AegisGuard `v1.4.0` is designed to work alongside the modern Minecraft plugin ec
 
 > **Hooks default off.** Map, Discord, and protection-compat integrations stay **off** in `config.yml` until you enable them. Optional AegisGuard modules are separate from those hooks and live under `modules:`.
 
+**Contents:** [Supported and Recommended Plugins](#supported-and-recommended-plugins) · [Native Integrations](#native-integrations) (BungeeCord/Velocity, Discord, market bridges, databases) · [Features That Work Without Extra Plugins](#features-that-work-without-extra-plugins) · [Incompatible Land-Protection Plugins](#incompatible-land-protection-plugins) · [Use with Caution](#use-with-caution) · [Compatibility Checklist](#compatibility-checklist)
+
 ---
 
 ## Supported and Recommended Plugins

@@ -23,3 +23,12 @@ mvn clean package -f aegisguard-modern/pom.xml -DskipTests
 - Watch for deprecation warnings with `-Dmaven.compiler.showDeprecation=true`.
 - The shade plugin bundles HikariCP; the filter excludes signing metadata and now also `META-INF/MANIFEST.MF` / `module-info.class` to keep the plugin manifest intact.
 - Folia readiness is centralized in `com.aegisguard.scheduler.AegisScheduler`; avoid scheduling through `Bukkit.getScheduler()` directly.
+
+## Documentation Conventions
+- **Organize by theme, not version.** Landing and overview docs group systems by pillar (travel, economy, community, admin, network); per-version detail belongs in `wiki/Release-Highlights.md` and the changelog txt — not stacked "What's New" sections on `Home.md`.
+- **Write fixes as value propositions.** Lead with the player/owner outcome ("the nine-language codex never drops a message under load"); keep the technical detail in a subordinate clause or parentheses. Avoid raw Java jargon (locks, races, publication) in user-facing text.
+- **Don't bury the flagship.** The multi-server network is the climactic feature — it closes the README highlights, the CurseForge headline features, and the overview document.
+- **Canonical content, no duplication.** Install steps live in `wiki/Installation.md`; the full command/permission matrix lives in `wiki/Permissions-and-Commands.md`; version history lives in `Release-Highlights.md`/`changelog.txt`. Other pages summarize and link.
+- **Audience routing.** `wiki/Home.md` ends with player / owner / developer paths; `wiki/_Sidebar.md` mirrors those groups. `wiki/Glossary.md` defines product nouns (Scepter, Codex, ClaimBlocks, Hearth, Frequency, etc.) — link to it instead of re-explaining terms.
+- **Wiki links** use page names (`[Install](Installation)`) or `Page#anchor` anchors; `wiki/` pages are pasted manually into the GitHub Wiki, so keep filenames wiki-style (`Hyphenated-Title.md`).
+- Keep `AegisGuard CurseForge description.md` and `AegisGuard CurseForge description FINAL.txt` in sync — they are the same listing copy.

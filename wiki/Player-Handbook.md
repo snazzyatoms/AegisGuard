@@ -2,9 +2,24 @@
 
 Welcome to **AegisGuard** `v1.4.0`.
 
-This handbook explains how to claim land, manage access, grow your territory, use travel and economy features, and protect your community.
+This handbook explains how to claim land, manage access, grow your territory, use travel and economy features, and protect your community. Unfamiliar terms are defined in the [Glossary](Glossary).
 
 > **Server configuration:** AegisGuard features can be enabled, disabled, or customized by the server owner. If a command, menu option, or feature is unavailable, it may be turned off on this server — contact staff. Disabled modules do not appear on the AegisGuard menu.
+
+**Find your task:**
+
+| I want to… | Section |
+| :--- | :--- |
+| Claim my first plot | [Quick Start Guide](#quick-start-guide) / [Claiming Land](#claiming-land) |
+| Control who can enter or build | [Managing Your Claim](#managing-your-claim) |
+| Give a friend temporary access | [Guest Passes](#guest-passes) |
+| Rent out rooms or make a shop district | [Subplots and Zones](#subplots-and-zones) |
+| Claim land with my team | [Group Claims](#group-claims) |
+| Level up or expand my plot | [Territory Progression](#territory-progression) |
+| Teleport home, visit plots, place beacons | [Travel, Routes, and Navigation](#travel-routes-and-navigation) |
+| Sell land, shop, or send a caravan | [Economy, Markets, and TradeStalls](#economy-markets-and-tradestalls) |
+| Deal with griefers or trolls | [Security and Moderation](#security-and-moderation) |
+| Change my language or notifications | [Preferences and Guidance](#preferences-and-guidance) |
 
 ---
 

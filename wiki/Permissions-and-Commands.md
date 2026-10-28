@@ -11,6 +11,8 @@ This reference lists the main commands and recommended permissions for **AegisGu
 > - If a menu icon is missing, that module is turned off on this server.
 > - The recommended permission bundles are `aegis.user` for regular players and `aegis.admin` for administrators.
 
+**Contents:** [Player Essentials](#player-essentials) · [Realm Profile and Noticeboard](#realm-profile-and-noticeboard) · [Notifications and Preferences](#notifications-and-preferences) · [Empire Building](#empire-building) · [Groups and Shared Plots](#groups-and-shared-plots) · [Alliance Access](#alliance-access) · [Plot Moderation and Safety](#plot-moderation-and-safety) · [Economy and Marketplace](#economy-and-marketplace) · [Server Administration](#server-administration) · [Migration Tools](#migration-tools) · [Staff Bypass and Utility Permissions](#staff-bypass-and-utility-permissions) · [Recommended LuckPerms Setup](#recommended-luckperms-setup)
+
 ---
 
 ## Player Essentials
@@ -106,6 +108,7 @@ Commands that grow, organize, and improve land.
 | `/ag subzone <name>` | `aegis.user` | Alias for `/ag subplot`. |
 | `/ag level` | `aegis.user` | Open **Plot Ascension**. |
 | `/ag like` | `aegis.user` | Like the plot you are currently visiting. |
+| `/ag favorite` | `aegis.user` | Favorite the plot you are currently visiting. |
 | `/ag arena` | `aegis.user` / `aegis.arena.use` | Browse Arena runs when the Arena module is on. |
 
 ### Frontier Expansion
@@ -229,6 +232,11 @@ Commands for selling land, browsing markets, ClaimBlocks, and related economy to
 | `/ag market local` | `aegis.user` | Open the Local Market for the current plot or area. |
 | `/ag market global` | `aegis.user` | Open the global market view. |
 | `/ag auction` | `aegis.user` | Open the auction browser. |
+| `/ag rent <price> [days] [deposit]` | `aegis.rent` | List the current plot for rent. Included in `aegis.user`. |
+| `/ag unrent` | `aegis.rent` | Remove the rental listing. |
+| `/ag rental` | `aegis.rent` | View or manage your rental contract (renew, cancel). |
+| `/ag discover` | `aegis.discovery` | Browse public territories and manage plot discovery settings. Included in `aegis.user`. |
+| `/ag activity` | `aegis.activity` | View activity history for territories you can manage. Included in `aegis.user`. |
 | `/ag giftblocks` | `aegis.claimblocks.gift` | Gift available ClaimBlocks to another player. |
 
 `aegis.claimblocks.gift` is included in `aegis.user`.
@@ -293,6 +301,12 @@ High-level commands for administrators, owners, and trusted staff.
 | `/agadmin inspect [player]` | `aegis.admin` | Inspect the claim here or a player's claims. |
 | `/agadmin network [find <p>\|broadcast <msg>]` | `aegis.admin.broadcast` | Cross-server find and broadcast tools. |
 | `/agadmin migrate storage\|backend` | `aegis.admin.migrate` | Inspect or change storage backends. |
+| `/agadmin manage` | `aegis.admin.manage` | Manage the server plot you are standing in. |
+| `/agadmin blocks` | `aegis.admin.blocks.view` / `aegis.admin.blocks.manage` | View or manage player ClaimBlocks. |
+| `/agadmin merge` | `aegis.admin.merge` | Merge eligible server zones. |
+| `/agadmin rentals` | `aegis.admin.rentals` | Manage rental contracts and settlements. |
+| `/agadmin discover` | `aegis.admin.discovery` | Feature or hide plots in public discovery. |
+| `/agadmin activity` | `aegis.admin.activity` | View activity history for any territory. |
 
 Snapshots always store **claim data** (owner, bounds, flags, members, guest passes, lockdown, alliance access, noticeboard, and plot maps). Optional WorldEdit/FAWE **build** copies require `snapshots.build_backup.enabled`.
 

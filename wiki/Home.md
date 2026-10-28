@@ -1,9 +1,7 @@
 # AegisGuard
 ### Simple. Steadfast. Eternal.
 
-AegisGuard is a modern land-protection plugin for Minecraft, built for **Paper, Purpur, Spigot, and Folia**. It combines reliable claim security with economy features, RPG-style progression, and accessible in-game management tools.
-
-**AegisGuard 1.4.0** is the current public release. Existing `1.2.7` and `1.3.x` data remain valid through automatic schema migration.
+AegisGuard is a modern land-protection plugin for Minecraft, built for **Paper, Purpur, Spigot, and Folia**. It combines reliable claim security with economy features, RPG-style progression, and accessible in-game management tools — and on BungeeCord/Velocity networks, it can link multiple servers into one territory network.
 
 | Requirement | Support |
 | :--- | :--- |
@@ -13,26 +11,22 @@ AegisGuard is a modern land-protection plugin for Minecraft, built for **Paper, 
 | Current line | AegisGuard 1.4.0 |
 | Latest release | [AegisGuard 1.4.0](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) |
 
-## Why AegisGuard?
+## What Land Becomes
 
 Land is more than protected space. It can become part of your server's economy, communities, and player progression.
 
-| Feature | Description |
+| Pillar | What you get |
 | :--- | :--- |
-| Folia Ready | Designed for Paper and Folia with Folia-safe scheduling. |
-| Land Management | Create and manage claims, members, permissions, and settings in game. |
-| Empire Building | Build sub-claims, rentable zones, plot progression, and economy-driven communities. |
-| Guardian Codex | Use a clear GUI to manage claims without relying on commands for every action. |
-| Travel System | Visit friends, public destinations, server warps, and **Teleport Beacons** with a per-plot arrival choice (`/ag arrival`). |
-| Active Security | Protect claims with anti-sniper tools, mob vaporizers, emergency lockdown, hopper/liquid/teleport/storm wards, and configurable safeguards. |
-| Guest Passes | Grant temporary, self-expiring access without permanent trust. |
-| Realm Profiles | Give each plot a public name, category, greeting, and noticeboard. |
-| Routes & Checkpoints | Offer staff-authored exploration routes players can browse and discover. |
-| Alliance Access | Let allied players share opt-in plot permissions — all risky toggles default **OFF**. |
-| Staff Audit Ledger | Review important admin and safety actions from a dedicated audit history. |
-| Module Switchboard | Optional systems ship **on** (wilderness revert ships **off**). Disabled modules leave the menu. Claiming and plot protection stay on. |
-| Language Picker | Choose from nine language packs in Settings without cycling one click at a time. |
-| Bedrock GUIs | With Geyser/Floodgate, Bedrock players are detected automatically and can complete chest menus with left-click and sneak-left. |
+| Protection | Claims, sub-zones, and wards against griefing — mobs, liquids, hoppers, teleports, storms, explosives — all managed in-game. |
+| Travel | A unified **Travel Atlas**: plot homes, public destinations, linked **Teleport Beacons**, exploration routes, and per-plot arrival rules. |
+| Economy | ClaimBlocks with a buy/sell exchange, Vault support, markets, auctions, TradeStalls, rentals, upkeep, and trade **Caravans**. |
+| Community | Groups, alliances, realm profiles, guest passes, gatherings, plot chat channels, and room-scoped **Hearth** chat. |
+| Events | Optional **Arena Dungeons** — instanced PvE/PvP runs with staging, matchmaking, and sealed boundaries. |
+| Progression | Plot Ascension, Expansion Horizons, succession and heirs, and unlocks like level-30 flight. |
+| Administration | Staff audit ledger, recovery snapshots, migration tools, diagnostics, and a **module switchboard** so servers only run what they want. |
+| Network | On BungeeCord/Velocity, linked servers share discovery, radios, arenas, beacons, and player data — one ecosystem, many backends. |
+
+Every optional system can be turned off in `modules:`, menus hide disabled entries, and players pick from nine language packs.
 
 ---
 
@@ -58,105 +52,48 @@ Optional first steps after your first claim:
 
 ---
 
-## Updating from 1.2.7, 1.3.0, or 1.3.5
-
-1. Stop the server.
-2. Confirm **Java 21** or newer.
-3. Replace the old JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1316`, with a backup). Existing plots load as-is and stay on classic arrival.
-5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`).
-6. Run `/agadmin doctor` only if something looks wrong.
-
-Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
-
-A folder backup of `plugins/AegisGuard/` is recommended. It is not required to keep claims.
-
----
-
-## What's New in 1.4.0
-
-- **Travel Atlas** — Destinations, My Beacons, Arrival, and Caravans in one menu. `/ag beacon` opens My Beacons. `/ag arrival <classic|beacon>` still sets listing landings; travelers may override when allowed. Beacon listings fail closed (`beacon_no_public_arrival`) if no public pad exists.
-- **Quick-Claim** — `/ag quickclaim [radius]` claims a square around you; Settings only on the main hub and staff menu; claiming honors `max_claims_per_player`.
-- **Restore-safe roles** — snapshot restore merges members/roles by default; `/ag roles lock|unlock|undo`.
-- **Guardian Succession** — `/ag heir`, `/ag succession`, Stewardship GUI, transfer cooldown and rollback.
-- **Arena Dungeons** — `/ag arena` browses, joins, and parties for PvE/PvP runs on bound plots: waves, boss finales, custom floors and schematics, staging hubs, matchmaking queues, and sealed runs, with a ready `lava_dungeon` preset. Steward and admin roles manage arenas.
-- **Caravans** — `/ag caravan` charge-then-deliver shipments on public beacon hops, with insurance, route events, hireable escorts, and resume after restart.
-- **Gatherings & Open House** — `/ag gathering` (alias `/ag openhouse`) hosts timed events on managed plots with optional visitor Guest Passes.
-- **Plot chat frequencies** — `/ag chat` toggles the plot channel; alliance and group radios with leader naming; `/ag staff` for staff.
-- **Cross-server travel** — `/ag hub`, `/ag lobby`, `/ag servers`, remote arena joins, and staff broadcasts on BungeeCord/Velocity networks.
-- **ClaimBlocks exchange** — `/ag blocks buy|sell` with rates, cooldowns, and sell locks; `/ag ledger` history; `/ag settlements` inbox.
-- **Nine language packs** — every player-facing message translated; full `/ag help` coverage; console logs stay plain English.
-- **Server sanctuary** — staff can toggle **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** on a server/spawn plot in Claim Settings → Safety. Off by default. Player plots never get this. No hub-flight Safety flag.
-- **Hearth rooms** — owners and server-plot stewards can seal public chat to a 3D subplot or the rest of the plot. Off by default. Staff with `aegis.admin.hearth` still hear every room. If Simple Voice Chat (`voicechat`) is installed, the same rooms become isolated voice groups.
-- **Claim presets** — after claim, choose Home / Shop / Arena / Farm (or Spawn / Hub / Shop / Arena on server plots).
-- **Staff seasons** — `/agadmin season` pins featured Atlas plots and Routes.
-- **Flight** — Ascension/Horizon level 30, staff fly, or `/agadmin skill fly <player> [seconds]`.
-- **Schema migration** — `config_schema` moves `1294` → `1316`; new keys auto-merge on upgrade with a backup.
-
-## What's New in 1.3.5
-
-- **Teleport Beacons** — linked pads on claims you manage; Safe Travel; optional public arrival for visit, market, and auction; configurable fees (`owner_choice`, `always`, or `off`). `/ag home` stays personal plot spawn.
-- **Language placeholders** — `{PLOT}`, `{MIN}`, `{PLAYER}`, and other `{KEY}` tokens now fill in on `lang/` translations, not only English fallbacks.
-- **ClaimBlocks** — expanding land no longer drives the wallet negative; extra area is refused if it cannot be covered. Group claims check the leader's ClaimBlocks.
-- **Minimum claim size** — `claims.min_radius` is enforced on both width and depth for wand claims, group claims, expansion, and Ascension growth.
-- **Bedrock / Geyser GUIs** — Floodgate and Geyser players are auto-detected (`gui.bedrock.detect`, default on). Java keeps right-click second actions; Bedrock uses left-click and sneak-left.
-- **Complete claim-data snapshots** — rollback restores guest passes, lockdown, alliance access, and noticeboards with owner, flags, members, and bounds.
-- **Plot backups** — optional full-height WorldEdit/FAWE copies with atomic manifests, SHA-256 checksums, Folia-safe chunk tasks, and protected retention. Default **off**; Folia requires FAWE by default.
-- **Automatic plot backups** — optional player-plot and server-zone snapshots in small batches. Default **off**.
-- **Recovery operations** — preview/selective restore, maintenance locking, restart pause/retry, health reporting, and optional Discord failure warnings.
-- **1.3.0 soak fixes** — correct plot lookup after ownership transfer, Folia-safe restore, snapshot prune, role nicknames, player-menu footer, hidden Staff Tools modules, lockdown no longer auto-lifts on save, and schema migration no longer re-enables a legacy `*.enabled: false`.
-
-### Still included from 1.3.0
-
-Module switchboard, Staff Audit Ledger, Guest Passes, Emergency Lockdown, Realm Profiles, first-claim walkthrough, Routes, Alliance Access, language picker, and server-zone stewardship.
-
-The 1.2.7 territory platform remains: Ascension Hall, Expansion Horizons, rentals, Travel Atlas, ClaimBlocks, markets, TradeStalls, Territory Doctor, and recovery tools.
-
----
-
 ## Quick Commands
 
 ```text
 /ag wand                     Get the Aegis Scepter
 /ag claim                    Create a claim from the current selection
-/ag menu                     Open the territory dashboard
-/ag guide                    Replay the first-claim walkthrough
-/ag level                    Open the Ascension Hall
-/ag visit                    Open the Travel Atlas
 /ag quickclaim [radius]      Claim a square around you
-/ag beacon                   Open the Atlas My Beacons tab
-/ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
-/ag heir [player|clear]      Name a succession heir
+/ag menu                     Open the territory dashboard
+/ag visit                    Open the Travel Atlas
+/ag beacon                   Manage Teleport Beacon pads
 /ag caravan                  Dispatch and track trade caravans
 /ag gathering                Host or browse open-house gatherings
-/ag travel                   Open the Travel Hub
-/ag hub /ag servers          Cross-server travel on networks
 /ag arena                    Browse, join, and party for arena runs
 /ag chat                     Toggle plot chat (alliance/group radios too)
-/ag staff                    Toggle staff chat
-/ag transfer <player>        Transfer plot ownership
 /ag blocks buy|sell          Trade ClaimBlocks through the exchange
-/ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center
-/agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
-/agadmin doctor              Optional diagnostics and repair tools
-/agadmin reload              Reload supported settings and languages
+/agadmin transition          Confirm upgrade status from 1.2.7/1.3.x
 ```
 
-Install only `AegisGuard-1.4.0.jar` in the server's `/plugins` folder. API JARs are for developers and do not belong there.
+The full command and permission reference lives in [Permissions and Commands](Permissions-and-Commands). Install only `AegisGuard-1.4.0.jar` in the server's `/plugins` folder — API JARs are for developers.
 
 ---
 
-## Wiki pages
+## Updating from 1.2.7, 1.3.0, or 1.3.5
 
-- [Installation](Installation)
-- [Player Handbook](Player-Handbook)
-- [The Land Economy](The-Land-Economy)
-- [Permissions and Commands](Permissions-and-Commands)
-- [Integrations and Compatibility](Integrations-and-Compatibility)
-- [Frequently Asked Questions](Frequently-Asked-Questions)
-- [AegisGuard API](AegisGuard-API)
+Upgrading is a JAR swap: stop the server, drop in `AegisGuard-1.4.0.jar`, start. Config and language merge on enable (`config_schema` `1294` → `1316`, with a backup), existing plots load as-is, and `/agadmin transition` confirms the upgrade. Do **not** use Bukkit `/reload` — use `/agadmin reload`.
+
+Full steps and a post-upgrade checklist: [Installation → Updating](Installation#updating-from-127-130-or-135-to-140).
+
+## What's New in 1.4.0
+
+Version 1.4.0 completes the travel layer (unified **Travel Atlas**, beacons with arrival rules, **Caravans**), builds arenas into sealed instanced dungeons, adds succession, gatherings, chat radios and Hearth rooms, the ClaimBlocks exchange — and, as its flagship, connects entire servers behind a BungeeCord/Velocity proxy into one network.
+
+The full feature list and the 1.3.5 / 1.3.0 history live in [Release Highlights](Release-Highlights).
+
+---
+
+## Choose your path
+
+- **Players** — [Player Handbook](Player-Handbook), [The Land Economy](The-Land-Economy), [FAQ](Frequently-Asked-Questions), [Glossary](Glossary)
+- **Server owners & staff** — [Installation](Installation), [Permissions and Commands](Permissions-and-Commands), [Integrations and Compatibility](Integrations-and-Compatibility), [Release Highlights](Release-Highlights)
+- **Developers** — [AegisGuard API](AegisGuard-API)
 
 ---
 

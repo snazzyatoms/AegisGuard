@@ -156,6 +156,7 @@ permissions:
       aegis.arena.spectate: true
       aegis.beacon: true
       aegis.chat: true
+      aegis.backup: true
       aegis.chat.alliance: true
       aegis.chat.group: true
       aegis.gathering: true
@@ -403,6 +404,10 @@ permissions:
 
   aegis.chat.group:
     description: Use group chat (/ag chat group) with your group members.
+    default: true
+
+  aegis.backup:
+    description: Snapshot and restore your own plot (/ag backup, /ag backup list, /ag backup restore).
     default: true
 
   aegis.gathering:

@@ -49,7 +49,8 @@ public final class Modules {
         VISUAL_PRESENCE("visual_presence", "visual_presence.enabled", true, "Visual Presence"),
         SUCCESSION("succession", "succession.enabled", true, "Guardian Succession"),
         CARAVANS("caravans", "caravans.enabled", true, "Caravans & Trade Routes"),
-        GATHERINGS("gatherings", "gatherings.enabled", true, "Open House");
+        GATHERINGS("gatherings", "gatherings.enabled", true, "Open House"),
+        SELF_BACKUP("self_backup", "self_backup.enabled", true, "Self-Backups");
 
         private final String key;
         private final String legacyPath;

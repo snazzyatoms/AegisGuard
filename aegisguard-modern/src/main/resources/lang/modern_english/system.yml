@@ -1338,6 +1338,7 @@ help_lines_extra:
 - '&e/aegis staff &7- Toggle the staff chat channel.'
 - '&e/aegis arena &7- Browse and join arenas.'
 - '&e/aegis caravan &7- Dispatch a trade caravan between linked beacon pads.'
+- '&e/aegis backup &7- Snapshot your plot; /aegis backup list shows restore points, /aegis backup restore <id> rolls back.'
 - '&e/aegis gathering &7- Host or browse open-house gatherings.'
 - '&e/aegis consume &7- Consume your wand item.'
 - '&e/aegis reload &7- Reload plugin settings (admin).'

@@ -115,6 +115,8 @@ modules:
   social: true
   # The durable owner/admin territory activity history.
   territory_activity: true
+  # Owner-initiated plot restore points (/ag backup) with self-service rollback.
+  self_backup: true
   # Cooperative PvE dungeon runs on protected server plots.
   arena: true
   # Off by default. Enable only if the owner wants it AND storage is SQL.
@@ -279,6 +281,32 @@ caravans:
   #     "Old Dock":
   #       disabled: true
   routes: {}
+
+
+# ==============================================================================
+# Self-Backups
+# ==============================================================================
+# /ag backup lets a plot owner snapshot the plot they're standing on: every
+# protection setting, role, member, and noticeboard in one restore point.
+# Owners browse their list and roll back through the same durable restore
+# pipeline staff use — cooldowns, per-plot caps, and an optional Vault cost
+# keep storage honest. Block copies ride the existing snapshots.build_backup
+# opt-in; set block_copies: true to include them in self-service restores.
+self_backup:
+  # Master switch (also gated by modules.self_backup).
+  enabled: true
+  # Minutes between self-backups per player (0 disables).
+  cooldown_minutes: 30
+  # Self-created restore points kept per plot; the oldest prunes beyond this.
+  max_per_plot: 5
+  # Optional Vault charge per self-backup (0 = free).
+  cost: 0
+  # "self" lets owners roll back themselves; "staff" makes restore requests
+  # tell players to contact an admin instead.
+  restore_mode: self
+  # Include build copies in self-service restores (requires WorldEdit/FAWE
+  # and snapshots.build_backup producing copies for the snapshot).
+  block_copies: false
 
 
 # ==============================================================================

@@ -18,11 +18,18 @@ public final class Party {
     private final UUID partyId;
     private volatile UUID leaderId;
     private volatile String name;
+    private volatile org.bukkit.Location rallyPoint;
+    private volatile long rallyExpireAt;
     private final Set<UUID> members = ConcurrentHashMap.newKeySet();
     private final java.util.Map<UUID, Long> pendingInvites = new ConcurrentHashMap<>();
 
     public Party(UUID leaderId, String name) {
-        this.partyId = UUID.randomUUID();
+        this(leaderId, name, UUID.randomUUID());
+    }
+
+    /** Rehydrating constructor for persisted parties. */
+    public Party(UUID leaderId, String name, UUID partyId) {
+        this.partyId = partyId == null ? UUID.randomUUID() : partyId;
         this.leaderId = Objects.requireNonNull(leaderId, "leaderId");
         this.name = name;
         this.members.add(leaderId);
@@ -36,6 +43,24 @@ public final class Party {
         if (leaderId != null && members.contains(leaderId)) {
             this.leaderId = leaderId;
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Rally point — leader plants it, members teleport in on their own call.
+
+    public void rally(org.bukkit.Location location, long expireAt) {
+        this.rallyPoint = location == null ? null : location.clone();
+        this.rallyExpireAt = expireAt;
+    }
+
+    /** Live rally point, or null if none/expired (clears lazily). */
+    public org.bukkit.Location rallyPoint() {
+        if (rallyPoint == null) return null;
+        if (System.currentTimeMillis() > rallyExpireAt) {
+            rallyPoint = null;
+            return null;
+        }
+        return rallyPoint.clone();
     }
 
     public Set<UUID> getMembers() { return Set.copyOf(members); }

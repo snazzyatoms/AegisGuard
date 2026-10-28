@@ -322,6 +322,10 @@ party:
   max_size: 8
   # Seconds a /ag party invite stays valid.
   invite_expire_seconds: 60
+  # Leader-planted rally points members can teleport to on their own call.
+  rally_enabled: true
+  # Seconds a rally point stays live after the leader plants it.
+  rally_expire_seconds: 120
   sidebar:
     # The member roster on the right of the screen; players toggle their own
     # with /ag party hud.

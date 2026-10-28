@@ -125,6 +125,40 @@ public final class PartyCommands extends CommandBase {
                     sendKey(p, "party_kick_failed", "&cOnly the leader can promote members.");
                 }
             }
+            case "rally" -> {
+                if (!plugin.getConfig().getBoolean("party.rally_enabled", true)) {
+                    sendKey(p, "party_rally_disabled", "&cParty rallies are disabled on this server.");
+                    return;
+                }
+                Party party = parties.partyOf(p.getUniqueId());
+                if (party == null) {
+                    sendKey(p, "party_not_in", "&cYou're not in a party.");
+                    return;
+                }
+                if (party.isLeader(p.getUniqueId())) {
+                    // Leader plants the point at their feet.
+                    if (parties.plantRally(p) == null) {
+                        sendKey(p, "party_kick_failed", "&cOnly the leader can do that.");
+                        return;
+                    }
+                    sendKey(p, "party_rally_set", "&6⚑ Rally point set. &fMembers: /ag party rally &6to join you.");
+                    for (Player member : parties.onlineMembers(p.getUniqueId())) {
+                        if (!member.equals(p)) sendKey(member, "party_rally_called",
+                                "&6⚑ " + p.getName() + " called a rally — &f/ag party rally &6to join them.");
+                    }
+                } else {
+                    // Member answers the call — self-consenting teleport.
+                    org.bukkit.Location rally = parties.rallyPointFor(p.getUniqueId());
+                    if (rally == null) {
+                        sendKey(p, "party_rally_none", "&cNo active rally — ask the leader to run &f/ag party rally&c.");
+                        return;
+                    }
+                    sendKey(p, "party_rally_going", "&aMoving to the rally point…");
+                    plugin.scheduler().runEntity(p, () -> {
+                        if (p.isOnline()) p.teleportAsync(rally);
+                    }, () -> { });
+                }
+            }
             case "hud", "sidebar" -> {
                 if (plugin.partySidebar() == null) {
                     sendKey(p, "party_disabled", "&cParties are disabled on this server.");

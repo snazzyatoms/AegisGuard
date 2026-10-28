@@ -3,6 +3,8 @@ package com.aegisguard.groups;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.arena.ArenaParty;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -32,10 +34,15 @@ public final class PartyService implements Listener {
     private final Map<UUID, Party> partyByPlayer = new ConcurrentHashMap<>();
     private final Map<UUID, Party> parties = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastInviteAt = new ConcurrentHashMap<>();
+    private final java.io.File storeFile;
+    /** If a load failed we refuse to overwrite the file with partial state. */
+    private volatile boolean storeHealthy = true;
     private PartySidebarService sidebar;
 
     public PartyService(AegisGuard plugin) {
         this.plugin = plugin;
+        this.storeFile = new java.io.File(plugin.getDataFolder(), "parties.yml");
+        load();
     }
 
     public void setSidebar(PartySidebarService sidebar) { this.sidebar = sidebar; }
@@ -63,6 +70,7 @@ public final class PartyService implements Listener {
         parties.put(party.getPartyId(), party);
         partyByPlayer.put(leader.getUniqueId(), party);
         refreshSidebar();
+        saveAsync();
         return party;
     }
 
@@ -111,6 +119,7 @@ public final class PartyService implements Listener {
             if (party.acceptInvite(player.getUniqueId())) {
                 partyByPlayer.put(player.getUniqueId(), party);
                 refreshSidebar();
+                saveAsync();
                 return JoinResult.JOINED;
             }
         }
@@ -139,6 +148,7 @@ public final class PartyService implements Listener {
             parties.remove(party.getPartyId());
         }
         refreshSidebar();
+        saveAsync();
         return party;
     }
 
@@ -156,7 +166,26 @@ public final class PartyService implements Listener {
         if (targetId == null || !party.isMember(targetId)) return false;
         party.setLeaderId(targetId);
         refreshSidebar();
+        saveAsync();
         return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Rally — leader plants a point, members teleport to it on their own call.
+
+    /** Leader plants the party's rally point at their feet. */
+    public Party plantRally(Player leader) {
+        Party party = partyOf(leader == null ? null : leader.getUniqueId());
+        if (party == null || !party.isLeader(leader.getUniqueId())) return null;
+        long ttl = Math.max(15L, plugin.getConfig().getLong("party.rally_expire_seconds", 120L)) * 1000L;
+        party.rally(leader.getLocation(), System.currentTimeMillis() + ttl);
+        return party;
+    }
+
+    /** Active rally point for the player's party (null if none/expired). */
+    public Location rallyPointFor(UUID playerId) {
+        Party party = partyOf(playerId);
+        return party == null ? null : party.rallyPoint();
     }
 
     /** All online member UUIDs of the player's party (for notifications). */
@@ -196,11 +225,73 @@ public final class PartyService implements Listener {
         if (sidebar != null) sidebar.requestRefresh();
     }
 
-    /** Clears all parties (plugin disable / module toggled off). */
+    /** Persists once, then clears all parties (plugin disable / module off). */
     public void shutdown() {
+        save();
         parties.clear();
         partyByPlayer.clear();
         lastInviteAt.clear();
+    }
+
+    // ------------------------------------------------------------------
+    // Persistence — parties.yml, mirroring alliances.yml's safe-write style.
+
+    private void load() {
+        if (!storeFile.isFile()) return;
+        YamlConfiguration data;
+        try {
+            data = YamlConfiguration.loadConfiguration(storeFile);
+        } catch (Throwable t) {
+            storeHealthy = false;
+            plugin.getLogger().severe("Could not read parties.yml; keeping it untouched: " + t.getMessage());
+            return;
+        }
+        var list = data.getMapList("parties");
+        for (Map<?, ?> row : list) {
+            try {
+                UUID id = UUID.fromString(String.valueOf(row.get("id")));
+                UUID leader = UUID.fromString(String.valueOf(row.get("leader")));
+                String name = row.get("name") == null ? null : String.valueOf(row.get("name"));
+                Party party = new Party(leader, name, id);
+                for (Object m : (java.util.List<?>) row.getOrDefault("members", java.util.List.of())) {
+                    try {
+                        party.addMember(UUID.fromString(String.valueOf(m)));
+                    } catch (Throwable ignored) { }
+                }
+                if (party.isEmpty()) continue;
+                parties.put(party.getPartyId(), party);
+                for (UUID member : party.getMembers()) partyByPlayer.put(member, party);
+            } catch (Throwable skipped) {
+                plugin.getLogger().warning("Skipping malformed parties.yml row: " + skipped.getMessage());
+            }
+        }
+    }
+
+    private void saveAsync() {
+        plugin.scheduler().runAsync(this::save);
+    }
+
+    /** Writes parties.yml; refuses to clobber a file we failed to load. */
+    public synchronized void save() {
+        if (!storeHealthy || !enabled()) return;
+        YamlConfiguration out = new YamlConfiguration();
+        java.util.List<Map<String, Object>> rows = new java.util.ArrayList<>();
+        for (Party party : parties.values()) {
+            Map<String, Object> row = new java.util.HashMap<>();
+            row.put("id", party.getPartyId().toString());
+            row.put("name", party.getName());
+            row.put("leader", party.getLeaderId().toString());
+            java.util.List<String> members = new java.util.ArrayList<>();
+            for (UUID m : party.getMembers()) members.add(m.toString());
+            row.put("members", members);
+            rows.add(row);
+        }
+        out.set("parties", rows);
+        try {
+            out.save(storeFile);
+        } catch (java.io.IOException e) {
+            plugin.getLogger().warning("Could not save parties.yml; changes remain in memory: " + e.getMessage());
+        }
     }
 
     /** Immutable render model for the sidebar: title + member set + leader. */

@@ -540,8 +540,9 @@ network:
     cross_server_travel: true
 
   chat:
-    # Relay alliance / group / staff channels across the network. Plot chat
-    # stays local (it is bound to the world the plot lives in).
+    # Relay plot / alliance / group / staff channels across the network. Plot
+    # Frequency messages reach that plot's members on every backend, matching
+    # local delivery; tuning only routes a player's own typing.
     relay_channels: true
 
   shared_player_data:

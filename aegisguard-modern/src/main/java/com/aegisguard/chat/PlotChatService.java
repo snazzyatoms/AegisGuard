@@ -17,8 +17,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Same-server intercept chat: one channel at a time (plot Frequency, alliance, group, or staff).
- * Cross-server sync is still a 2.0 network feature and is not implemented here.
+ * Intercept chat: one channel at a time (plot Frequency, alliance, group, or staff).
+ * All four channels relay across the network when {@code network.chat.relay_channels}
+ * is on; plot messages reach members of that plot on any backend, same as local.
  */
 public final class PlotChatService {
 
@@ -222,8 +223,10 @@ public final class PlotChatService {
         }
 
         String line = format(speaker, plot, message);
-        return broadcast(speaker, line, frequencyMemberIds(plot),
+        SendResult result = broadcast(speaker, line, frequencyMemberIds(plot),
                 "plot_chat_no_listeners", "&eNobody else is online on this Frequency.");
+        relay("PLOT", plotLabel(plot), speaker, frequencyMemberIds(plot), message);
+        return result;
     }
 
     public SendResult sendAlliance(Player speaker, String rawMessage) {
@@ -454,12 +457,15 @@ public final class PlotChatService {
                     "&8[&d{ALLIANCE}&8] &f{PLAYER}&7: &f{MESSAGE}");
             case "GROUP" -> translate(viewer, "group_chat_format",
                     "&8[&a{GROUP}&8] &f{PLAYER}&7: &f{MESSAGE}");
+            case "PLOT" -> translate(viewer, "plot_chat_format",
+                    "&8[&b{PLOT}&8] &f{PLAYER}&7: &f{MESSAGE}");
             default -> translate(viewer, "staff_chat_format",
                     "&8[&cStaff&8] &f{PLAYER}&7: &f{MESSAGE}");
         };
         String token = switch (channel == null ? "" : channel.toUpperCase(Locale.ROOT)) {
             case "ALLIANCE" -> "{ALLIANCE}";
             case "GROUP" -> "{GROUP}";
+            case "PLOT" -> "{PLOT}";
             default -> "{STAFF}";
         };
         String filled = template
@@ -467,7 +473,7 @@ public final class PlotChatService {
                 .replace("{PLAYER}", senderName == null ? "?" : senderName)
                 .replace("{MESSAGE}", message == null ? "" : message);
         if (!filled.contains("{ALLIANCE}") && !filled.contains("{GROUP}") && !filled.contains("{STAFF}")
-                && !channel.equalsIgnoreCase("STAFF")) {
+                && !filled.contains("{PLOT}") && !channel.equalsIgnoreCase("STAFF")) {
             // Template didn't carry a label token — prepend the channel label plainly.
             filled = "&8[&b" + (label == null ? channel : label) + "&8] " + filled;
         }
@@ -484,14 +490,13 @@ public final class PlotChatService {
 
     /**
      * Suppress the "nobody else is online" nag when the channel could still be
-     * heard on another backend (networked + relay on + non-PLOT channel).
+     * heard on another backend (networked + relay on).
      */
     private boolean relayMayHaveRemoteListeners(Player speaker) {
         try {
             return plugin.network() != null && plugin.network().isNetworked()
                     && plugin.getConfig().getBoolean("network.chat.relay_channels", true)
-                    && plugin.networkChat() != null
-                    && activeChannel(speaker.getUniqueId()) != Channel.PLOT;
+                    && plugin.networkChat() != null;
         } catch (Throwable t) {
             return false;
         }

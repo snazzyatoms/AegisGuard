@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 /**
- * Cross-server chat relay for alliance / group / staff channels.
+ * Cross-server chat relay for plot / alliance / group / staff channels.
  *
  * <p>Publish side: after local delivery, the channel's send path appends a
  * {@code chat} row to {@code aegis_network_events} carrying the pre-formatted
@@ -48,7 +48,7 @@ public final class NetworkChatService {
         return n != null && n.isNetworked();
     }
 
-    /** Channel relay (alliance/group/staff chat) is separately toggleable. */
+    /** Channel relay (plot/alliance/group/staff chat) is separately toggleable. */
     private boolean chatRelayOn() {
         return ready() && plugin.getConfig().getBoolean("network.chat.relay_channels", true);
     }

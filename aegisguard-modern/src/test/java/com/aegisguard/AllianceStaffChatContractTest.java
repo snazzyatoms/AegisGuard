@@ -86,7 +86,7 @@ class AllianceStaffChatContractTest {
     @Test
     void channelEnumAndMutualExclusionHelpersExist() throws Exception {
         String service = Files.readString(JAVA.resolve("chat/PlotChatService.java"));
-        assertTrue(service.contains("enum Channel { NONE, PLOT, ALLIANCE, GROUP, STAFF }"));
+        assertTrue(service.contains("enum Channel { NONE, PLOT, ALLIANCE, GROUP, STAFF, PARTY }"));
         assertTrue(service.contains("toggleAlliance"));
         assertTrue(service.contains("toggleGroup"));
         assertTrue(service.contains("toggleStaff"));

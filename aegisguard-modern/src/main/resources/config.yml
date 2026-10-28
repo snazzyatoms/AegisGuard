@@ -269,6 +269,16 @@ caravans:
   delay_ms: 15000
   # Fraction of travel completed before a shipment can no longer be cancelled.
   cancel_progress: 0.25
+  # Per-route owner overrides, keyed by the ORIGIN pad's beacon name
+  # (case-insensitive). Each rule can close the route, scale its shipping
+  # fee, or cap cargo below the global max_cargo. Example:
+  #   routes:
+  #     "Spawn Market":
+  #       fee_multiplier: 1.5
+  #       cargo_cap: 500
+  #     "Old Dock":
+  #       disabled: true
+  routes: {}
 
 
 # ==============================================================================

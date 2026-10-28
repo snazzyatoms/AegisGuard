@@ -112,6 +112,7 @@ public final class CaravanGUI {
                 if (hist > 34) break;
                 inv.setItem(hist++, caravanIcon(player, caravan));
             }
+            inv.setItem(45, ledgerSummary(player, owned));
         }
 
         double cargo = cargoFor(player, service);
@@ -224,6 +225,12 @@ public final class CaravanGUI {
             UUID id = parseUuid(action.substring("cancel:".length()));
             if (id != null) service.cancel(player, id);
             open(player);
+            return;
+        }
+        if (action.startsWith("return:") && service != null) {
+            UUID id = parseUuid(action.substring("return:".length()));
+            if (id != null) service.dispatchReturn(player, id);
+            open(player);
         }
     }
 
@@ -239,6 +246,9 @@ public final class CaravanGUI {
                 Map.of("STATUS", caravan.getStatus().name())));
         lore.add(t(player, "caravan_event_line", "&7Event: &f{EVENT}",
                 Map.of("EVENT", caravan.getLastEvent().name())));
+        lore.add(t(player, "caravan_entry_cargo", "&7Cargo: &f{AMOUNT} &8(stake {STAKE})",
+                Map.of("AMOUNT", String.format(java.util.Locale.US, "%.2f", caravan.getCargoValue()),
+                        "STAKE", String.format(java.util.Locale.US, "%.2f", caravan.getChargedVault()))));
         if (caravan.inFlight()) {
             long remain = Math.max(0L, caravan.getEtaAt() - System.currentTimeMillis());
             lore.add(t(player, "caravan_eta_line", "&7ETA: &f{SECONDS}s",
@@ -247,14 +257,57 @@ public final class CaravanGUI {
         } else if (caravan.getStatus() == Caravan.Status.ARRIVED) {
             lore.add(t(player, "caravan_payout_line", "&7Payout: &f{AMOUNT}",
                     Map.of("AMOUNT", String.format(java.util.Locale.US, "%.2f", caravan.getDeliveredValue()))));
+            if (caravan.getTollPaid() > 0.0D) {
+                lore.add(t(player, "caravan_entry_toll", "&7Route toll: &f{AMOUNT}",
+                        Map.of("AMOUNT", String.format(java.util.Locale.US, "%.2f", caravan.getTollPaid()))));
+            }
+            if (caravan.getEscortPaid() > 0.0D) {
+                lore.add(t(player, "caravan_entry_escort", "&7Escort cut: &f{AMOUNT}",
+                        Map.of("AMOUNT", String.format(java.util.Locale.US, "%.2f", caravan.getEscortPaid()))));
+            }
+            lore.add(t(player, "caravan_return_hint", "&eClick to send the return caravan."));
         } else if (!caravan.getFailReason().isBlank()) {
             lore.add(t(player, "caravan_fail_line", "&c{REASON}", Map.of("REASON", caravan.getFailReason())));
         }
         ItemStack item = GUIManager.createItem(icon,
                 t(player, "caravan_entry_name", "&6{ROUTE}", Map.of("ROUTE", caravan.routeLabel())),
                 lore);
-        if (caravan.inFlight()) plugin.gui().tagAction(item, "cancel:" + caravan.getId());
+        if (caravan.inFlight()) {
+            plugin.gui().tagAction(item, "cancel:" + caravan.getId());
+        } else if (caravan.getStatus() == Caravan.Status.ARRIVED) {
+            plugin.gui().tagAction(item, "return:" + caravan.getId());
+        }
         return item;
+    }
+
+    /** Ledger summary: totals across the owner's recorded shipments. */
+    private ItemStack ledgerSummary(Player player, List<Caravan> owned) {
+        int arrived = 0;
+        int failed = 0;
+        int transit = 0;
+        double delivered = 0.0D;
+        double staked = 0.0D;
+        for (Caravan caravan : owned) {
+            if (caravan == null) continue;
+            staked += caravan.getChargedVault();
+            switch (caravan.getStatus()) {
+                case ARRIVED -> { arrived++; delivered += caravan.getDeliveredValue(); }
+                case FAILED, CANCELLED -> failed++;
+                case IN_TRANSIT -> transit++;
+            }
+        }
+        return GUIManager.createItem(Material.BOOK,
+                t(player, "caravan_ledger_name", "&6Ledger"),
+                List.of(
+                        t(player, "caravan_ledger_runs", "&7Runs: &f{COUNT}",
+                                Map.of("COUNT", String.valueOf(owned.size()))),
+                        t(player, "caravan_ledger_earned", "&7Delivered: &a{AMOUNT}",
+                                Map.of("AMOUNT", String.format(java.util.Locale.US, "%.2f", delivered))),
+                        t(player, "caravan_ledger_staked", "&7Staked: &f{AMOUNT}",
+                                Map.of("AMOUNT", String.format(java.util.Locale.US, "%.2f", staked))),
+                        t(player, "caravan_ledger_split", "&7Arrived &a{OK}&7 / lost &c{BAD}&7 / riding &e{FLYING}",
+                                Map.of("OK", String.valueOf(arrived), "BAD", String.valueOf(failed),
+                                        "FLYING", String.valueOf(transit)))));
     }
 
     private double cargoFor(Player player, CaravanService service) {

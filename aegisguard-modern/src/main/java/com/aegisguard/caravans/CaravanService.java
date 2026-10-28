@@ -8,6 +8,7 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -87,6 +88,34 @@ public final class CaravanService {
         return plugin.getConfig().getDouble("caravans.escort_cut_rate", 0.10D);
     }
 
+    /**
+     * Per-route owner overrides from {@code caravans.routes.<origin pad name>}.
+     * {@code cargoCap} of 0 means "no route cap" (global bounds still apply).
+     */
+    public record RouteRule(boolean disabled, double feeMultiplier, double cargoCap) {
+        public static final RouteRule NONE = new RouteRule(false, 1.0D, 0.0D);
+    }
+
+    /** Look up the route rule for an origin pad name (exact, then case-insensitive). */
+    public RouteRule routeRule(@Nullable String originName) {
+        if (originName == null || originName.isBlank()) return RouteRule.NONE;
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("caravans.routes");
+        if (section == null) return RouteRule.NONE;
+        ConfigurationSection rule = section.getConfigurationSection(originName);
+        if (rule == null) {
+            for (String key : section.getKeys(false)) {
+                if (key != null && key.equalsIgnoreCase(originName)) {
+                    rule = section.getConfigurationSection(key);
+                    break;
+                }
+            }
+        }
+        if (rule == null) return RouteRule.NONE;
+        return new RouteRule(rule.getBoolean("disabled", false),
+                rule.getDouble("fee_multiplier", 1.0D),
+                rule.getDouble("cargo_cap", 0.0D));
+    }
+
     public List<TradeRoute> listRoutes() {
         List<TradeRoute> routes = new ArrayList<>();
         if (plugin.beacons() == null || !plugin.beacons().isEnabled()) return routes;
@@ -106,6 +135,7 @@ public final class CaravanService {
             return null;
         }
         if (!origin.isLinked()) return null;
+        if (routeRule(origin.getName()).disabled()) return null;
         if (plugin.getConfig().getBoolean("caravans.require_trade_purpose", false)
                 && !isTradePurpose(origin.getPurpose())) {
             return null;
@@ -207,8 +237,15 @@ public final class CaravanService {
             escort = null;
         }
         double cargo = clampCargo(cargoValue);
+        RouteRule rule = routeRule(origin.getName());
+        if (rule.cargoCap() > 0.0D) cargo = Math.min(cargo, Math.max(rule.cargoCap(), minCargo()));
         boolean useInsurance = insuranceEnabled() && insured;
         CaravanRules.Quote cost = quote(cargo, useInsurance);
+        if (rule.feeMultiplier() != 1.0D) {
+            double fee = CaravanRules.clampMoney(cost.fee() * Math.max(0.0D, rule.feeMultiplier()));
+            cost = new CaravanRules.Quote(cost.cargo(), fee, cost.insurancePremium(),
+                    CaravanRules.clampMoney(cost.cargo() + fee + cost.insurancePremium()));
+        }
         if (cost.charged() > 0.0D && plugin.vault() != null && plugin.vault().isEnabled()) {
             if (!plugin.vault().has(player, cost.charged()) || !plugin.vault().charge(player, cost.charged())) {
                 send(player, "caravan_cannot_afford",
@@ -262,6 +299,21 @@ public final class CaravanService {
         }
         if (plugin.effects() != null) plugin.effects().playConfirm(player);
         return caravan;
+    }
+
+    /**
+     * Re-dispatch the reverse leg of a completed caravan (dest → origin) with
+     * the same cargo and insurance choice. Every normal dispatch gate still
+     * applies — cooldown, active cap, a valid public route back, and the
+     * Vault charge — so a return trip can never bypass the rules.
+     */
+    public @Nullable Caravan dispatchReturn(Player player, UUID caravanId) {
+        if (player == null || caravanId == null) return null;
+        Caravan caravan = store.get(caravanId);
+        if (caravan == null || caravan.getStatus() != Caravan.Status.ARRIVED) return null;
+        if (!player.getUniqueId().equals(caravan.getOwnerId()) && !plugin.isAdmin(player)) return null;
+        return dispatch(player, caravan.getDestBeaconId(), caravan.getCargoValue(),
+                caravan.isInsured(), null);
     }
 
     public boolean cancel(Player player, UUID caravanId) {

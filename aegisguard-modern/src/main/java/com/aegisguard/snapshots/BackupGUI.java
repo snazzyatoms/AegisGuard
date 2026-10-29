@@ -80,6 +80,18 @@ public final class BackupGUI {
         ItemStack filler = GUIManager.getFiller();
         for (int slot : new int[]{45, 47, 48, 50, 51, 52}) inv.setItem(slot, filler);
 
+        inv.setItem(4, GUIManager.createItem(Material.OAK_SIGN,
+                "§e⚠ Read before restoring", List.of(
+                        "§7Backups save your plot's data — settings,",
+                        "§7roles, members, boards. Restoring rewinds",
+                        "§7the plot to the point you pick, and anything",
+                        "§7changed after it is gone for good.",
+                        " ",
+                        "§cUse restores at your own risk.",
+                        "§7If something goes wrong, ask a server",
+                        "§7admin — staff keep their own restore",
+                        "§7points and can roll back further.")));
+
         int start = page * PER_PAGE;
         boolean staffMode = "staff".equalsIgnoreCase(
                 plugin.getConfig().getString("self_backup.restore_mode", "self"));
@@ -97,6 +109,7 @@ public final class BackupGUI {
             } else if (isArmed) {
                 lore.add("§e⚠ Click again to restore!");
                 lore.add("§7This rewinds the plot to this point.");
+                lore.add("§8At your own risk — admins can help if it goes wrong.");
             } else {
                 lore.add("§aClick to arm a restore,");
                 lore.add("§aclick again to confirm.");

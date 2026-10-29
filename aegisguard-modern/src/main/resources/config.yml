@@ -307,8 +307,8 @@ self_backup:
   # "self" lets owners roll back themselves; "staff" makes restore requests
   # tell players to contact an admin instead.
   restore_mode: self
-  # Include build copies in self-service restores (requires WorldEdit/FAWE
-  # and snapshots.build_backup producing copies for the snapshot).
+  # Include build copies in self-service restores (uses the engine selected by
+  # snapshots.build_backup.engine — built-in by default, WorldEdit/FAWE if set).
   block_copies: false
 
 # Open-ended parties (/ag party): a group for dungeon runs, build sessions,

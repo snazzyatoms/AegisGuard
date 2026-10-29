@@ -10,10 +10,10 @@ What each public release added to AegisGuard, newest first. For the player-facin
 
 The next point release is about recovery and polish — "1.4.0 connected the servers; 1.4.5 protects what makes them home." Not yet shipped; scope may change before release.
 
-- **Self-backups** — `/ag backup` lets plot owners snapshot their land (settings, roles, members, noticeboards, bounds) and roll back themselves or through staff approval — now with a paginated GUI and a clear at-your-own-risk warning. Cooldowns, per-plot caps, and optional Vault cost keep it honest.
+- **Self-backups** — `/ag backup` lets plot owners snapshot their land (settings, roles, members, noticeboards, bounds), name restore points, and roll back themselves or through staff approval — now with a paginated GUI and a clear at-your-own-risk warning. A 30-minute cooldown, five-per-plot cap with oldest-first pruning, optional Vault cost, and a staff-approval mode keep it honest; block copies stay opt-in.
 - **Built-in block restores** — AegisGuard ships its own capture engine, so full block restores work on every platform — Folia included — with no extra plugins. WorldEdit/FAWE stays supported when a server has it (`snapshots.build_backup.engine: auto|native|worldedit`); containers and signs restore contents and text.
-- **Parties** — `/ag party` forms open-ended groups with a live sidebar roster (health, leader star, offline members greyed, remote members labeled with their server). Parties survive restarts, the leader plants rally points members answer on their own call, and rosters sync across the network.
-- **Network plot frequencies** — the `/ag chat` plot channel relays to members on other backends, completing the cross-server radio set; fails closed on single servers.
+- **Parties** — `/ag party` forms open-ended groups with a live sidebar roster (health, leader star, offline members greyed, remote members labeled with their server). The leader plants rally points members answer on their own call, a tracker HUD points toward crewmates, `/ag party ping` marks a spot for everyone, `/ag party map` opens a radar map with member head icons, and `/ag party hide`/`track` are the privacy toggles.
+- **Network-wide sync** — parties persist and sync across the network, and `/ag chat` plot frequencies relay to members on other backends, completing the cross-server radio set on BungeeCord/Velocity; everything fails closed on single servers.
 - **Arena polish** — live match HUD (wave counter, run clock, survivors) plus owner-tunable reward pots, MVP share, and XP from `arena.rewards:`.
 - **Caravan polish** — return deliveries, a shipment ledger in the caravan GUI, and per-route pricing and cargo caps.
 

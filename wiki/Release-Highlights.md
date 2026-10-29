@@ -10,11 +10,12 @@ What each public release added to AegisGuard, newest first. For the player-facin
 
 The next point release is about recovery and polish — "1.4.0 connected the servers; 1.4.5 protects what makes them home." Not yet shipped; scope may change before release.
 
-- **Self-backups** — `/ag backup` lets plot owners snapshot their land (settings, roles, members, noticeboards, bounds) and roll back themselves or through staff approval. Optional WorldEdit/FAWE block copies are an owner-controlled opt-in; cooldowns, per-plot caps, and optional Vault cost keep it honest.
-- **Plasmo Voice support** — Hearth rooms become isolated voice groups on Plasmo Voice too, alongside the existing Simple Voice Chat hook.
+- **Self-backups** — `/ag backup` lets plot owners snapshot their land (settings, roles, members, noticeboards, bounds) and roll back themselves or through staff approval — now with a paginated GUI and a clear at-your-own-risk warning. Cooldowns, per-plot caps, and optional Vault cost keep it honest.
+- **Built-in block restores** — AegisGuard ships its own capture engine, so full block restores work on every platform — Folia included — with no extra plugins. WorldEdit/FAWE stays supported when a server has it (`snapshots.build_backup.engine: auto|native|worldedit`); containers and signs restore contents and text.
+- **Parties** — `/ag party` forms open-ended groups with a live sidebar roster (health, leader star, offline members greyed, remote members labeled with their server). Parties survive restarts, the leader plants rally points members answer on their own call, and rosters sync across the network.
 - **Network plot frequencies** — the `/ag chat` plot channel relays to members on other backends, completing the cross-server radio set; fails closed on single servers.
-- **Arena polish** — live match HUD (waves, timer, party status), configurable per-preset rewards, persistent parties, per-arena record board.
-- **Caravan polish** — return deliveries, a shipment ledger tab in the caravan GUI, and per-route pricing.
+- **Arena polish** — live match HUD (wave counter, run clock, survivors) plus owner-tunable reward pots, MVP share, and XP from `arena.rewards:`.
+- **Caravan polish** — return deliveries, a shipment ledger in the caravan GUI, and per-route pricing and cargo caps.
 
 ---
 

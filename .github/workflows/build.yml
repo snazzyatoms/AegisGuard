@@ -21,6 +21,9 @@ jobs:
       - name: Upload standard server JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AegisGuard-1.4.0
-          path: aegisguard-modern/target/AegisGuard-1.4.0.jar
+          name: AegisGuard-server
+          path: |
+            aegisguard-modern/target/AegisGuard-*.jar
+            !aegisguard-modern/target/AegisGuard-*-dev-api.jar
+            !aegisguard-modern/target/original-*.jar
           if-no-files-found: error

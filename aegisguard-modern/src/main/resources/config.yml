@@ -328,6 +328,13 @@ party:
   rally_enabled: true
   # Seconds a rally point stays live after the leader plants it.
   rally_expire_seconds: 120
+  # Cross-server parties: publish rosters over the network event bus so the
+  # party follows members across backends (roster + party chat — remote
+  # members show "name @server" on the sidebar). Requires network.enabled.
+  network_sync: true
+  # Seconds between full roster republications; also republished instantly on
+  # every roster change. Backends that join late backfill on the next pulse.
+  sync_interval_seconds: 60
   sidebar:
     # The member roster on the right of the screen; players toggle their own
     # with /ag party hud.

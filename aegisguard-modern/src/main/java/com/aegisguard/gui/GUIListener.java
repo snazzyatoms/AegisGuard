@@ -94,6 +94,7 @@ import com.aegisguard.gui.GiftBlocksGUI.GiftBlocksHolder;
 import com.aegisguard.gui.StorageMigrateGUI.StorageMigrateHolder;
 import com.aegisguard.snapshots.SnapshotAdminGUI.SnapshotHolder;
 import com.aegisguard.snapshots.SnapshotAdminGUI.OperationHolder;
+import com.aegisguard.snapshots.BackupGUI.BackupHolder;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -202,6 +203,7 @@ public class GUIListener implements Listener {
                 || holder instanceof StallPreviewHolder
                 || holder instanceof StallBuyConfirmHolder
                 || holder instanceof SnapshotHolder
+                || holder instanceof BackupHolder
                 || holder instanceof OperationHolder
                 || holder instanceof AuditHolder
                 || holder instanceof GuestPassMenuHolder
@@ -457,6 +459,11 @@ public class GUIListener implements Listener {
         else if (holder instanceof SnapshotHolder || holder instanceof OperationHolder) {
             if (plugin.gui().snapshotAdmin() != null) {
                 plugin.gui().snapshotAdmin().handleClick(player, e);
+            }
+        }
+        else if (holder instanceof BackupHolder) {
+            if (plugin.gui().backup() != null) {
+                plugin.gui().backup().handleClick(player, e);
             }
         }
         else if (holder instanceof AuditHolder) {

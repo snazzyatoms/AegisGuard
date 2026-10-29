@@ -93,6 +93,7 @@ public class GUIManager {
 
     // ✅ Snapshot Admin GUI (Rollback System)
     private SnapshotAdminGUI snapshotAdminGUI;
+    private com.aegisguard.snapshots.BackupGUI backupGUI;
     private final MigrationAdminGUI migrationAdminGUI;
 
     // Staff Audit Ledger (1.3.0+)
@@ -345,6 +346,13 @@ public class GUIManager {
     }
 
     // ✅ Snapshot Admin
+    public com.aegisguard.snapshots.BackupGUI backup() {
+        if (backupGUI == null && plugin.getSnapshotManager() != null) {
+            backupGUI = new com.aegisguard.snapshots.BackupGUI(plugin);
+        }
+        return backupGUI;
+    }
+
     public SnapshotAdminGUI snapshotAdmin() {
         if (snapshotAdminGUI == null && plugin.getSnapshotManager() != null) {
             snapshotAdminGUI = new SnapshotAdminGUI(plugin);

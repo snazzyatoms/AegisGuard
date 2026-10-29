@@ -157,7 +157,14 @@ public final class PartySidebarService {
         boolean leader = id.equals(leaderId);
         boolean minimal = compact.contains(viewer.getUniqueId());
         if (p == null || !p.isOnline()) {
-            String name = p != null ? p.getName() : Bukkit.getOfflinePlayer(id).getName();
+            // Remote member on another backend: name @server, not "offline".
+            PartyService.RemoteMember remote = plugin.parties() == null
+                    ? null : plugin.parties().remoteStatus(id);
+            if (remote != null && remote.online()) {
+                return "§b" + (leader ? "★ " : "● ") + remote.name() + " §8@" + remote.server();
+            }
+            String name = remote != null ? remote.name()
+                    : p != null ? p.getName() : Bukkit.getOfflinePlayer(id).getName();
             return "§7" + (leader ? "★ " : "○ ") + (name == null ? "?" : name) + " §8offline";
         }
         String nameColor = leader ? "§6" : "§f";

@@ -71,6 +71,13 @@ final class BackupCommands extends CommandBase {
         switch (sub) {
             case "list", "l", "history" -> list(p, plot);
             case "restore", "revert", "undo" -> restore(p, plot, args);
+            case "" -> {
+                if (plugin.gui() != null && plugin.gui().backup() != null) {
+                    plugin.gui().backup().open(p, plot, 0);
+                } else {
+                    create(p, plot);
+                }
+            }
             default -> create(p, plot);
         }
     }

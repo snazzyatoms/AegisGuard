@@ -171,6 +171,7 @@ public final class NetworkChatService {
                 switch (event.kind()) {
                     case "chat" -> { if (chatRelayOn()) deliver(event.payload()); }
                     case "broadcast" -> deliverBroadcast(event.payload());
+                    case "party" -> deliverParty(event.payload());
                     default -> { }
                 }
             }
@@ -248,6 +249,35 @@ public final class NetworkChatService {
                         .replace("{TEXT}", text));
             });
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Party roster sync — non-chat events riding the same event bus.
+    // ------------------------------------------------------------------
+
+    /**
+     * Publish a {@code party} bus event (roster snapshots). Callers pass raw
+     * field map contents; the message id is stamped here for dedupe. Delivery
+     * rides the DB poll only — roster sync doesn't need the Forward fast path.
+     */
+    public void publishParty(Map<String, String> fields) {
+        if (!ready() || fields == null) return;
+        NetworkService n = net();
+        if (n == null) return;
+        Map<String, String> safe = new HashMap<>(fields);
+        safe.put("mid", UUID.randomUUID().toString());
+        String payload = encode(safe);
+        plugin.scheduler().runAsync(() -> n.store().publishEvent(n.serverName(), "party", payload));
+    }
+
+    /** Route a roster event to PartyService — never displayed as chat. */
+    private void deliverParty(String payload) {
+        if (!plugin.getConfig().getBoolean("party.network_sync", true)) return;
+        Map<String, String> fields = decode(payload);
+        String mid = fields.get("mid");
+        if (mid != null && !delivered.add(mid)) return;
+        if (delivered.size() > 1024) delivered.clear();
+        if (plugin.parties() != null) plugin.parties().applyRemoteRoster(fields);
     }
 
     // ------------------------------------------------------------------

@@ -37,7 +37,13 @@ public final class PartyService implements Listener {
     private final java.io.File storeFile;
     /** If a load failed we refuse to overwrite the file with partial state. */
     private volatile boolean storeHealthy = true;
+    /** Presence learned from remote rosters: memberId → where they are. */
+    private final Map<UUID, RemoteMember> remotePresence = new ConcurrentHashMap<>();
+    private volatile Object syncTicker;
     private PartySidebarService sidebar;
+
+    /** What the sidebar needs about a member who lives on another backend. */
+    public record RemoteMember(String name, String server, boolean online, long seenAt) { }
 
     public PartyService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -46,6 +52,22 @@ public final class PartyService implements Listener {
     }
 
     public void setSidebar(PartySidebarService sidebar) { this.sidebar = sidebar; }
+
+    private boolean networkSyncOn() {
+        return enabled() && plugin.getConfig().getBoolean("party.network_sync", true)
+                && plugin.network() != null && plugin.network().isNetworked()
+                && plugin.networkChat() != null;
+    }
+
+    /** Periodic roster republication — self-heals backends that joined late. */
+    public void start() {
+        if (syncTicker != null) return;
+        long period = Math.max(20L, plugin.getConfig().getLong("party.sync_interval_seconds", 60L));
+        syncTicker = plugin.scheduler().runAsyncRepeating(() -> {
+            if (!networkSyncOn()) return;
+            for (Party party : parties.values()) publishRoster(party);
+        }, period, period);
+    }
 
     public boolean enabled() {
         return plugin.getConfig().getBoolean("party.enabled", true);
@@ -71,6 +93,7 @@ public final class PartyService implements Listener {
         partyByPlayer.put(leader.getUniqueId(), party);
         refreshSidebar();
         saveAsync();
+        publishRoster(party);
         return party;
     }
 
@@ -120,6 +143,7 @@ public final class PartyService implements Listener {
                 partyByPlayer.put(player.getUniqueId(), party);
                 refreshSidebar();
                 saveAsync();
+                publishRoster(party);
                 return JoinResult.JOINED;
             }
         }
@@ -149,6 +173,7 @@ public final class PartyService implements Listener {
         }
         refreshSidebar();
         saveAsync();
+        publishRoster(party);
         return party;
     }
 
@@ -167,7 +192,107 @@ public final class PartyService implements Listener {
         party.setLeaderId(targetId);
         refreshSidebar();
         saveAsync();
+        publishRoster(party);
         return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Network roster sync — mirrors of parties that span backends.
+    // ------------------------------------------------------------------
+
+    /** Publish this party's full roster to the network event bus. */
+    public void publishRoster(Party party) {
+        if (party == null || party.isEmpty() || !networkSyncOn()) return;
+        Map<String, String> fields = new java.util.HashMap<>();
+        fields.put("party", party.getPartyId().toString());
+        fields.put("title", party.getName() == null ? "" : party.getName());
+        fields.put("leader", party.getLeaderId().toString());
+        fields.put("origin", plugin.network().serverName());
+        StringBuilder csv = new StringBuilder();
+        for (UUID m : party.getMembers()) {
+            if (csv.length() > 0) csv.append(',');
+            Player online = Bukkit.getPlayer(m);
+            RemoteMember known = remotePresence.get(m);
+            String name = online != null ? online.getName()
+                    : known != null ? known.name()
+                    : nameCache(m);
+            boolean on = online != null && online.isOnline();
+            csv.append(m).append('~').append(name == null ? "?" : name).append('~').append(on ? 1 : 0);
+        }
+        fields.put("members", csv.toString());
+        plugin.networkChat().publishParty(fields);
+    }
+
+    /**
+     * Merge a roster event from another backend. Full-replace semantics per
+     * party: the publisher's view wins for that party id; concurrent adds on
+     * two backends self-heal on the next republication. A local mirror is
+     * materialized whenever a roster names an online player here, so chat,
+     * leave, and the sidebar all just work.
+     */
+    public void applyRemoteRoster(Map<String, String> fields) {
+        if (fields == null || !enabled()) return;
+        UUID partyId, leaderId;
+        try {
+            partyId = UUID.fromString(String.valueOf(fields.get("party")));
+            leaderId = UUID.fromString(String.valueOf(fields.get("leader")));
+        } catch (Throwable t) { return; }
+        String title = fields.get("title");
+        String origin = fields.get("origin");
+
+        Set<UUID> memberIds = new java.util.HashSet<>();
+        String csv = fields.get("members");
+        if (csv != null) {
+            for (String entry : csv.split(",")) {
+                String[] parts = entry.split("~");
+                try {
+                    UUID id = UUID.fromString(parts[0]);
+                    String name = parts.length > 1 ? parts[1] : "?";
+                    boolean on = parts.length > 2 && "1".equals(parts[2]);
+                    memberIds.add(id);
+                    remotePresence.put(id, new RemoteMember(name, origin, on, System.currentTimeMillis()));
+                } catch (Throwable ignored) { }
+            }
+        }
+        if (memberIds.isEmpty()) return;
+
+        Party mirror = parties.get(partyId);
+        boolean anyLocalOnline = memberIds.stream().anyMatch(id -> {
+            Player p = Bukkit.getPlayer(id);
+            return p != null && p.isOnline();
+        });
+        if (mirror == null && anyLocalOnline) {
+            mirror = new Party(leaderId, title, partyId);
+            parties.put(partyId, mirror);
+        }
+        if (mirror == null) return;
+        mirror.setName(title);
+        mirror.setLeaderId(leaderId);
+        for (UUID id : new java.util.HashSet<>(mirror.getMembers())) {
+            if (!memberIds.contains(id)) {
+                mirror.removeMember(id);
+                partyByPlayer.remove(id, mirror);
+            }
+        }
+        for (UUID id : memberIds) {
+            mirror.addMember(id);
+            partyByPlayer.put(id, mirror);
+        }
+        remotePresence.entrySet().removeIf(e ->
+                !memberIds.contains(e.getKey()) && e.getValue().seenAt() < System.currentTimeMillis() - 300_000L);
+        refreshSidebar();
+    }
+
+    /** Remote presence for the sidebar: name/server for members not online here. */
+    public RemoteMember remoteStatus(UUID memberId) {
+        return memberId == null ? null : remotePresence.get(memberId);
+    }
+
+    private String nameCache(UUID id) {
+        try {
+            String name = Bukkit.getOfflinePlayer(id).getName();
+            return name == null ? "?" : name;
+        } catch (Throwable t) { return "?"; }
     }
 
     // ------------------------------------------------------------------
@@ -227,10 +352,15 @@ public final class PartyService implements Listener {
 
     /** Persists once, then clears all parties (plugin disable / module off). */
     public void shutdown() {
+        if (syncTicker != null) {
+            try { plugin.scheduler().cancel(syncTicker); } catch (Throwable ignored) { }
+            syncTicker = null;
+        }
         save();
         parties.clear();
         partyByPlayer.clear();
         lastInviteAt.clear();
+        remotePresence.clear();
     }
 
     // ------------------------------------------------------------------

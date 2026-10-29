@@ -419,6 +419,7 @@ public class AegisGuard extends JavaPlugin {
         partySidebarService = new com.aegisguard.groups.PartySidebarService(this, partyService);
         partyService.setSidebar(partySidebarService);
         Bukkit.getPluginManager().registerEvents(partyService, this);
+        partyService.start();
         partySidebarService.start();
         gatheringService = new com.aegisguard.gatherings.GatheringService(this);
         plotChatService = new com.aegisguard.chat.PlotChatService(this);

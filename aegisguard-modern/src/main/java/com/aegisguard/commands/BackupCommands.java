@@ -71,20 +71,35 @@ final class BackupCommands extends CommandBase {
         switch (sub) {
             case "list", "l", "history" -> list(p, plot);
             case "restore", "revert", "undo" -> restore(p, plot, args);
+            case "create", "new", "save" -> create(p, plot,
+                    args.length > 2 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : "");
             case "" -> {
                 if (plugin.gui() != null && plugin.gui().backup() != null) {
                     plugin.gui().backup().open(p, plot, 0);
                 } else {
-                    create(p, plot);
+                    create(p, plot, "");
                 }
             }
-            default -> create(p, plot);
+            default -> create(p, plot, "");
         }
     }
 
     // ------------------------------------------------------------ create
 
     private void create(Player p, Plot plot) {
+        create(p, plot, "");
+    }
+
+    /** Player labels are stripped of formatting codes and capped so they stay readable in the GUI. */
+    private String sanitizeLabel(String raw) {
+        if (raw == null) return "";
+        String cleaned = raw.replaceAll("[§&][0-9A-FK-ORXa-fk-orx]", "")
+                .replaceAll("\\p{Cntrl}", "").trim();
+        return cleaned.length() > 40 ? cleaned.substring(0, 40) : cleaned;
+    }
+
+    private void create(Player p, Plot plot, String rawLabel) {
+        String label = sanitizeLabel(rawLabel);
         long cooldownMs = Math.max(0L,
                 plugin.getConfig().getLong("self_backup.cooldown_minutes", 30L)) * 60_000L;
         long last = lastBackupAt.getOrDefault(p.getUniqueId(), 0L);
@@ -102,9 +117,10 @@ final class BackupCommands extends CommandBase {
                 return;
             }
         }
+        String reason = label.isEmpty() ? SELF_REASON : SELF_REASON + ": " + label;
         sendKey(p, "backup_working", "&7Snapshotting your plot…");
         plugin.snapshots().createSnapshotDurableAsync(plot, ClaimSnapshot.SnapshotType.MANUAL,
-                        SELF_REASON, p.getUniqueId())
+                        reason, p.getUniqueId())
                 .whenComplete((snapshot, error) -> plugin.runMain(p, () -> {
                     if (error != null || snapshot == null) {
                         sendKey(p, "backup_failed", "&cThe backup could not be saved.");
@@ -112,8 +128,8 @@ final class BackupCommands extends CommandBase {
                     }
                     lastBackupAt.put(p.getUniqueId(), System.currentTimeMillis());
                     pruneSelfBackups(plot);
-                    sendKey(p, "backup_created",
-                            "&aBackup saved. &f/ag backup list&a shows your restore points.");
+                    sendKey(p, "backup_created", "&aBackup saved" + (label.isEmpty() ? ""
+                            : "&a — &f" + label) + "&a. &f/ag backup list&a shows your restore points.");
                 }));
     }
 
@@ -122,7 +138,9 @@ final class BackupCommands extends CommandBase {
         int max = Math.max(1, plugin.getConfig().getInt("self_backup.max_per_plot", 5));
         List<ClaimSnapshot> mine = new ArrayList<>();
         for (ClaimSnapshot snap : plugin.snapshots().getSnapshotsForPlot(plot.getPlotId())) {
-            if (snap != null && SELF_REASON.equals(snap.getReason())) mine.add(snap);
+            String reason = snap == null ? null : snap.getReason();
+            if (reason != null && (reason.equals(SELF_REASON)
+                    || reason.startsWith(SELF_REASON + ":"))) mine.add(snap);
         }
         if (mine.size() <= max) return;
         mine.sort(Comparator.comparingLong(ClaimSnapshot::getTimestamp));

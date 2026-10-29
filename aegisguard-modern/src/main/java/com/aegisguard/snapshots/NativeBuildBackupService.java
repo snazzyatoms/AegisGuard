@@ -461,8 +461,10 @@ public final class NativeBuildBackupService implements BuildBackupService {
         try {
             org.bukkit.block.BlockState state = block.getState();
             if (state instanceof Container container) {
+                // getState() already returns a detached snapshot copy, so getInventory()
+                // here reads the snapshot contents — portable across Spigot/Paper/Folia.
                 Map<String, Object> payload = new HashMap<>();
-                payload.put("items", container.getSnapshotInventory().getContents());
+                payload.put("items", container.getInventory().getContents());
                 states.add(new StoredState(relX, relY, relZ, "container", serializePayload(payload)));
             } else if (state instanceof Sign sign) {
                 Map<String, Object> payload = new HashMap<>();

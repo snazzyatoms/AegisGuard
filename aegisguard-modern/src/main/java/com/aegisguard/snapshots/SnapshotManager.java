@@ -69,7 +69,10 @@ public class SnapshotManager {
                     + "(snapshots.build_backup.engine=native).");
             return new NativeBuildBackupService(plugin);
         }
-        if (worldEditPresent && !"none".equals(engine)) {
+        if ("none".equals(engine)) {
+            return new UnavailableBuildBackupService(plugin);
+        }
+        if (worldEditPresent) {
             return new PlotBuildBackup(plugin);
         }
         if ("worldedit".equals(engine)) {

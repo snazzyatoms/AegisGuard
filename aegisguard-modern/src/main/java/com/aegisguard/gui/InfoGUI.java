@@ -100,7 +100,7 @@ public class InfoGUI {
                 ))
         ));
 
-        inv.setItem(20, infoCard(player, Material.GLOWSTONE_DUST, "codex_root_whats_new_name", "&eWhat's New in 1.4.0",
+        inv.setItem(20, infoCard(player, Material.GLOWSTONE_DUST, "codex_root_whats_new_name", "&eWhat's New in 1.4.5",
                 "codex_root_whats_new_lore", List.of(
                         "&7Teleport Beacons, Caravans, the",
                         "&7Travel Hub, Discover upgrades,",

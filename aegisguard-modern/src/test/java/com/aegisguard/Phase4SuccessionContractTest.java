@@ -24,7 +24,7 @@ class Phase4SuccessionContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1316, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1317, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("succession"));
         Map<String, Object> succession = (Map<String, Object>) config.get("succession");
@@ -36,9 +36,9 @@ class Phase4SuccessionContractTest {
         assertTrue(migration.contains("CURRENT_SCHEMA = 1306")
                 || migration.contains("CURRENT_SCHEMA = 1307")
                 || migration.contains("CURRENT_SCHEMA = 1308")
-                || migration.contains("CURRENT_SCHEMA = 1316")
-                || migration.contains("CURRENT_SCHEMA = 1316")
-                || migration.contains("CURRENT_SCHEMA = 1316"));
+                || migration.contains("CURRENT_SCHEMA = 1317")
+                || migration.contains("CURRENT_SCHEMA = 1317")
+                || migration.contains("CURRENT_SCHEMA = 1317"));
     }
 
     @Test

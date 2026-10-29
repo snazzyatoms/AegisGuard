@@ -38,9 +38,9 @@ class ArenaContractTest {
     @Test
     void versionIsOnThe14Line() throws Exception {
         String pom = Files.readString(Path.of("pom.xml"));
-        assertTrue(pom.contains("<version>1.4.0</version>"));
+        assertTrue(pom.contains("<version>1.4.5</version>"));
         String pluginYml = Files.readString(Path.of("src/main/resources/plugin.yml"));
-        assertTrue(pluginYml.contains("version: 1.4.0"));
+        assertTrue(pluginYml.contains("version: 1.4.5"));
     }
 
     @Test
@@ -84,9 +84,9 @@ class ArenaContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1306")
                 || migration.contains("CURRENT_SCHEMA = 1307")
                 || migration.contains("CURRENT_SCHEMA = 1308")
-                || migration.contains("CURRENT_SCHEMA = 1316")
-                || migration.contains("CURRENT_SCHEMA = 1316")
-                || migration.contains("CURRENT_SCHEMA = 1316"));
+                || migration.contains("CURRENT_SCHEMA = 1317")
+                || migration.contains("CURRENT_SCHEMA = 1317")
+                || migration.contains("CURRENT_SCHEMA = 1317"));
     }
 
     @Test

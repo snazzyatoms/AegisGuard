@@ -24,7 +24,7 @@ class ModulesContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1316, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1317, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertTrue(modules.containsKey("guest_passes"));
         assertTrue(modules.containsKey("expansions"));

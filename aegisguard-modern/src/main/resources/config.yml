@@ -26,7 +26,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1316
+config_schema: 1317
 
 
 # ------------------------------------------------------------------------------

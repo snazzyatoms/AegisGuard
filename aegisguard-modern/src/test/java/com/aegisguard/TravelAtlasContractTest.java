@@ -41,9 +41,9 @@ class TravelAtlasContractTest {
     @Test
     void pluginAndPomsAreOnThe14Line() throws Exception {
         String pluginYml = Files.readString(RESOURCES.resolve("plugin.yml"));
-        assertTrue(pluginYml.contains("version: 1.4.0"), "plugin.yml must declare 1.4.0");
+        assertTrue(pluginYml.contains("version: 1.4.5"), "plugin.yml must declare 1.4.5");
         String pom = Files.readString(Path.of("pom.xml"));
-        assertTrue(pom.contains("<version>1.4.0</version>"), "module pom must be 1.4.0");
+        assertTrue(pom.contains("<version>1.4.5</version>"), "module pom must be 1.4.5");
     }
 
     @Test

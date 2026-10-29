@@ -45,7 +45,6 @@ public final class PartyMapRenderer extends MapRenderer {
     public PartyMapRenderer(AegisGuard plugin, PartyService parties) {
         this.plugin = plugin;
         this.parties = parties;
-        this.contextual(false);
     }
 
     /**
@@ -93,8 +92,8 @@ public final class PartyMapRenderer extends MapRenderer {
             }
         }
         for (int i = 0; i < 128; i++) {
-            canvas.setPixel(i, 64, org.bukkit.map.MapPalette.GRAY);
-            canvas.setPixel(64, i, org.bukkit.map.MapPalette.GRAY);
+            canvas.setPixel(i, 64, org.bukkit.map.MapPalette.GRAY_1);
+            canvas.setPixel(64, i, org.bukkit.map.MapPalette.GRAY_1);
         }
     }
 

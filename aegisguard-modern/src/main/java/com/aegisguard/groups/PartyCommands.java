@@ -213,7 +213,7 @@ public final class PartyCommands extends CommandBase {
                     return;
                 }
                 lastMapAt.put(p.getUniqueId(), now);
-                givePartyMap(p);
+                givePartyMap(p, parties);
                 sendKey(p, "party_map_given",
                         "&aParty map ready — your crew shows as head icons; pings are flagged.");
             }
@@ -283,7 +283,7 @@ public final class PartyCommands extends CommandBase {
      * Hands the player a party radar map centered on where they stand. The custom
      * renderer paints member head icons, the player's own marker, and the party ping.
      */
-    private void givePartyMap(Player p) {
+    private void givePartyMap(Player p, PartyService parties) {
         org.bukkit.map.MapView view = Bukkit.createMap(p.getWorld());
         view.setScale(org.bukkit.map.MapView.Scale.FAR);
         view.setCenterX(p.getLocation().getBlockX());

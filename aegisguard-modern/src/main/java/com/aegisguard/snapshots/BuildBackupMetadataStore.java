@@ -132,4 +132,32 @@ final class BuildBackupMetadataStore {
     private static String string(UUID value) {
         return value == null ? null : value.toString();
     }
+
+    /**
+     * Hash utilities live here — not on the WorldEdit-backed service — so metadata records
+     * stay loadable on servers that never install WorldEdit/FAWE.
+     */
+    static String sha256(File file) throws IOException {
+        try (java.io.InputStream input = Files.newInputStream(file.toPath())) {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = input.read(buffer)) >= 0) {
+                if (read > 0) digest.update(buffer, 0, read);
+            }
+            return java.util.HexFormat.of().formatHex(digest.digest());
+        } catch (java.security.GeneralSecurityException error) {
+            throw new IllegalStateException("SHA-256 unavailable", error);
+        }
+    }
+
+    static String sha256(byte[] value) {
+        try {
+            return java.util.HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256")
+                            .digest(value == null ? new byte[0] : value));
+        } catch (java.security.GeneralSecurityException error) {
+            throw new IllegalStateException("SHA-256 unavailable", error);
+        }
+    }
 }

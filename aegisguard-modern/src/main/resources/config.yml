@@ -1212,15 +1212,30 @@ snapshots:
   # Default off. Staff-only. Huge plots over max_volume skip the build copy.
   build_backup:
     enabled: false
+    # Which engine writes build copies:
+    #   auto      - WorldEdit/FAWE when installed, otherwise the built-in engine.
+    #   native    - Always use the built-in engine (no add-ons needed, works on Folia).
+    #   worldedit - Require WorldEdit/FAWE; block copies stay unavailable without it.
+    engine: "auto"
+    # Built-in engine used whenever WorldEdit/FAWE is absent (or engine=native).
+    # It captures block data plus container contents and sign text into compressed
+    # .agtile files under plugins/AegisGuard/plot-backups-native. Engine-specific:
+    # backups captured by one engine are not restored by the other.
+    native_engine: true
+    # Blocks applied per region tick during a native-engine restore. Lower this on
+    # very small servers; raising it makes restores finish faster per region.
+    native_blocks_per_tick: 8192
     max_volume: 2000000
     # Standard servers handle at most this many chunks per checkpoint. Folia always
     # uses one chunk per owning-region task because its region ownership is dynamic.
     max_chunks_per_region_job: 4
     # Also serialize entities inside the copied region (slower; off by default).
+    # WorldEdit/FAWE engine only - the built-in engine does not copy entities.
     copy_entities: false
     folia:
-      # Fail closed on Folia unless FAWE is enabled. Set false only after validating
-      # the exact WorldEdit build on a staging Folia server.
+      # WorldEdit engine only: fail closed on Folia unless FAWE is enabled. Set false
+      # only after validating the exact WorldEdit build on a staging Folia server.
+      # The built-in engine is region-safe on Folia and ignores this policy.
       require_fawe: true
     storage:
       # Applies to build artifacts only; claim-data snapshots remain available.

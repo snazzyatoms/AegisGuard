@@ -50,7 +50,7 @@ public record BuildBackupMetadata(
         for (BuildFile file : files) {
             value.append(file.fileName()).append(':').append(file.sha256()).append('\n');
         }
-        return PlotBuildBackup.sha256(value.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return BuildBackupMetadataStore.sha256(value.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     public BuildBackupMetadata withCaptureOperation(UUID operationId) {

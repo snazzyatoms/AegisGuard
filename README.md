@@ -38,7 +38,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 1.4.0 connected the servers. 1.4.5 protects what makes them home. This point release is about recovery, polish, and finishing the last room of the network.
 
-**Self-backups — your realm can always come home.** `/ag backup` gives plot owners their own restore points: settings, roles, members, and bounds, plus the build itself when WorldEdit/FAWE is present and the server opts in. Owners browse their history and roll back a bad change themselves — or route restores through staff approval, server's choice. Cooldowns, per-plot caps, and an optional Vault cost keep it honest. Griefed at 2 AM? It's a fix, not a ticket.
+**Self-backups — your realm can always come home.** `/ag backup` gives plot owners their own restore points: settings, roles, members, bounds — and the build itself, captured by a built-in engine that needs no add-ons and runs natively on Folia, Paper, and Spigot (WorldEdit/FAWE stays supported when a server has it). Owners browse their history and roll back a bad change themselves — or route restores through staff approval, server's choice. Cooldowns, per-plot caps, and an optional Vault cost keep it honest. Griefed at 2 AM? It's a fix, not a ticket.
 
 **Party up — your crew, on screen.** `/ag party` forms a group for a dungeon run, a build session, or just wandering — and every member shows on a live sidebar roster: health, a star on the leader, offline friends greyed. Wynncraft-style, zero setup, and arena-run groups ride the same sidebar automatically.
 

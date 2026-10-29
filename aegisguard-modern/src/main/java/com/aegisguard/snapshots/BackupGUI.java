@@ -80,21 +80,22 @@ public final class BackupGUI {
         ItemStack filler = GUIManager.getFiller();
         for (int slot : new int[]{45, 47, 48, 50, 51, 52}) inv.setItem(slot, filler);
 
+        List<String> warningLore = new ArrayList<>(List.of(
+                "§7Backups save your plot's data — settings,",
+                "§7roles, members, boards. Restoring rewinds",
+                "§7the plot to the point you pick, and anything",
+                "§7changed after it is gone for good.",
+                " "));
+        warningLore.addAll(engineNote());
+        warningLore.addAll(List.of(
+                " ",
+                "§cUse restores at your own risk.",
+                "§7A restore can't be undone — later",
+                "§7changes are lost. If something goes",
+                "§7wrong, ask a server admin — staff",
+                "§7keep their own deeper restore points."));
         inv.setItem(4, GUIManager.createItem(Material.OAK_SIGN,
-                "§e⚠ Read before restoring", List.of(
-                        "§7Backups save your plot's data — settings,",
-                        "§7roles, members, boards. Restoring rewinds",
-                        "§7the plot to the point you pick, and anything",
-                        "§7changed after it is gone for good.",
-                        " ",
-                        "§8Block restores also need a world-edit add-on",
-                        "§8built for this server — WorldEdit, or FAWE",
-                        "§8on Folia. Without it restores are data-only.",
-                        " ",
-                        "§cUse restores at your own risk.",
-                        "§7If something goes wrong, ask a server",
-                        "§7admin — staff keep their own restore",
-                        "§7points and can roll back further.")));
+                "§e⚠ Read before restoring", warningLore));
 
         int start = page * PER_PAGE;
         boolean staffMode = "staff".equalsIgnoreCase(
@@ -113,6 +114,7 @@ public final class BackupGUI {
             } else if (isArmed) {
                 lore.add("§e⚠ Click again to restore!");
                 lore.add("§7This rewinds the plot to this point.");
+                lore.add("§8Can't be undone — later changes are lost.");
                 lore.add("§8At your own risk — admins can help if it goes wrong.");
             } else {
                 lore.add("§aClick to arm a restore,");
@@ -133,6 +135,27 @@ public final class BackupGUI {
                         "§7Same as /ag backup.")));
         inv.setItem(SLOT_CLOSE, GUIManager.createItem(Material.BARRIER, "§cClose", List.of()));
         player.openInventory(inv);
+    }
+
+    /**
+     * Engine-aware dependency note: the built-in engine restores blocks with no add-ons,
+     * a WorldEdit/FAWE engine restores through that add-on, and no engine means data-only.
+     */
+    private List<String> engineNote() {
+        BuildBackupService service = plugin.snapshots() == null
+                ? null : plugin.snapshots().buildBackup();
+        if (service instanceof NativeBuildBackupService) {
+            return List.of("§8Full block restores are built in —",
+                    "§8no add-ons needed, even on Folia.",
+                    "§8Chests and signs keep their contents.");
+        }
+        if (service != null && service.isReady()) {
+            return List.of("§8Block restores run through this server's",
+                    "§8world-edit add-on (WorldEdit or FAWE).");
+        }
+        return List.of("§8This server has no block-restore engine —",
+                "§8restores are data-only. Ask staff about",
+                "§8enabling the built-in engine or WorldEdit.");
     }
 
     /** GUIListener dispatch. Owner + permission re-checked on every click. */

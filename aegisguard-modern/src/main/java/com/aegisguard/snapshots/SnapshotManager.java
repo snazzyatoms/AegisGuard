@@ -55,13 +55,36 @@ public class SnapshotManager {
     }
 
     private static BuildBackupService createBuildBackupService(AegisGuard plugin) {
+        String engine = plugin.getConfig().getString("snapshots.build_backup.engine", "auto")
+                .trim().toLowerCase(java.util.Locale.ROOT);
+        boolean worldEditPresent;
         try {
             Class.forName("com.sk89q.worldedit.WorldEdit", false, plugin.getClass().getClassLoader());
-            return new PlotBuildBackup(plugin);
+            worldEditPresent = true;
         } catch (Throwable unavailable) {
-            plugin.getLogger().info("WorldEdit/FAWE is not installed; optional plot build backups are unavailable.");
+            worldEditPresent = false;
+        }
+        if ("native".equals(engine)) {
+            plugin.getLogger().info("Using the built-in plot build backup engine "
+                    + "(snapshots.build_backup.engine=native).");
+            return new NativeBuildBackupService(plugin);
+        }
+        if (worldEditPresent && !"none".equals(engine)) {
+            return new PlotBuildBackup(plugin);
+        }
+        if ("worldedit".equals(engine)) {
+            plugin.getLogger().info("snapshots.build_backup.engine=worldedit but WorldEdit/FAWE is "
+                    + "not installed; optional plot build backups are unavailable.");
             return new UnavailableBuildBackupService(plugin);
         }
+        if (!plugin.getConfig().getBoolean("snapshots.build_backup.native_engine", true)) {
+            plugin.getLogger().info("WorldEdit/FAWE is not installed and the native engine is "
+                    + "disabled; optional plot build backups are unavailable.");
+            return new UnavailableBuildBackupService(plugin);
+        }
+        plugin.getLogger().info("WorldEdit/FAWE is not installed; using the built-in "
+                + "plot build backup engine.");
+        return new NativeBuildBackupService(plugin);
     }
 
     public AutomaticPlayerBackupService automaticPlayerBackups() {

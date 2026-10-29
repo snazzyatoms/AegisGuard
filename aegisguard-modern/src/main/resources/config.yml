@@ -328,6 +328,20 @@ party:
   rally_enabled: true
   # Seconds a rally point stays live after the leader plants it.
   rally_expire_seconds: 120
+  # Live party tracker: members see each other's direction + distance above the
+  # hotbar, and /ag party ping drops a shared marker. Per-player toggles:
+  # /ag party track (show/hide your own HUD) and /ag party hide (go off the map).
+  tracking_enabled: true
+  # Ticks between tracker refreshes (20 = 1s).
+  tracker_interval_ticks: 40
+  # Most entries shown on the tracker HUD at once (nearest members first).
+  tracker_max_entries: 3
+  # /ag party ping marks a spot on the tracker + party map with a light beam.
+  ping_enabled: true
+  ping_expire_seconds: 90
+  ping_beam: true
+  # /ag party map hands out a radar map showing members as head icons.
+  map_enabled: true
   # Cross-server parties: publish rosters over the network event bus so the
   # party follows members across backends (roster + party chat — remote
   # members show "name @server" on the sidebar). Requires network.enabled.

@@ -20,6 +20,8 @@ public final class Party {
     private volatile String name;
     private volatile org.bukkit.Location rallyPoint;
     private volatile long rallyExpireAt;
+    private volatile org.bukkit.Location pingPoint;
+    private volatile long pingExpireAt;
     private final Set<UUID> members = ConcurrentHashMap.newKeySet();
     private final java.util.Map<UUID, Long> pendingInvites = new ConcurrentHashMap<>();
 
@@ -61,6 +63,28 @@ public final class Party {
             return null;
         }
         return rallyPoint.clone();
+    }
+
+    // ------------------------------------------------------------------
+    // Ping — any member marks a spot; the whole party sees it on the tracker.
+
+    public void ping(org.bukkit.Location location, long expireAt) {
+        this.pingPoint = location == null ? null : location.clone();
+        this.pingExpireAt = expireAt;
+    }
+
+    /** Live ping point, or null if none/expired (clears lazily). */
+    public org.bukkit.Location pingPoint() {
+        if (pingPoint == null) return null;
+        if (System.currentTimeMillis() > pingExpireAt) {
+            pingPoint = null;
+            return null;
+        }
+        return pingPoint.clone();
+    }
+
+    public void clearPing() {
+        this.pingPoint = null;
     }
 
     public Set<UUID> getMembers() { return Set.copyOf(members); }

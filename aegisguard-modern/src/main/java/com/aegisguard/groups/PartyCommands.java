@@ -15,6 +15,8 @@ import java.util.UUID;
  */
 public final class PartyCommands extends CommandBase {
 
+    private final java.util.Map<java.util.UUID, Long> lastMapAt = new java.util.concurrent.ConcurrentHashMap<>();
+
     public PartyCommands(AegisGuard plugin) {
         super(plugin);
     }
@@ -159,6 +161,62 @@ public final class PartyCommands extends CommandBase {
                     }, () -> { });
                 }
             }
+            case "track" -> {
+                if (!parties.trackingEnabled()) {
+                    sendKey(p, "party_track_disabled", "&cParty tracking is disabled on this server.");
+                    return;
+                }
+                boolean on = parties.toggleTrack(p.getUniqueId());
+                sendKey(p, on ? "party_track_on" : "party_track_off",
+                        on ? "&aParty tracker on — member directions show above your hotbar."
+                           : "&eParty tracker off.");
+            }
+            case "hide" -> {
+                boolean hidden = parties.toggleHide(p.getUniqueId());
+                sendKey(p, hidden ? "party_hide_on" : "party_hide_off",
+                        hidden ? "&eYou're now off the party map — members can't see your position."
+                               : "&aBack on the party map — members can see you again.");
+            }
+            case "ping" -> {
+                if (!parties.trackingEnabled()
+                        || !plugin.getConfig().getBoolean("party.ping_enabled", true)) {
+                    sendKey(p, "party_ping_disabled", "&cParty pings are disabled on this server.");
+                    return;
+                }
+                if (parties.partyOf(p.getUniqueId()) == null) {
+                    sendKey(p, "party_not_in", "&cYou're not in a party.");
+                    return;
+                }
+                if (parties.plantPing(p) == null) {
+                    sendKey(p, "party_ping_wait", "&eGive it a few seconds between pings.");
+                    return;
+                }
+                for (Player member : parties.onlineMembers(p.getUniqueId())) {
+                    sendKey(member, "party_ping_marked",
+                            "&d◎ " + p.getName() + " marked a spot — watch your tracker & party map.");
+                }
+            }
+            case "map" -> {
+                if (!parties.trackingEnabled()
+                        || !plugin.getConfig().getBoolean("party.map_enabled", true)) {
+                    sendKey(p, "party_map_disabled", "&cThe party map is disabled on this server.");
+                    return;
+                }
+                if (parties.partyOf(p.getUniqueId()) == null) {
+                    sendKey(p, "party_not_in", "&cYou're not in a party.");
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                Long lastMap = lastMapAt.get(p.getUniqueId());
+                if (lastMap != null && now - lastMap < 10_000L) {
+                    sendKey(p, "party_map_wait", "&eParty map already handed out — give it a few seconds.");
+                    return;
+                }
+                lastMapAt.put(p.getUniqueId(), now);
+                givePartyMap(p);
+                sendKey(p, "party_map_given",
+                        "&aParty map ready — your crew shows as head icons; pings are flagged.");
+            }
             case "hud", "sidebar" -> {
                 if (plugin.partySidebar() == null) {
                     sendKey(p, "party_disabled", "&cParties are disabled on this server.");
@@ -196,7 +254,7 @@ public final class PartyCommands extends CommandBase {
             }
             case "info", "list" -> showInfo(p, parties);
             default -> sendKey(p, "party_usage",
-                    "&e/ag party &7— create, invite <player>, accept, leave, kick, promote, hud, disband");
+                    "&e/ag party &7— create, invite, accept, leave, kick, promote, rally, ping, map, track, hide, hud");
         }
     }
 
@@ -219,5 +277,32 @@ public final class PartyCommands extends CommandBase {
         }
         sendKey(p, "party_info", "&6" + view.title() + " &8— &f{MEMBERS}",
                 Map.of("MEMBERS", sb.toString()));
+    }
+
+    /**
+     * Hands the player a party radar map centered on where they stand. The custom
+     * renderer paints member head icons, the player's own marker, and the party ping.
+     */
+    private void givePartyMap(Player p) {
+        org.bukkit.map.MapView view = Bukkit.createMap(p.getWorld());
+        view.setScale(org.bukkit.map.MapView.Scale.FAR);
+        view.setCenterX(p.getLocation().getBlockX());
+        view.setCenterZ(p.getLocation().getBlockZ());
+        view.addRenderer(new PartyMapRenderer(plugin, parties));
+        org.bukkit.inventory.ItemStack item =
+                new org.bukkit.inventory.ItemStack(org.bukkit.Material.FILLED_MAP);
+        if (item.getItemMeta() instanceof org.bukkit.inventory.meta.MapMeta meta) {
+            meta.setMapView(view);
+            meta.setDisplayName("§e⚑ Party Map");
+            meta.setLore(java.util.List.of(
+                    "§7Your crew shows as head icons.",
+                    "§7Pings are flagged in red.",
+                    "§8/ag party hide §7— go off the map"));
+            item.setItemMeta(meta);
+        }
+        java.util.Map<Integer, org.bukkit.inventory.ItemStack> leftover =
+                p.getInventory().addItem(item);
+        leftover.values().forEach(extra ->
+                p.getWorld().dropItemNaturally(p.getLocation(), extra));
     }
 }

@@ -175,10 +175,12 @@ public final class PartySidebarService {
                 String hpColor = hp >= 15 ? "§a" : hp >= 8 ? "§e" : "§c";
                 suffix += " " + hpColor + "❤" + hp;
             }
-            if (showDistance() && !id.equals(viewer.getUniqueId())) {
+            if (showDistance() && !id.equals(viewer.getUniqueId()) && !parties.isHidden(id)) {
                 try {
-                    if (viewer.getWorld().equals(p.getWorld())) {
-                        int dist = (int) Math.round(viewer.getLocation().distance(p.getLocation()));
+                    org.bukkit.Location target = parties.positionOf(id);
+                    if (target != null && target.getWorld() != null
+                            && target.getWorld().equals(viewer.getWorld())) {
+                        int dist = (int) Math.round(viewer.getLocation().distance(target));
                         suffix += " §8" + dist + "m";
                     }
                 } catch (Throwable ignored) { }

@@ -39,7 +39,16 @@ public final class PartyService implements Listener {
     private volatile boolean storeHealthy = true;
     /** Presence learned from remote rosters: memberId → where they are. */
     private final Map<UUID, RemoteMember> remotePresence = new ConcurrentHashMap<>();
+    /** Last entity-thread-captured location per online member (tracker never reads
+     *  another entity's state off its own region). */
+    private final Map<UUID, org.bukkit.Location> lastPositions = new ConcurrentHashMap<>();
+    private final Map<UUID, String> memberNames = new ConcurrentHashMap<>();
+    /** Per-player preferences: see the tracker / hide own position. */
+    private final Map<UUID, Boolean> trackPref = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> hidePref = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastPingAt = new ConcurrentHashMap<>();
     private volatile Object syncTicker;
+    private volatile Object trackerTicker;
     private PartySidebarService sidebar;
 
     /** What the sidebar needs about a member who lives on another backend. */
@@ -61,12 +70,17 @@ public final class PartyService implements Listener {
 
     /** Periodic roster republication — self-heals backends that joined late. */
     public void start() {
-        if (syncTicker != null) return;
-        long period = Math.max(20L, plugin.getConfig().getLong("party.sync_interval_seconds", 60L));
-        syncTicker = plugin.scheduler().runAsyncRepeating(() -> {
-            if (!networkSyncOn()) return;
-            for (Party party : parties.values()) publishRoster(party);
-        }, period, period);
+        if (syncTicker == null) {
+            long period = Math.max(20L, plugin.getConfig().getLong("party.sync_interval_seconds", 60L));
+            syncTicker = plugin.scheduler().runAsyncRepeating(() -> {
+                if (!networkSyncOn()) return;
+                for (Party party : parties.values()) publishRoster(party);
+            }, period, period);
+        }
+        if (trackerTicker == null) {
+            long ticks = Math.max(10L, plugin.getConfig().getLong("party.tracker_interval_ticks", 40L));
+            trackerTicker = plugin.scheduler().runGlobalRepeating(this::trackerTick, ticks, ticks);
+        }
     }
 
     public boolean enabled() {
@@ -313,6 +327,157 @@ public final class PartyService implements Listener {
         return party == null ? null : party.rallyPoint();
     }
 
+    // ------------------------------------------------------------------
+    // Live tracker — MMO-style compass HUD plus a shared ping marker.
+    // Positions are only ever read on each member's own entity thread and
+    // cached; the HUD composes from that cache, so no off-region access.
+
+    public boolean trackingEnabled() {
+        return enabled() && plugin.getConfig().getBoolean("party.tracking_enabled", true);
+    }
+
+    public boolean showsTracker(UUID playerId) {
+        Boolean pref = trackPref.get(playerId);
+        return pref == null || pref;
+    }
+
+    /** Whether this member hides their position from the party tracker + sidebar distance. */
+    public boolean isHidden(UUID playerId) {
+        Boolean pref = hidePref.get(playerId);
+        return pref != null && pref;
+    }
+
+    /**
+     * Last entity-thread-captured position of a member, or null when offline, unreported,
+     * or hidden. Reading this never touches another entity off its region.
+     */
+    public org.bukkit.Location positionOf(UUID playerId) {
+        return playerId == null ? null : lastPositions.get(playerId);
+    }
+
+    /** Cached display name captured on the member's own thread (null if never seen). */
+    public String nameOf(UUID playerId) {
+        return playerId == null ? null : memberNames.get(playerId);
+    }
+
+    public boolean toggleTrack(UUID playerId) {
+        boolean next = !showsTracker(playerId);
+        trackPref.put(playerId, next);
+        saveAsync();
+        return next;
+    }
+
+    public boolean toggleHide(UUID playerId) {
+        boolean next = !isHidden(playerId);
+        hidePref.put(playerId, next);
+        if (next) lastPositions.remove(playerId);
+        saveAsync();
+        return next;
+    }
+
+    private void trackerTick() {
+        boolean tracking = trackingEnabled();
+        for (Party party : parties.values()) {
+            if (tracking) {
+                org.bukkit.Location ping = party.pingPoint();
+                if (ping != null && ping.getWorld() != null
+                        && plugin.getConfig().getBoolean("party.ping_beam", true)) {
+                    plugin.scheduler().runAt(ping, () -> spawnPingBeam(ping));
+                }
+            }
+            for (UUID id : party.getMembers()) {
+                Player member = Bukkit.getPlayer(id);
+                if (member == null || !member.isOnline()) continue;
+                plugin.scheduler().runEntity(member, () -> tickMember(party, member, tracking), () -> { });
+            }
+        }
+    }
+
+    /** Runs on the member's own entity thread. Position capture always runs (the sidebar
+     *  distance and party map both read the cache); only the HUD honors the toggle. */
+    private void tickMember(Party party, Player member, boolean tracking) {
+        memberNames.put(member.getUniqueId(), member.getName());
+        if (!isHidden(member.getUniqueId())) {
+            lastPositions.put(member.getUniqueId(), member.getLocation().clone());
+        }
+        if (!tracking || !showsTracker(member.getUniqueId())) return;
+        String hud = trackerHud(party, member);
+        if (hud != null) com.aegisguard.util.Text.actionBar(member, hud);
+    }
+
+    private String trackerHud(Party party, Player viewer) {
+        org.bukkit.Location from = viewer.getLocation();
+        record Entry(double distance, String text) { }
+        List<Entry> entries = new ArrayList<>();
+        for (UUID otherId : party.getMembers()) {
+            if (otherId.equals(viewer.getUniqueId()) || isHidden(otherId)) continue;
+            org.bukkit.Location target = lastPositions.get(otherId);
+            String name = memberNames.get(otherId);
+            if (target == null || name == null) continue;
+            boolean sameWorld = target.getWorld() != null && target.getWorld().equals(from.getWorld());
+            double distance = sameWorld ? from.distance(target) : Double.MAX_VALUE;
+            entries.add(new Entry(distance, "§f" + name + "§7" + (sameWorld
+                    ? " " + compassArrow(from, target) + " " + (int) Math.round(distance) + "m"
+                    : " §8·other realm")));
+        }
+        org.bukkit.Location ping = party.pingPoint();
+        if (ping != null && ping.getWorld() != null && ping.getWorld().equals(from.getWorld())) {
+            double distance = from.distance(ping);
+            entries.add(new Entry(distance, "§d◎ ping§7 " + compassArrow(from, ping)
+                    + " " + (int) Math.round(distance) + "m"));
+        }
+        if (entries.isEmpty()) return null;
+        int max = Math.max(1, plugin.getConfig().getInt("party.tracker_max_entries", 3));
+        entries.sort(Comparator.comparingDouble(Entry::distance));
+        StringBuilder hud = new StringBuilder("§e⚑ ");
+        for (int i = 0; i < Math.min(max, entries.size()); i++) {
+            if (i > 0) hud.append("  §8•  ");
+            hud.append(entries.get(i).text());
+        }
+        return hud.toString();
+    }
+
+    /** 8-sector arrow for the bearing from viewer to target, relative to the viewer's yaw. */
+    private String compassArrow(org.bukkit.Location from, org.bukkit.Location to) {
+        double bearing = Math.toDegrees(Math.atan2(-(to.getX() - from.getX()),
+                to.getZ() - from.getZ()));
+        double rel = ((bearing - from.getYaw()) % 360 + 540) % 360 - 180;
+        if (rel >= -22.5 && rel < 22.5) return "↑";
+        if (rel >= 22.5 && rel < 67.5) return "↗";
+        if (rel >= 67.5 && rel < 112.5) return "→";
+        if (rel >= 112.5 && rel < 157.5) return "↘";
+        if (rel >= -67.5 && rel < -22.5) return "↖";
+        if (rel >= -112.5 && rel < -67.5) return "←";
+        if (rel >= -157.5 && rel < -112.5) return "↙";
+        return "↓";
+    }
+
+    /** Members can mark a spot the whole party sees on the tracker + a light beam. */
+    public Party plantPing(Player member) {
+        if (member == null || !trackingEnabled()
+                || !plugin.getConfig().getBoolean("party.ping_enabled", true)) return null;
+        Party party = partyOf(member.getUniqueId());
+        if (party == null) return null;
+        long now = System.currentTimeMillis();
+        Long last = lastPingAt.get(member.getUniqueId());
+        if (last != null && now - last < 5000L) return null;
+        lastPingAt.put(member.getUniqueId(), now);
+        org.bukkit.block.Block looked = member.getTargetBlockExact(64);
+        org.bukkit.Location point = looked != null
+                ? looked.getLocation().add(0.5, 1.0, 0.5) : member.getLocation();
+        long ttl = Math.max(10L, plugin.getConfig().getLong("party.ping_expire_seconds", 90L)) * 1000L;
+        party.ping(point, now + ttl);
+        return party;
+    }
+
+    /** A short column of light at the ping — spawned on the ping's own region tick. */
+    private void spawnPingBeam(org.bukkit.Location point) {
+        try {
+            point.getWorld().spawnParticle(org.bukkit.Particle.END_ROD, point, 30,
+                    0.25, 4.5, 0.25, 0.005);
+        } catch (Throwable ignored) { }
+    }
+
     /** All online member UUIDs of the player's party (for notifications). */
     public List<Player> onlineMembers(UUID playerId) {
         Party party = partyOf(playerId);
@@ -356,11 +521,18 @@ public final class PartyService implements Listener {
             try { plugin.scheduler().cancel(syncTicker); } catch (Throwable ignored) { }
             syncTicker = null;
         }
+        if (trackerTicker != null) {
+            try { plugin.scheduler().cancel(trackerTicker); } catch (Throwable ignored) { }
+            trackerTicker = null;
+        }
         save();
         parties.clear();
         partyByPlayer.clear();
         lastInviteAt.clear();
         remotePresence.clear();
+        lastPositions.clear();
+        memberNames.clear();
+        lastPingAt.clear();
     }
 
     // ------------------------------------------------------------------
@@ -398,6 +570,13 @@ public final class PartyService implements Listener {
                 plugin.getLogger().warning("Skipping malformed parties.yml row: " + skipped.getMessage());
             }
         }
+        for (Map<?, ?> row : data.getMapList("prefs")) {
+            try {
+                UUID id = UUID.fromString(String.valueOf(row.get("id")));
+                trackPref.put(id, Boolean.parseBoolean(String.valueOf(row.get("track"))));
+                hidePref.put(id, Boolean.parseBoolean(String.valueOf(row.get("hide"))));
+            } catch (Throwable ignored) { }
+        }
     }
 
     private void saveAsync() {
@@ -420,6 +599,17 @@ public final class PartyService implements Listener {
             rows.add(row);
         }
         out.set("parties", rows);
+        java.util.List<Map<String, Object>> prefRows = new java.util.ArrayList<>();
+        Set<UUID> prefIds = new java.util.HashSet<>(trackPref.keySet());
+        prefIds.addAll(hidePref.keySet());
+        for (UUID id : prefIds) {
+            Map<String, Object> row = new java.util.HashMap<>();
+            row.put("id", id.toString());
+            row.put("track", showsTracker(id));
+            row.put("hide", isHidden(id));
+            prefRows.add(row);
+        }
+        out.set("prefs", prefRows);
         try {
             out.save(storeFile);
         } catch (java.io.IOException e) {

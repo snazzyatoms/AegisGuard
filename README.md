@@ -38,9 +38,9 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 1.4.0 connected the servers. 1.4.5 protects what makes them home. This point release is about recovery, polish, and finishing the last room of the network.
 
-**Self-backups — your realm can always come home.** `/ag backup` gives plot owners their own restore points: settings, roles, members, bounds — and the build itself, captured by a built-in engine that needs no add-ons and runs natively on Folia, Paper, and Spigot (WorldEdit/FAWE stays supported when a server has it). Owners browse their history and roll back a bad change themselves — or route restores through staff approval, server's choice. Cooldowns, per-plot caps, and an optional Vault cost keep it honest. Griefed at 2 AM? It's a fix, not a ticket.
+**Self-backups — your realm can always come home.** `/ag backup` gives plot owners their own restore points — name them (`/ag backup create before-the-redesign`) and they read like bookmarks instead of timestamps. A restore covers settings, roles, members, bounds — and the build itself, captured by a built-in engine that needs no add-ons and runs natively on Folia, Paper, and Spigot (WorldEdit/FAWE stays supported when a server has it). Owners browse their history and roll back a bad change themselves — or route restores through staff approval, server's choice. Cooldowns, per-plot caps, and an optional Vault cost keep it honest, and a plain-language disclaimer in the GUI makes the stakes clear before anyone clicks. Griefed at 2 AM? It's a fix, not a ticket.
 
-**Party up — your crew, on screen.** `/ag party` forms a group for a dungeon run, a build session, or just wandering — and every member shows on a live sidebar roster: health, a star on the leader, offline friends greyed. Wynncraft-style, zero setup, and arena-run groups ride the same sidebar automatically.
+**Party up — your crew, on screen.** `/ag party` forms a group for a dungeon run, a build session, or just wandering — and every member shows on a live sidebar roster: health, a star on the leader, offline friends greyed. Out in the world, a quiet tracker HUD points toward your crew, `/ag party ping` marks a spot for everyone, and `/ag party map` opens a radar map with each member's head at their position — with `/ag party hide` and `/ag party track` to opt out either way. Parties survive restarts, sync across the network, and arena runs ride the same roster automatically. Wynncraft-style, zero setup.
 
 **Arenas feel like events.** A live match HUD (wave counter, run timer, party status), configurable per-preset rewards (Vault, XP, or items), parties that persist between runs, and a per-arena record board — fastest clears, most waves, top parties.
 
@@ -48,9 +48,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **The radio is complete.** The 1.4.0 flagship gets its last room: `/ag chat` plot frequencies relay to members on other backends — your plot's channel follows your people wherever they're logged in on the network. Same rules, wider range: one channel per player, member-only, identical on Java and Bedrock. And like everything in the network stack, it fails closed — a single server behaves exactly as it does today.
 
-## What 1.4.0 Shipped
-
-The current public release turned protected land into a full territory platform: the Travel Atlas, instanced Arena Dungeons on your own maps, trade caravans, Guardian Succession, plot and alliance radios, Hearth rooms, the ClaimBlocks exchange, sanctuary settings — and the flagship — one AegisGuard network spanning BungeeCord/Velocity proxies with shared discovery, rosters, beacons, and arenas. Full notes on the [1.4.0 release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) and [Release Highlights](wiki/Release-Highlights.md) pages.
+1.4.5 builds on the 1.4.0 platform — the Travel Atlas, instanced Arena Dungeons on your own maps, trade caravans, Guardian Succession, plot and alliance radios, Hearth rooms, the ClaimBlocks exchange, sanctuary settings — and the flagship — one AegisGuard network spanning BungeeCord/Velocity proxies with shared discovery, rosters, beacons, and arenas. Full notes on the [1.4.0 release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) and [Release Highlights](wiki/Release-Highlights.md) pages.
 
 ## Core Systems
 
@@ -75,8 +73,8 @@ The current public release turned protected land into a full territory platform:
 | Economy | Vault with a supported economy provider |
 | Networks | BungeeCord or Velocity for cross-server travel, remote arenas, and broadcasts |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
-| Extensions | PlaceholderAPI, the public AegisGuard API, optional WorldEdit/FAWE plot backups, and an optional Simple Voice Chat hook for Hearth rooms |
-| Upgrade path | From AegisGuard `1.2.7` or `1.3.x` with automatic config schema migration (`config_schema` → `1316`) |
+| Extensions | PlaceholderAPI, the public AegisGuard API, built-in plot build backups (WorldEdit/FAWE used when present), and an optional Simple Voice Chat hook for Hearth rooms |
+| Upgrade path | From AegisGuard `1.2.7` or `1.3.x` with automatic config schema migration (`config_schema` → `1317`) |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 
@@ -84,7 +82,7 @@ Server implementations evolve independently. Test new Minecraft server releases 
 
 1. Stop the Minecraft server.
 2. Confirm the host is running **Java 21 or newer**.
-3. Place `AegisGuard-1.4.0.jar` in the server's `plugins` directory.
+3. Place `AegisGuard-1.4.5.jar` in the server's `plugins` directory.
 4. Install Vault and an economy provider if money-based features are required.
 5. Start the server. On a JAR swap from 1.2.7 or 1.3.x, config and language merge run automatically and existing plots load as-is.
 6. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.
@@ -134,7 +132,7 @@ See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed comm
 
 ## For Developers
 
-`AegisGuard-1.4.0-api.jar` ships with each [release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) as a compile-time dependency — it does not belong in a server's `plugins` folder. Public events and service accessors live under `com.aegisguard.api` with Javadocs.
+`AegisGuard-1.4.5-dev-api.jar` ships with each [release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.4.0) as a compile-time dependency — it does not belong in a server's `plugins` folder. Public events and service accessors live under `com.aegisguard.api` with Javadocs.
 
 ---
 

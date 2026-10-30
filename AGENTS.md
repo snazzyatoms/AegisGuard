@@ -32,3 +32,6 @@ mvn clean package -f aegisguard-modern/pom.xml -DskipTests
 - **Audience routing.** `wiki/Home.md` ends with player / owner / developer paths; `wiki/_Sidebar.md` mirrors those groups. `wiki/Glossary.md` defines product nouns (Scepter, Codex, ClaimBlocks, Hearth, Frequency, etc.) — link to it instead of re-explaining terms.
 - **Wiki links** use page names (`[Install](Installation)`) or `Page#anchor` anchors; `wiki/` pages are pasted manually into the GitHub Wiki, so keep filenames wiki-style (`Hyphenated-Title.md`).
 - Keep `AegisGuard CurseForge description.md` and `AegisGuard CurseForge description FINAL.txt` in sync — they are the same listing copy.
+
+## GUI Conventions
+- `/agadmin` (Staff Command Center) stays a flat sectioned launcher: four color-banded rows (Policy / Territory & Claims / Recovery & Integrity / Content & Maintenance), every tool one click. When the tool count outgrows the bands, promote the section frame panes into clickable category sub-menus — the `addSectionFrame` + `aegis_action` routing already supports that move. `InterfaceQualityContractTest` pins the section keys, pane colors, `SLOT_TOOL_ARENA = 38`, and action names.

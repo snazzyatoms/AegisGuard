@@ -2451,7 +2451,7 @@ staff_policy_section_lore:
 - '&7Fila superior: política operativa del servidor.'
 - '&7Alterna solo en ventanas de mantenimiento'
 - '&7cuando entiendes los efectos secundarios.'
-staff_toolbelt_section_name: '&bHerramientas del Guardián'
+staff_toolbelt_section_name: '&bContenido & Mantenimiento'
 staff_toolbelt_section_lore:
 - '&7Fila inferior: revisión, recuperación, mundos,'
 - '&7migración, diagnóstico y mantenimiento.'

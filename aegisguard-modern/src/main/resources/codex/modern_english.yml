@@ -1717,7 +1717,7 @@ staff_policy_section_lore:
 - '&7Upper row: server-wide operating policy.'
 - '&7Toggle only during maintenance windows'
 - '&7when you understand the side effects.'
-staff_toolbelt_section_name: '&bGuardian Toolbelt'
+staff_toolbelt_section_name: '&bContent & Maintenance'
 staff_toolbelt_section_lore:
 - '&7Lower row: review, recovery, world,'
 - '&7migration, diagnostics, and maintenance.'

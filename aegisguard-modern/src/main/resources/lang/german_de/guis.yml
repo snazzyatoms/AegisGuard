@@ -1735,7 +1735,7 @@ staff_policy_section_lore:
 - '&7Obere Zeile: serverweite Betriebsrichtlinie.'
 - '&7Umschalten nur während Wartungsfenstern'
 - '&7wenn Sie die Nebenwirkungen verstehen.'
-staff_toolbelt_section_name: '&bWächter-Werkzeuggürtel'
+staff_toolbelt_section_name: '&bInhalte & Wartung'
 staff_toolbelt_section_lore:
 - '&7Untere Reihe: Rückblick, Wiederherstellung, Welt,'
 - '&7Migration, Diagnose und Wartung.'

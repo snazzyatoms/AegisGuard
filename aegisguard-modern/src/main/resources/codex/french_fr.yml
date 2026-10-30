@@ -1707,7 +1707,7 @@ staff_policy_section_lore:
 - '&7Rangée supérieure : politique de fonctionnement à l''échelle du serveur.'
 - '&7Activer uniquement pendant les fenêtres de maintenance'
 - '&7quand vous comprenez les effets secondaires.'
-staff_toolbelt_section_name: '&bCeinture à outils Guardian'
+staff_toolbelt_section_name: '&bContenu & Maintenance'
 staff_toolbelt_section_lore:
 - '&7Rangée inférieure : révision, récupération, monde,'
 - '&7migration, diagnostic et maintenance.'

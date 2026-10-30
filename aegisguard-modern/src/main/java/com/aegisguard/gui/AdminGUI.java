@@ -40,36 +40,36 @@ public class AdminGUI {
 
     private static final int SIZE = 54;
 
-    // Policy row (10-16) — expansion QUEUE ↔ INSTANT must not collide with tools.
-    private static final int SLOT_TOGGLE_AUTO_REMOVE = 10;
-    private static final int SLOT_TOGGLE_BYPASS_LIMIT = 11;
-    private static final int SLOT_TOGGLE_BROADCAST   = 12;
-    private static final int SLOT_TOGGLE_UNLIMITED   = 13;
-    private static final int SLOT_TOGGLE_PROXY_SYNC  = 14;
-    private static final int SLOT_TOGGLE_LOW_OVERHEAD= 15;
+    // Policy row (10-16) — harmless ops left, power/risk toggles right.
+    private static final int SLOT_TOGGLE_BROADCAST   = 10;
+    private static final int SLOT_TOGGLE_PROXY_SYNC  = 11;
+    private static final int SLOT_TOGGLE_LOW_OVERHEAD= 12;
+    private static final int SLOT_TOGGLE_BYPASS_LIMIT = 13;
+    private static final int SLOT_TOGGLE_UNLIMITED   = 14;
+    private static final int SLOT_TOGGLE_AUTO_REMOVE = 15;
     private static final int SLOT_TOGGLE_EXPANSION_MODE = 16;
 
     private static final int SLOT_SECTION_TERRITORY = 18;
-    private static final int SLOT_TOOL_CONVERT        = 19;
-    private static final int SLOT_TOOL_PLOT_LIST     = 20;
-    private static final int SLOT_TOOL_REQUESTS      = 21;
-    private static final int SLOT_TOOL_INSTANT_APPROVALS = 22;
-    private static final int SLOT_TOOL_SET_SPAWN      = 23;
-    private static final int SLOT_TOOL_WORLD_CONTROLS = 24;
+    private static final int SLOT_TOOL_PLOT_LIST     = 19;
+    private static final int SLOT_TOOL_CONVERT        = 20;
+    private static final int SLOT_TOOL_SET_SPAWN      = 21;
+    private static final int SLOT_TOOL_WORLD_CONTROLS = 22;
+    private static final int SLOT_TOOL_REQUESTS      = 23;
+    private static final int SLOT_TOOL_INSTANT_APPROVALS = 24;
 
     private static final int SLOT_SECTION_RECOVERY = 27;
     private static final int SLOT_TOOL_SNAPSHOTS     = 28;
     private static final int SLOT_TOOL_SNAPSHOT_SCHEDULE = 29;
-    private static final int SLOT_TOOL_AUDIT_LEDGER   = 30;
-    private static final int SLOT_TOOL_DIAGNOSTICS   = 31;
-    private static final int SLOT_TOOL_MIGRATION      = 32;
+    private static final int SLOT_TOOL_DIAGNOSTICS   = 30;
+    private static final int SLOT_TOOL_MIGRATION      = 31;
+    private static final int SLOT_TOOL_AUDIT_LEDGER   = 32;
 
     private static final int SLOT_SECTION_MODULES = 36;
     private static final int SLOT_TOOL_ROUTES         = 37;
-    private static final int SLOT_TOOL_SEASON         = 41;
     private static final int SLOT_TOOL_ARENA          = 38;
-    private static final int SLOT_TOOL_REFRESH_LANG  = 39;
-    private static final int SLOT_TOOL_RELOAD_ALL    = 40;
+    private static final int SLOT_TOOL_SEASON         = 39;
+    private static final int SLOT_TOOL_REFRESH_LANG  = 40;
+    private static final int SLOT_TOOL_RELOAD_ALL    = 41;
 
     private static final int SLOT_NAV_SETTINGS = 47;
     private static final int SLOT_NAV_BACK = 48;
@@ -124,11 +124,11 @@ public class AdminGUI {
                 ),
                 9, 16, 17);
         addSectionFrame(player, inv, Material.LIME_STAINED_GLASS_PANE,
-                "staff_territory_section_name", "&aTerritory",
+                "staff_territory_section_name", "&aTerritory & Claims",
                 "staff_territory_section_lore",
                 List.of(
-                        "&7Convert plots, browse claims,",
-                        "&7review expansions, and set spawn."
+                        "&7Browse claims, convert plots, set spawn,",
+                        "&7world rules, and expansion requests."
                 ),
                 18, 19, 20, 21, 22, 23, 24, 25, 26);
         addSectionFrame(player, inv, Material.MAGENTA_STAINED_GLASS_PANE,
@@ -137,37 +137,12 @@ public class AdminGUI {
                 recoverySectionLoreDefault(),
                 27, 28, 29, 30, 31, 32, 33, 34, 35);
         addSectionFrame(player, inv, Material.CYAN_STAINED_GLASS_PANE,
-                "staff_toolbelt_section_name", "&bGuardian Toolbelt",
+                "staff_toolbelt_section_name", "&bContent & Maintenance",
                 "staff_modules_section_lore",
-                List.of("&7Routes, Arena, language refresh, and reload."),
+                List.of("&7Routes, Arena, Season, and server upkeep."),
                 36, 37, 38, 39, 40, 41, 42, 43, 44);
 
-        // --- SETTINGS TOGGLES ---
-        addToggle(player, inv, SLOT_TOGGLE_AUTO_REMOVE,
-                "admin.auto_remove_banned",
-                "button_admin_auto_remove", "admin_auto_remove_lore",
-                Material.TNT, false,
-                List.of(
-                        "&7What: auto-clean claims owned by banned players.",
-                        "&7When: you want banned accounts cleared over time.",
-                        " ",
-                        "&cCaution: removes territory after the ban cleanup path.",
-                        "&eClick to toggle."
-                ),
-                "toggle_auto_remove_banned"
-        );
-        addToggle(player, inv, SLOT_TOGGLE_BYPASS_LIMIT,
-                "admin.bypass_claim_limit",
-                "button_admin_bypass_limit", "admin_bypass_limit_lore",
-                Material.NETHER_STAR, false,
-                List.of(
-                        "&7What: let staff ignore normal claim limits.",
-                        "&7When: building staff zones or repairing oversized claims.",
-                        " ",
-                        "&eClick to toggle."
-                ),
-                "toggle_bypass_claim_limit"
-        );
+        // --- SETTINGS TOGGLES (harmless left, power/risk right) ---
         addToggle(player, inv, SLOT_TOGGLE_BROADCAST,
                 "admin.broadcast_admin_actions",
                 "button_admin_broadcast", "admin_broadcast_lore",
@@ -179,18 +154,6 @@ public class AdminGUI {
                         "&eClick to toggle."
                 ),
                 "toggle_broadcast_admin_actions"
-        );
-        addToggle(player, inv, SLOT_TOGGLE_UNLIMITED,
-                "admin.unlimited_plots",
-                "button_admin_unlimited", "admin_unlimited_lore",
-                Material.EMERALD_BLOCK, true,
-                List.of(
-                        "&7What: remove normal plot-count limits for admins.",
-                        "&7When: large staff builds or recovery work.",
-                        " ",
-                        "&eClick to toggle."
-                ),
-                "toggle_unlimited_plots"
         );
         addToggle(player, inv, SLOT_TOGGLE_PROXY_SYNC,
                 "sync.proxy.enabled",
@@ -217,6 +180,43 @@ public class AdminGUI {
                         "&eClick to toggle."
                 ),
                 "toggle_low_overhead_mode"
+        );
+        addToggle(player, inv, SLOT_TOGGLE_BYPASS_LIMIT,
+                "admin.bypass_claim_limit",
+                "button_admin_bypass_limit", "admin_bypass_limit_lore",
+                Material.NETHER_STAR, false,
+                List.of(
+                        "&7What: let staff ignore normal claim limits.",
+                        "&7When: building staff zones or repairing oversized claims.",
+                        " ",
+                        "&eClick to toggle."
+                ),
+                "toggle_bypass_claim_limit"
+        );
+        addToggle(player, inv, SLOT_TOGGLE_UNLIMITED,
+                "admin.unlimited_plots",
+                "button_admin_unlimited", "admin_unlimited_lore",
+                Material.EMERALD_BLOCK, true,
+                List.of(
+                        "&7What: remove normal plot-count limits for admins.",
+                        "&7When: large staff builds or recovery work.",
+                        " ",
+                        "&eClick to toggle."
+                ),
+                "toggle_unlimited_plots"
+        );
+        addToggle(player, inv, SLOT_TOGGLE_AUTO_REMOVE,
+                "admin.auto_remove_banned",
+                "button_admin_auto_remove", "admin_auto_remove_lore",
+                Material.TNT, false,
+                List.of(
+                        "&7What: auto-clean claims owned by banned players.",
+                        "&7When: you want banned accounts cleared over time.",
+                        " ",
+                        "&cCaution: removes territory after the ban cleanup path.",
+                        "&eClick to toggle."
+                ),
+                "toggle_auto_remove_banned"
         );
         if (mod(com.aegisguard.config.Modules.Id.EXPANSIONS)) {
             addExpansionModeToggle(player, inv);
@@ -1043,7 +1043,7 @@ public class AdminGUI {
         if (backup != null && backup.isReady()) {
             return List.of(
                     "&7What: browse recovery points and restore claims.",
-                    "&aWorldEdit build copies are enabled for staff snapshots.",
+                    "&aThe build-copy engine is active for staff snapshots.",
                     " ",
                     "&cRollback overwrites the live claim — confirm carefully.",
                     "&eClick to open."
@@ -1052,7 +1052,8 @@ public class AdminGUI {
         if (backup != null && backup.isConfiguredOn()) {
             return List.of(
                     "&7What: browse recovery points and restore claims.",
-                    "&eInstall WorldEdit or FAWE to copy builds.",
+                    "&eConfigured engine is unavailable — restores are",
+                    "&edata-only until it can run (see engine setting).",
                     " ",
                     "&eClick to open."
             );
@@ -1065,7 +1066,7 @@ public class AdminGUI {
                 "&cRollback overwrites the live claim — confirm carefully.",
                 "&eClick to open.",
                 " ",
-                "&eEnable snapshots.build_backup and install WorldEdit/FAWE."
+                "&eEnable snapshots.build_backup (built-in engine by default)."
         );
     }
 
@@ -1079,13 +1080,13 @@ public class AdminGUI {
         var backup = plugin.getSnapshotManager() == null ? null : plugin.getSnapshotManager().buildBackup();
         if (backup != null && backup.isReady()) {
             return List.of(
-                    "&7Claim snapshots, optional WorldEdit build copies,",
-                    "&7audit, doctor, and migration."
+                    "&7Claim snapshots with build copies, audit,",
+                    "&7doctor, and migration."
             );
         }
         return List.of(
                 "&7Claim-data snapshots, audit, doctor,",
-                "&7and migration. Build copies need WorldEdit."
+                "&7and migration."
         );
     }
 

@@ -1733,7 +1733,7 @@ staff_policy_section_lore:
 - '&7Linha superior: política operacional para todo o servidor.'
 - '&7Alternar somente durante janelas de manutenção'
 - '&7quando você entende os efeitos colaterais.'
-staff_toolbelt_section_name: '&bCinto de Ferramentas Guardião'
+staff_toolbelt_section_name: '&bConteúdo & Manutenção'
 staff_toolbelt_section_lore:
 - '&7Linha inferior: revisão, recuperação, mundo,'
 - '&7migração, diagnóstico e manutenção.'

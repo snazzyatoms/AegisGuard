@@ -1715,7 +1715,7 @@ staff_policy_section_lore:
 - '&7Upper row: server-wide operating law.'
 - '&7Toggle only in hours of upkeep,'
 - '&7when thou understandest the consequences.'
-staff_toolbelt_section_name: '&bGuardian Toolbelt'
+staff_toolbelt_section_name: '&bContent & Maintenance'
 staff_toolbelt_section_lore:
 - '&7Lower row: review, recovery, world,'
 - '&7migration, diagnosis, and upkeep.'

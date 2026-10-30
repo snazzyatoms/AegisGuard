@@ -1732,7 +1732,7 @@ staff_policy_section_lore:
 - '&7Górny rząd: polityka operacyjna obejmująca cały serwer.'
 - '&7Przełączaj tylko w oknach konserwacji'
 - '&7kiedy zrozumiesz skutki uboczne.'
-staff_toolbelt_section_name: '&bPas narzędziowy Guardian'
+staff_toolbelt_section_name: '&bZawartość i konserwacja'
 staff_toolbelt_section_lore:
 - '&7Dolny rząd: recenzja, odzyskiwanie, świat,'
 - '&7migracja, diagnostyka i konserwacja.'

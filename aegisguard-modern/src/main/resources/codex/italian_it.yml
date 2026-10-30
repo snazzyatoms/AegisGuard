@@ -1706,7 +1706,7 @@ staff_policy_section_lore:
 - '&7Riga superiore: politica operativa a livello di server.'
 - '&7Attiva/disattiva solo durante le finestre di manutenzione'
 - '&7quando comprendi gli effetti collaterali.'
-staff_toolbelt_section_name: '&bCintura degli attrezzi Guardian'
+staff_toolbelt_section_name: '&bContenuti & Manutenzione'
 staff_toolbelt_section_lore:
 - '&7Riga inferiore: revisione, ripresa, mondo,'
 - '&7migrazione, diagnostica e manutenzione.'
